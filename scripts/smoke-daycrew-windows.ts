@@ -367,18 +367,42 @@ try {
   let startMenuPid = 0;
   await waitFor(() => {
     const result = powerShell(
-      `Get-Process | Where-Object { $_.Path -eq $env:DAYCREW_EXE -and $_.MainWindowTitle -like '*Daycrew*' } | Select-Object -First 1 -ExpandProperty Id`,
+      `Get-Process | Where-Object { $_.Path -eq $env:DAYCREW_EXE -and $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -ne '' } | Select-Object -First 1 -ExpandProperty Id`,
       { DAYCREW_EXE: executable },
     );
     startMenuPid = Number(result);
     return startMenuPid > 0;
   }, "Start menu opens Daycrew window");
+  let startMenuBackendPid = 0;
+  await waitFor(() => {
+    try {
+      startMenuBackendPid = JSON.parse(
+        NodeFS.readFileSync(NodePath.join(userdata, "server-runtime.json"), "utf8"),
+      ).pid;
+      process.kill(startMenuBackendPid, 0);
+      return true;
+    } catch {
+      return false;
+    }
+  }, "Start menu launch starts the owned backend");
   checks.push("actual Start menu shortcut launch");
   powerShell(
     `$p = Get-Process -Id $env:DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close Daycrew window' }; if (!$p.WaitForExit(30000)) { throw 'Daycrew did not quit' }`,
     { DAYCREW_PID: String(startMenuPid) },
   );
   checks.push("native window close quits after Start menu launch");
+  await waitFor(
+    () => {
+      try {
+        process.kill(startMenuBackendPid, 0);
+        return false;
+      } catch {
+        return true;
+      }
+    },
+    "Start menu backend exits",
+    30_000,
+  );
   const uninstaller = NodeFS.readdirSync(installDir).find((name) =>
     /^Uninstall.*\.exe$/i.test(name),
   );
