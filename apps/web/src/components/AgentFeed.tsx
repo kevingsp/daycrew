@@ -590,7 +590,19 @@ export default function AgentFeed({ target }: { target: Target | null }) {
       data-open={open}
       style={{ "--feed-duration": (active ? durationMs : 0) + "ms" } as React.CSSProperties}
     >
-      <section ref={scroller} className="feed-scroll" aria-label="Task feed">
+      <section
+        ref={scroller}
+        className="feed-scroll"
+        aria-label="Task feed"
+        onBlurCapture={(event) => {
+          if (
+            event.relatedTarget instanceof Element &&
+            event.relatedTarget.closest('[data-slot="agent-link"]')
+          ) {
+            remember(event.target);
+          }
+        }}
+      >
         <div className="feed-stream">
           <header>
             <SidebarTrigger className="md:hidden" />

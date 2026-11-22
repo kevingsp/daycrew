@@ -1,7 +1,7 @@
 import { useAtomValue } from "@effect/atom-react";
 import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
 import { threadKey } from "@t3tools/client-runtime/state/entities";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { useGT, useMessages } from "gt-react";
 import { Bot, Pause, Rss, Settings } from "lucide-react";
 import {
@@ -23,6 +23,9 @@ import { sidebarProviderEntriesAtom } from "./providerEntries";
 function AgentRailContents() {
   const gt = useGT();
   const messages = useMessages();
+  const inFeed = useRouterState({
+    select: (state) => /^\/feed(?:\/|$)/.test(state.location.pathname),
+  });
   const threads = useQuietThreadShells();
   const delegated = useDelegatedUnderParent();
   const hidden = useHiddenThreadKeys();
@@ -60,7 +63,8 @@ function AgentRailContents() {
               <TooltipTrigger
                 render={
                   <Link
-                    to="/$environmentId/$threadId"
+                    to={inFeed ? "/feed/$environmentId/$threadId" : "/$environmentId/$threadId"}
+                    search={inFeed ? { panel: "conversation" } : {}}
                     params={buildThreadRouteParams(ref)}
                     data-slot="agent-link"
                     data-attention={waiting}
