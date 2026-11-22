@@ -163,7 +163,9 @@ function verifyPreserved() {
   );
 }
 const authenticode = powerShell(
-  "(Get-AuthenticodeSignature -FilePath $env:DAYCREW_INSTALLER).Status.ToString()",
+  // The runner exports PowerShell 7 module paths into Windows PowerShell 5.1.
+  // Load the signature cmdlet shipped with the interpreter that executes the probe.
+  String.raw`Import-Module "$PSHOME\Modules\Microsoft.PowerShell.Security\Microsoft.PowerShell.Security.psd1"; (Get-AuthenticodeSignature -LiteralPath $env:DAYCREW_INSTALLER).Status.ToString()`,
   { DAYCREW_INSTALLER: installerPath },
 );
 if (process.env.DAYCREW_EXPECT_SIGNED === "true") NodeAssert.equal(authenticode, "Valid");
