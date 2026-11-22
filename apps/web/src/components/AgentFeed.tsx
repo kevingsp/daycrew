@@ -27,6 +27,7 @@ import { Button } from "./ui/button";
 import { useEnvironmentScope } from "../state/session";
 import { AuthOrchestrationOperateScope } from "@t3tools/contracts";
 import { useAtomValue } from "@effect/atom-react";
+import { T } from "gt-react";
 import { serverEnvironment } from "../state/server";
 import { useQuietThreadShell } from "../state/entities";
 import {
@@ -102,10 +103,9 @@ function ReviewAction({
       setReceipt(result._tag === "Success" ? "Review sent to Claude" : "Review could not be sent");
     } catch {
       setReceipt("Review could not be sent");
-    } finally {
-      lock.current = false;
-      setBusy(false);
     }
+    lock.current = false;
+    setBusy(false);
   }
   return (
     <div className="feed-review">
@@ -308,10 +308,9 @@ function TaskCard({
       } else setReceipt("Couldn’t send. Your reply is saved here.");
     } catch {
       setReceipt("Couldn’t send. Your reply is saved here.");
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
     }
+    inFlight.current = false;
+    setBusy(false);
   }
   const state = category(thread);
   return (
@@ -456,7 +455,7 @@ function TaskCard({
                 <ArrowUp size={16} />
               </Button>
             </form>
-            <small role="status">{receipt || (busy ? "Sending…" : "\u00a0")}</small>
+            <small role="status">{receipt || (busy ? <T>Sending…</T> : "\u00a0")}</small>
           </div>
         </div>
       </div>
@@ -528,6 +527,7 @@ export default function AgentFeed({ target }: { target: Target | null }) {
     void navigate({ to: "/feed" });
   }
   const selectedKey = target && scopedThreadKey(target.threadRef);
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Route selection changes restore the clicked card's geometry and native keyboard focus.
   useLayoutEffect(() => {
     const origin = anchor.current;
     const scroll = scroller.current;
@@ -542,7 +542,7 @@ export default function AgentFeed({ target }: { target: Target | null }) {
           { duration: durationMs, easing: "cubic-bezier(.2,.75,.25,1)" },
         );
     }
-    if (open) closeButton.current?.focus({ preventScroll: true });
+    if (selectedKey) closeButton.current?.focus({ preventScroll: true });
     else if (wasOpen.current) {
       const back = trigger.current?.isConnected
         ? trigger.current

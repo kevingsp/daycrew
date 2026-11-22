@@ -1,4 +1,4 @@
-// @effect-diagnostics nodeBuiltinImport:off globalConsole:off
+// @effect-diagnostics nodeBuiltinImport:off globalConsole:off globalDate:off
 /* oxlint-disable t3code/no-global-process-runtime -- This Windows release probe runs outside Effect. */
 import * as NodeAssert from "node:assert/strict";
 import * as NodeChildProcess from "node:child_process";
@@ -6,8 +6,10 @@ import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
+import * as NodeSqlite from "node:sqlite";
 import * as NodeTimersPromises from "node:timers/promises";
 import { _electron, type ElectronApplication } from "playwright-core";
+import { checkDaycrewFeed } from "./lib/check-daycrew-feed.ts";
 
 NodeAssert.equal(process.platform, "win32", "Run this check on Windows x64.");
 NodeAssert.equal(process.arch, "x64");
@@ -31,6 +33,41 @@ NodeFS.copyFileSync(
   NodePath.join(repo, "scripts/fixtures/desktop-launch/statev2.sqlite"),
   NodePath.join(userdata, "statev2.sqlite"),
 );
+const fixture = new NodeSqlite.DatabaseSync(NodePath.join(userdata, "statev2.sqlite"));
+const timestamp = "2026-10-27T10:01:00.000Z";
+const run = {
+  id: "daycrew-check-run",
+  threadId: "launch-check-thread",
+  ordinal: 1,
+  providerInstanceId: "codex",
+  modelSelection: { instanceId: "codex", model: "gpt-5.4" },
+  providerThreadId: null,
+  userMessageId: "launch-check-user",
+  rootNodeId: null,
+  activeAttemptId: null,
+  status: "completed",
+  requestedAt: timestamp,
+  startedAt: timestamp,
+  completedAt: timestamp,
+  checkpointId: null,
+  contextHandoffId: null,
+};
+fixture
+  .prepare(
+    "INSERT INTO orchestration_v2_projection_runs(run_id,thread_id,ordinal,provider,status,requested_at,completed_at,payload_json,provider_instance_id) VALUES(?,?,?,?,?,?,?,?,?)",
+  )
+  .run(
+    run.id,
+    run.threadId,
+    1,
+    "codex",
+    "completed",
+    timestamp,
+    timestamp,
+    JSON.stringify(run),
+    "codex",
+  );
+fixture.close();
 const settings = {
   providerInstances: {
     "daycrew-inkling": {
@@ -47,16 +84,21 @@ const settings = {
 NodeFS.writeFileSync(NodePath.join(userdata, "settings.json"), JSON.stringify(settings));
 NodeFS.mkdirSync(NodePath.join(home, "worktrees"));
 NodeFS.writeFileSync(NodePath.join(home, "worktrees", "preserved.txt"), "existing worktree marker");
-const env: NodeJS.ProcessEnv = {
-  ...process.env,
+const env: Record<string, string> = {
+  ...Object.fromEntries(
+    Object.entries(process.env).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  ),
   LOCALAPPDATA: localAppData,
   T3CODE_TELEMETRY_ENABLED: "false",
   T3CODE_OTEL_SDK_DISABLED: "true",
 };
-// Exercise the production default NodePath and packaged update policy.
+// Exercise the production default path and packaged update policy.
 delete env.T3CODE_HOME;
 delete env.T3CODE_DISABLE_AUTO_UPDATE;
 const checks: string[] = [];
+const timing: unknown[] = [];
 const powerShell = (script: string, extraEnv: Record<string, string> = {}) =>
   NodeChildProcess.execFileSync(
     "powershell.exe",
@@ -149,20 +191,44 @@ try {
       for (const [width, height] of [
         [1366, 768],
         [3440, 1440],
-      ]) {
+      ] as const) {
         await app.evaluate(
           ({ BrowserWindow }, size) =>
-            BrowserWindow.getAllWindows()[0]?.setContentSize(size[0], size[1]),
-          [width!, height!],
+            BrowserWindow.getAllWindows()[0]?.setContentSize(size[0]!, size[1]!),
+          [width, height],
         );
-        await page.screenshot({ path: NodePath.join(evidence, `feed-${width}.png`) });
-        NodeAssert.equal(
-          await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
-          true,
-        );
+        timing.push(await checkDaycrewFeed(page, width, evidence));
       }
       checks.push(
-        "feed renders at laptop and ultrawide sizes without horizontal document overflow",
+        "laptop and ultrawide: replies, column enter/exit, card anchoring, focus restoration, draft retention, frame/input sampling",
+      );
+      await page.emulateMedia({ reducedMotion: "reduce" });
+      await page
+        .locator(".feed-card")
+        .first()
+        .getByRole("link", { name: "Review diff", exact: true })
+        .click();
+      NodeAssert.equal(
+        await page
+          .locator(".feed-layout")
+          .evaluate((element) =>
+            getComputedStyle(element).getPropertyValue("--feed-duration").trim(),
+          ),
+        "0ms",
+      );
+      await page.getByRole("button", { name: "Close details", exact: true }).click();
+      checks.push("reduced motion disables feed transitions");
+      await page.getByRole("button", { name: "Replies", exact: true }).first().click();
+      const composer = page.getByRole("textbox", { name: "Reply to Release launch check" });
+      await composer.fill("Daycrew installer verification message");
+      await page.getByRole("button", { name: "Send reply", exact: true }).click();
+      NodeAssert.equal(
+        await composer.evaluate((element) => element === document.activeElement),
+        true,
+      );
+      await page.getByRole("status").filter({ hasText: "Reply sent" }).waitFor({ timeout: 60_000 });
+      checks.push(
+        "reply command accepted without losing composer focus (no authenticated provider run)",
       );
     }
     const exited = new Promise<void>((resolve) => launched.process().once("exit", () => resolve()));
@@ -244,6 +310,7 @@ try {
         platform: process.platform,
         arch: process.arch,
         checks,
+        timing,
         installer,
         sha256: NodeCrypto.createHash("sha256")
           .update(NodeFS.readFileSync(installerPath))

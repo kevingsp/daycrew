@@ -3929,10 +3929,10 @@ const buildDesktopArtifactUnlocked = Effect.fn("buildDesktopArtifactUnlocked")(f
     private: true,
     packageManager: rootPackageJson.packageManager,
     description:
-      "T3 Code is an open-source desktop app for coding agents. Work with your existing agent subscriptions, review code changes, and run commands in your projects. Connect from desktop, web, or mobile to continue working remotely.",
+      "Daycrew by NYShift is a desktop workspace for coding agents, based on T3 Code by pingdotgg and contributors.",
     license: "MIT",
-    homepage: "https://t3.codes",
-    author: "T3 Tools",
+    homepage: "https://github.com/kevingsp/daycrew",
+    author: "NYShift and T3 Code contributors",
     main: "apps/desktop/dist-electron/boot.cjs",
     build: yield* createBuildConfig(
       options.platform,
