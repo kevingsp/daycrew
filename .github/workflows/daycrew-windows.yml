@@ -19,7 +19,9 @@ permissions:
   contents: read
 
 env:
-  DAYCREW_VERSION: 0.1.11-daycrew.2
+  DAYCREW_VERSION: 0.1.11-daycrew.3
+  DAYCREW_PREVIOUS_VERSION: 0.1.11-daycrew.2
+  DAYCREW_PREVIOUS_SHA256: 9df7ca44f04ae841b10e5c35f37d08e74f019e5b08986d86c5992f2e9ab3dbd4
 
 jobs:
   installer:
@@ -90,7 +92,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release download v0.1.11-daycrew.1 --repo $env:GITHUB_REPOSITORY --pattern Daycrew-0.1.11-daycrew.1-Windows-x64.exe --dir $env:RUNNER_TEMP
+          gh release download "v${env:DAYCREW_PREVIOUS_VERSION}" --repo $env:GITHUB_REPOSITORY --pattern "Daycrew-${env:DAYCREW_PREVIOUS_VERSION}-Windows-x64.exe" --dir $env:RUNNER_TEMP
       - name: Install, launch, upgrade, reopen, quit, reinstall, and uninstall
         run: pnpm exec node scripts/smoke-daycrew-windows.ts
       - name: Compute installer digest
@@ -154,7 +156,7 @@ jobs:
           actual = hashlib.file_digest(installer.open('rb'), 'sha256').hexdigest()
           report = json.loads(pathlib.Path('release/daycrew-windows-check/verification.json').read_text())
           assert actual == expected == report['sha256']
-          assert report['version'] == os.environ['DAYCREW_VERSION'] and report['upgradedFrom'] == '0.1.11-daycrew.1'
+          assert report['version'] == os.environ['DAYCREW_VERSION'] and report['upgradedFrom'] == os.environ['DAYCREW_PREVIOUS_VERSION']
           assert report['platform'] == 'win32' and report['arch'] == 'x64'
           assert report['checks'][-1] == 'uninstall removes app and preserves user data'
           assert sorted(sample['width'] for sample in report['timing']) == [1366, 3440]

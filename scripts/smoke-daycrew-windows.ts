@@ -26,14 +26,15 @@ NodeFS.mkdirSync(evidence, { recursive: true });
 const version = process.env.DAYCREW_VERSION;
 NodeAssert.ok(version, "Set DAYCREW_VERSION to the candidate version");
 const installer = `Daycrew-${version}-Windows-x64.exe`;
-const previousVersion = "0.1.11-daycrew.1";
+const previousVersion = process.env.DAYCREW_PREVIOUS_VERSION;
+NodeAssert.ok(previousVersion, "Set DAYCREW_PREVIOUS_VERSION to the published predecessor");
 const previousInstaller = NodePath.join(
   process.env.RUNNER_TEMP!,
   `Daycrew-${previousVersion}-Windows-x64.exe`,
 );
 NodeAssert.equal(
   NodeCrypto.createHash("sha256").update(NodeFS.readFileSync(previousInstaller)).digest("hex"),
-  "79d30d8a23e72e0c2b3ecfba3f61350966bd73e8eac110ee558e67711c847296",
+  process.env.DAYCREW_PREVIOUS_SHA256,
 );
 const installerPath = NodePath.join(release, installer);
 const temporary = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "daycrew-install-"));
