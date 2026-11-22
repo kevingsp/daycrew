@@ -1,0 +1,56 @@
+name: Daycrew Windows x64
+
+on:
+  push:
+    branches: [codex/daycrew-windows-desktop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  installer:
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      T3CODE_TELEMETRY_ENABLED: "false"
+      T3CODE_OTEL_SDK_DISABLED: "true"
+      T3CODE_DISABLE_AUTO_UPDATE: "true"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+      - name: Install pinned package manager
+        run: npm install --global pnpm@12.14.0
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check desktop lifecycle and data paths
+        working-directory: apps/desktop
+        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts
+      - name: Build Windows x64 installer
+        run: pnpm run dist:desktop:win:x64 --build-version 0.1.11-daycrew.1
+      - name: Install, launch, reopen, quit, reinstall, and uninstall
+        run: pnpm exec node scripts/smoke-daycrew-windows.ts
+      - name: Compute installer digest
+        shell: pwsh
+        run: |
+          Get-ChildItem release/Daycrew-*-Windows-x64.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)" | Set-Content -Encoding utf8NoBOM "$($_.FullName).sha256"
+          }
+      - name: Upload installer and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daycrew-Windows-x64
+          if-no-files-found: warn
+          path: |
+            release/Daycrew-*-Windows-x64.exe
+            release/*.sha256
+            release/daycrew-windows-check/**

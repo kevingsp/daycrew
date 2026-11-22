@@ -63,7 +63,7 @@ import { Command, Flag } from "effect/cli";
 import { ChildProcess, ChildProcessSpawner } from "effect/process";
 
 const LINUX_ICON_SIZES = [16, 22, 24, 32, 48, 64, 128, 256, 512] as const;
-const DESKTOP_APP_ID = "com.t3tools.t3code";
+const DESKTOP_APP_ID = "com.nyshift.daycrew";
 const APPLE_TEAM_ID_PATTERN = /^[A-Z0-9]{10}$/u;
 
 const BuildPlatform = Schema.Literals(["mac", "linux", "win"]);
@@ -2701,14 +2701,10 @@ export const resolveGitHubPublishConfig = Effect.fn("resolveGitHubPublishConfig"
 ) {
   const env = yield* Config.all({
     updateRepository: Config.String("T3CODE_DESKTOP_UPDATE_REPOSITORY").pipe(Config.option),
-    githubRepository: Config.String("GITHUB_REPOSITORY").pipe(Config.option),
+    enableUpdates: Config.Boolean("DAYCREW_ENABLE_AUTO_UPDATE").pipe(Config.withDefault(false)),
   });
-  const rawRepo = (
-    Option.getOrUndefined(env.updateRepository)?.trim() ||
-    Option.getOrUndefined(env.githubRepository)?.trim() ||
-    ""
-  ).trim();
-  if (!rawRepo) return undefined;
+  const rawRepo = Option.getOrUndefined(env.updateRepository)?.trim();
+  if (!env.enableUpdates || rawRepo !== "kevingsp/daycrew") return undefined;
 
   const [owner, repo, ...rest] = rawRepo.split("/");
   if (!owner || !repo || rest.length > 0) return undefined;
@@ -2739,14 +2735,14 @@ export function resolveDesktopBuildIconAssets(version: string): DesktopBuildIcon
     return {
       macIconPng: BRAND_ASSET_PATHS.nightlyMacIconPng,
       linuxIconPng: BRAND_ASSET_PATHS.nightlyLinuxIconPng,
-      windowsIconIco: BRAND_ASSET_PATHS.nightlyWindowsIconIco,
+      windowsIconIco: "assets/daycrew/daycrew.ico",
     };
   }
 
   return {
     macIconPng: BRAND_ASSET_PATHS.productionMacIconPng,
     linuxIconPng: BRAND_ASSET_PATHS.productionLinuxIconPng,
-    windowsIconIco: BRAND_ASSET_PATHS.productionWindowsIconIco,
+    windowsIconIco: "assets/daycrew/daycrew.ico",
   };
 }
 
@@ -2767,8 +2763,8 @@ export function resolvePackageManagerUserAgent(packageManager: string): string {
 
 export function resolveDesktopProductName(version: string): string {
   return resolveDesktopUpdateChannel(version) === "nightly"
-    ? "T3 Code (Nightly)"
-    : (desktopPackageJson.productName ?? "T3 Code");
+    ? "Daycrew (Nightly)"
+    : (desktopPackageJson.productName ?? "Daycrew");
 }
 
 export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
@@ -2791,7 +2787,10 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
     afterPack: (yield* Path.Path).join(yield* RepoRoot, "scripts/prepare-server-compile-cache.cjs"),
     appId: DESKTOP_APP_ID,
     productName: resolveDesktopProductName(version),
-    artifactName: "T3-Code-${version}-${arch}.${ext}",
+    artifactName:
+      platform === "win"
+        ? "Daycrew-${version}-Windows-${arch}.${ext}"
+        : "Daycrew-${version}-${arch}.${ext}",
     electronLanguages: [...DESKTOP_ELECTRON_LANGUAGES],
     files: [
       ...DESKTOP_FILE_EXCLUSIONS,
@@ -2969,6 +2968,13 @@ export const createBuildConfig = Effect.fn("createBuildConfig")(function* (
     buildConfig.nsis = {
       differentialPackage: true,
       include: "apps/desktop/resources/installer.nsh",
+      oneClick: false,
+      perMachine: false,
+      allowToChangeInstallationDirectory: true,
+      createStartMenuShortcut: true,
+      shortcutName: "Daycrew",
+      uninstallDisplayName: "Daycrew",
+      deleteAppDataOnUninstall: false,
     };
     const winConfig: Record<string, unknown> = {
       target: [target],

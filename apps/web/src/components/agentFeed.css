@@ -1,4 +1,5 @@
 .feed-layout {
+  --feed-detail-width: min(55%, 1440px);
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
   height: 100dvh;
@@ -6,7 +7,7 @@
   position: relative;
 }
 .feed-layout[data-open="true"] {
-  grid-template-columns: minmax(0, 0.83fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) var(--feed-detail-width);
 }
 .feed-scroll,
 .feed-detail-content {
@@ -167,12 +168,12 @@
   border-color: color-mix(in srgb, var(--foreground) 38%, var(--border));
 }
 .feed-scroll {
-  overflow-anchor: none;
+  scrollbar-gutter: stable;
 }
 .feed-detail {
   position: absolute;
   inset: 0 0 0 auto;
-  width: calc(100% / 1.83);
+  width: var(--feed-detail-width);
   transform: translateX(100%);
   transition: transform var(--feed-duration) cubic-bezier(0.2, 0.75, 0.25, 1);
   overflow: hidden;

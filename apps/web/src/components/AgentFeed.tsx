@@ -209,6 +209,7 @@ function TaskCard({
   const [reply, setReply] = useState(() => drafts.get(draftKey) ?? "");
   const [receipt, setReceipt] = useState("");
   const inFlight = useRef(false);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const [visible, setVisible] = useState(false);
   const card = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -285,6 +286,7 @@ function TaskCard({
       return;
     }
     inFlight.current = true;
+    composer.current?.focus({ preventScroll: true });
     setBusy(true);
     setReceipt("");
     try {
@@ -300,8 +302,8 @@ function TaskCard({
         },
       });
       if (result._tag === "Success") {
-        drafts.delete(draftKey);
-        setReply("");
+        if (drafts.get(draftKey) === reply) drafts.delete(draftKey);
+        setReply((current) => (current === reply ? "" : current));
         setReceipt("Reply sent");
       } else setReceipt("Couldn’t send. Your reply is saved here.");
     } catch {
@@ -427,9 +429,11 @@ function TaskCard({
               }}
             >
               <textarea
+                ref={composer}
                 rows={2}
                 aria-label={"Reply to " + thread.title}
-                disabled={busy || !canSend}
+                disabled={!canSend}
+                aria-busy={busy}
                 placeholder="Reply to this task…"
                 value={reply}
                 onChange={(e) => {
@@ -452,7 +456,7 @@ function TaskCard({
                 <ArrowUp size={16} />
               </Button>
             </form>
-            {receipt && <small role="status">{receipt}</small>}
+            <small role="status">{receipt || (busy ? "Sending…" : "\u00a0")}</small>
           </div>
         </div>
       </div>

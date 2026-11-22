@@ -99,6 +99,7 @@ export const make = Effect.gen(function* () {
       applicationName: environment.displayName,
       applicationVersion: environment.appVersion,
       version: Option.getOrElse(commitHash, () => "unknown"),
+      copyright: "Daycrew by NYShift. Based on T3 Code by pingdotgg and contributors (MIT).",
     });
 
     if (environment.platform === "win32") {
