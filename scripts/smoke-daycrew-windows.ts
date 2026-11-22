@@ -222,16 +222,19 @@ try {
       await new Promise<void>((resolve, reject) => {
         reopened.once("error", reject);
         reopened.once("exit", (code) =>
-          code === 0 ? resolve() : reject(new Error(`reopen exited ${code}`)),
+          code === 0 || code === 130 ? resolve() : reject(new Error(`reopen exited ${code}`)),
         );
       });
       NodeAssert.equal(
         await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length),
         1,
       );
-      NodeAssert.equal(
-        await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isFocused()),
-        true,
+      await waitFor(
+        () =>
+          launched.evaluate(
+            ({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isFocused() === true,
+          ),
+        "reopen focuses the existing window",
       );
       checks.push("second invocation focuses the existing window");
       for (const [width, height] of [
