@@ -136,6 +136,8 @@ const env: Record<string, string> = {
 // Exercise the production default path and packaged update policy.
 delete env.T3CODE_HOME;
 delete env.T3CODE_DISABLE_AUTO_UPDATE;
+// Cold Windows runners can spend over 40s bringing up the backend before the renderer connects.
+const workspaceReadyTimeout = 120_000;
 const checks: string[] = [];
 const timing: unknown[] = [];
 const powerShell = (script: string, extraEnv: Record<string, string> = {}) =>
@@ -185,7 +187,7 @@ try {
   const oldPage = await app.firstWindow();
   await oldPage
     .locator("li[data-thread-item]", { hasText: "Release launch check" })
-    .waitFor({ timeout: 60_000 });
+    .waitFor({ timeout: workspaceReadyTimeout });
   const previousBackend = JSON.parse(
     NodeFS.readFileSync(NodePath.join(userdata, "server-runtime.json"), "utf8"),
   ).pid;
@@ -246,7 +248,7 @@ try {
     const page = await app.firstWindow();
     await page
       .locator("li[data-thread-item]", { hasText: "Release launch check" })
-      .waitFor({ timeout: 60_000 });
+      .waitFor({ timeout: workspaceReadyTimeout });
     await page.locator("li[data-thread-item]", { hasText: "Release launch check" }).click();
     await page.getByText("The release opens and shows this thread.").waitFor({ timeout: 60_000 });
     NodeAssert.equal(await app.evaluate(({ app }) => app.isPackaged), true);
