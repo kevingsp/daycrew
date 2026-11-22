@@ -65,3 +65,13 @@ Previous Chromium checks covered feed navigation, inline replies, draft retentio
 The upstream GitHub Actions definitions are preserved under `.github/upstream-workflows/` as inactive references. Review their release targets, permissions and signing secrets before enabling any for Daycrew. The private repository starts from the complete source tree for the pinned upstream revision and the Daycrew changes described above.
 
 At handoff the changed-files check reported formatting, lint and unused-code findings. The type checker could not start a subprocess under this host's sandbox. The tests stopped while loading the mobile Vite configuration. Rerun on the Windows development machine before packaging.
+
+### Windows 11 x64 personal-PC pilot
+
+Use a separate Windows user account and a disposable Git project for this check. The automated installer smoke test uninstalls software and is intended for disposable CI machines.
+
+1. In the test account, install the previous Daycrew prerelease from Releases. Open a small Git project, configure a provider using its normal sign-in flow, and start a thread. Note its title and a message you can recognize after upgrading.
+2. Quit Daycrew and the preview launcher. Download the new installer and its checksum from the same release. Compare the result of `Get-FileHash -Algorithm SHA256 <installer-path>` with the published checksum. The release notes identify the Authenticode status. Follow your organization's normal installation policy.
+3. Install the new version over the old one and launch **Daycrew** from Start. Check the existing project, provider selection, and thread. For the clean-install comparison use a second fresh test account.
+4. With the provider in approval-on-request mode, ask it to add one line to the test project's README. Open the waiting thread from the collapsed rail, review the requested action and approve the intended edit. Send a follow-up, open Changes, and confirm the edit is present. Quit and reopen from Start and check the thread, diff, and settings.
+5. In a disposable provider session, disconnect the network while composing a feed reply. Reconnect, send the draft, and confirm it appears once. If the provider requires sign-in, open Provider settings, sign in again, and resume. Record the Windows build, Daycrew version, provider, and the step that failed. Keep credentials and private project contents out of reports.

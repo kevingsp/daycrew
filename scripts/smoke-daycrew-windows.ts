@@ -23,10 +23,18 @@ const repo = NodePath.resolve(import.meta.dirname, "..");
 const release = NodePath.join(repo, "release");
 const evidence = NodePath.join(release, "daycrew-windows-check");
 NodeFS.mkdirSync(evidence, { recursive: true });
-const installer = NodeFS.readdirSync(release).find((name) =>
-  /^Daycrew-.*-Windows-x64\.exe$/.test(name),
+const version = process.env.DAYCREW_VERSION;
+NodeAssert.ok(version, "Set DAYCREW_VERSION to the candidate version");
+const installer = `Daycrew-${version}-Windows-x64.exe`;
+const previousVersion = "0.1.11-daycrew.1";
+const previousInstaller = NodePath.join(
+  process.env.RUNNER_TEMP!,
+  `Daycrew-${previousVersion}-Windows-x64.exe`,
 );
-NodeAssert.ok(installer, "Windows x64 NSIS installer is missing");
+NodeAssert.equal(
+  NodeCrypto.createHash("sha256").update(NodeFS.readFileSync(previousInstaller)).digest("hex"),
+  "79d30d8a23e72e0c2b3ecfba3f61350966bd73e8eac110ee558e67711c847296",
+);
 const installerPath = NodePath.join(release, installer);
 const temporary = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "daycrew-install-"));
 const installDir = NodePath.join(temporary, "app");
@@ -154,8 +162,43 @@ function verifyPreserved() {
     "existing worktree marker",
   );
 }
+const authenticode = powerShell(
+  "(Get-AuthenticodeSignature -FilePath $env:DAYCREW_INSTALLER).Status.ToString()",
+  { DAYCREW_INSTALLER: installerPath },
+);
+if (process.env.DAYCREW_EXPECT_SIGNED === "true") NodeAssert.equal(authenticode, "Valid");
+else
+  NodeAssert.ok(
+    authenticode === "Valid" || authenticode === "NotSigned",
+    "Unexpected installer signature status: " + authenticode,
+  );
 let app: ElectronApplication | undefined;
 try {
+  NodeChildProcess.execFileSync(previousInstaller, ["/S", `/D=${installDir}`], {
+    env,
+    timeout: 180_000,
+  });
+  app = await _electron.launch({ executablePath: executable, env, timeout: 60_000 });
+  NodeAssert.equal(await app.evaluate(({ app }) => app.getVersion()), previousVersion);
+  const oldPage = await app.firstWindow();
+  await oldPage
+    .locator("li[data-thread-item]", { hasText: "Release launch check" })
+    .waitFor({ timeout: 60_000 });
+  const previousBackend = JSON.parse(
+    NodeFS.readFileSync(NodePath.join(userdata, "server-runtime.json"), "utf8"),
+  ).pid;
+  await app.close();
+  app = undefined;
+  await waitFor(() => {
+    try {
+      process.kill(previousBackend, 0);
+      return false;
+    } catch {
+      return true;
+    }
+  }, "previous backend exits");
+  verifyPreserved();
+  checks.push("published predecessor launched and opened populated profile");
   NodeChildProcess.execFileSync(installerPath, ["/S", `/D=${installDir}`], {
     env,
     timeout: 180_000,
@@ -197,6 +240,7 @@ try {
   for (const pass of ["first-launch", "reinstalled"]) {
     app = await _electron.launch({ executablePath: executable, env, timeout: 60_000 });
     const launched = app;
+    NodeAssert.equal(await app.evaluate(({ app }) => app.getVersion()), version);
     const page = await app.firstWindow();
     await page
       .locator("li[data-thread-item]", { hasText: "Release launch check" })
@@ -429,13 +473,16 @@ try {
         checks,
         timing,
         installer,
+        version,
+        upgradedFrom: previousVersion,
+        authenticode,
         sha256: NodeCrypto.createHash("sha256")
           .update(NodeFS.readFileSync(installerPath))
           .digest("hex"),
         limitations: [
           "No authenticated cloud agent run",
           "No GPU/Inkling inference",
-          "Same-version replacement, not an older Daycrew desktop upgrade",
+          "Native install and upgrade tested on Windows Server 2025",
           "Hosted runner is not a physical ultrawide display",
         ],
       },
