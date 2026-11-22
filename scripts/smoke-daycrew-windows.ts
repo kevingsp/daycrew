@@ -108,7 +108,7 @@ const settings = {
       environment: [
         { name: "PI_CODING_AGENT_DIR", value: NodePath.join(home, "inkling/pi"), sensitive: false },
       ],
-      config: { enabled: false },
+      config: { binaryPath: NodePath.join(home, "inkling", "pi.cmd") },
     },
   },
 };
