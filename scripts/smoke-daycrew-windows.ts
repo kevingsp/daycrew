@@ -13,6 +13,11 @@ import { checkDaycrewFeed } from "./lib/check-daycrew-feed.ts";
 
 NodeAssert.equal(process.platform, "win32", "Run this check on Windows x64.");
 NodeAssert.equal(process.arch, "x64");
+NodeAssert.equal(
+  process.env.RUNNER_ENVIRONMENT,
+  "github-hosted",
+  "Use a disposable GitHub-hosted runner; this probe changes installer registrations.",
+);
 const repo = NodePath.resolve(import.meta.dirname, "..");
 const release = NodePath.join(repo, "release");
 const evidence = NodePath.join(release, "daycrew-windows-check");
@@ -24,7 +29,7 @@ NodeAssert.ok(installer, "Windows x64 NSIS installer is missing");
 const installerPath = NodePath.join(release, installer);
 const temporary = NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "daycrew-install-"));
 const installDir = NodePath.join(temporary, "app");
-const executable = NodePath.join(installDir, "Daycrew.exe");
+let executable = NodePath.join(installDir, "Daycrew.exe");
 const localAppData = NodePath.join(temporary, "local");
 const home = NodePath.join(localAppData, "T3CodeWorkspaces");
 const userdata = NodePath.join(home, "userdata");
@@ -130,11 +135,26 @@ try {
     timeout: 180_000,
   });
   NodeAssert.ok(NodeFS.existsSync(executable));
-  checks.push("NSIS per-user install");
-  const shortcut = powerShell(
-    `$roots = @([Environment]::GetFolderPath('Programs'), [Environment]::GetFolderPath('CommonPrograms')); $shell = New-Object -ComObject WScript.Shell; Get-ChildItem $roots -Recurse -Filter 'Daycrew.lnk' | Where-Object { $shell.CreateShortcut($_.FullName).TargetPath -eq $env.DAYCREW_EXE } | Select-Object -First 1 -ExpandProperty FullName`,
-    { DAYCREW_EXE: executable },
+  executable = NodeFS.realpathSync.native(executable);
+  NodeAssert.match(
+    NodeFS.readFileSync(NodePath.join(installDir, "resources/T3-Code-LICENSE.txt"), "utf8"),
+    /Copyright \(c\) 2026 T3 Tools Inc\./,
   );
+  checks.push("NSIS per-user install");
+  const shortcutInventory = JSON.parse(
+    powerShell(
+      `$roots = @([Environment]::GetFolderPath('Programs'), [Environment]::GetFolderPath('CommonPrograms')); $shell = New-Object -ComObject WScript.Shell; $links = @(Get-ChildItem $roots -Recurse -Filter 'Daycrew.lnk' | ForEach-Object { @{ path = $_.FullName; target = $shell.CreateShortcut($_.FullName).TargetPath } }); ConvertTo-Json -InputObject $links -Compress`,
+    ),
+  ) as Array<{ path: string; target: string }>;
+  NodeFS.writeFileSync(
+    NodePath.join(evidence, "shortcuts.json"),
+    JSON.stringify({ executable, shortcutInventory }, null, 2),
+  );
+  const shortcut = shortcutInventory.find(
+    (link) =>
+      NodeFS.existsSync(link.target) &&
+      NodeFS.realpathSync.native(link.target).toLowerCase() === executable.toLowerCase(),
+  )?.path;
   NodeAssert.ok(shortcut, "Start menu shortcut is missing");
   const appId = powerShell(
     `$shell = New-Object -ComObject Shell.Application; $folder = $shell.NameSpace([IO.Path]::GetDirectoryName($env.DAYCREW_LINK)); $folder.ParseName([IO.Path]::GetFileName($env.DAYCREW_LINK)).ExtendedProperty('System.AppUserModel.ID')`,

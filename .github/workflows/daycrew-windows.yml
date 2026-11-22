@@ -4,8 +4,14 @@ on:
   push:
     branches: [codex/daycrew-windows-desktop]
   workflow_dispatch:
+    inputs:
+      installer_run_id:
+        description: "Optional prior run whose installer should be rechecked without rebuilding"
+        type: string
+        default: ""
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
@@ -32,12 +38,14 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Check desktop lifecycle and data paths
         working-directory: apps/desktop
-        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts
+        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopUserData.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts
       - name: Build Windows x64 installer
+        if: inputs.installer_run_id == ''
         id: build
         continue-on-error: true
         run: pnpm run dist:desktop:win:x64 --build-version 0.1.11-daycrew.1 --keep-stage
       - name: Inspect payload and verify native runtime
+        if: inputs.installer_run_id == ''
         shell: pwsh
         run: |
           $stage = Get-ChildItem $env:TEMP -Directory -Filter 't3code-desktop-win-stage-*' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
@@ -48,6 +56,14 @@ jobs:
           Get-ChildItem $app -Recurse -File | ForEach-Object { $_.FullName.Substring($app.Length + 1) } | Tee-Object -FilePath release/daycrew-windows-check/payload-files.txt
           Copy-Item "$dist/Daycrew-*-Windows-x64.exe" release/ -ErrorAction Stop
           pnpm exec node scripts/verify-windows-desktop-artifact.ts --app-dir "$app" --arch x64 --build-version 0.1.11-daycrew.1
+      - name: Download installer for repeat verification
+        if: inputs.installer_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: Daycrew-Windows-x64
+          path: release
+          run-id: ${{ inputs.installer_run_id }}
+          github-token: ${{ github.token }}
       - name: Install, launch, reopen, quit, reinstall, and uninstall
         run: pnpm exec node scripts/smoke-daycrew-windows.ts
       - name: Compute installer digest
@@ -58,7 +74,7 @@ jobs:
             "$hash  $($_.Name)" | Set-Content -Encoding utf8NoBOM "$($_.FullName).sha256"
           }
       - name: Require packaging validation
-        if: steps.build.outcome != 'success'
+        if: steps.build.outcome == 'failure'
         run: throw 'Installer checks completed, but packaging validation still needs repair. See payload-files.txt.'
       - name: Upload installer and evidence
         if: always()

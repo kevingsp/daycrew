@@ -4,6 +4,7 @@ import * as NodePath from "node:path";
 import type { Page } from "playwright-core";
 
 export async function checkDaycrewFeed(page: Page, width: number, artifacts: string) {
+  await page.waitForFunction((expected) => window.innerWidth === expected, width);
   await page.locator(".feed-card").first().waitFor();
   const metrics = await page.evaluateHandle(() => {
     const sample = { running: true, frames: [] as number[], keyLatency: [] as number[] };
