@@ -1,7 +1,7 @@
 import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/models";
 import { derivePendingThreadRequests } from "@t3tools/client-runtime/state/thread-requests";
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useMatch, useNavigate } from "@tanstack/react-router";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import {
@@ -19,7 +19,11 @@ import { useEnvironmentThread, threadEnvironment } from "../state/threads";
 import { useOrchestrationCommand } from "../state/use-orchestration-command";
 import { useProjects, useQuietThreadShells } from "../state/entities";
 import { newMessageId } from "../lib/utils";
-import { buildThreadRouteParams, type ThreadRouteTarget } from "../threadRoutes";
+import {
+  buildThreadRouteParams,
+  resolveThreadRouteTarget,
+  type ThreadRouteTarget,
+} from "../threadRoutes";
 import { usePanelAnimationSettings, usePanelPresence } from "../panelAnimations";
 import { ThreadRouteView } from "./ThreadRouteView";
 import { SidebarInset, SidebarTrigger } from "./ui/sidebar";
@@ -494,34 +498,32 @@ function TaskCard({
   );
 }
 
-export default function AgentFeed({ target }: { target: Target | null }) {
+export default function AgentFeed() {
   const [review, setReview] = useState<{ key: string; text: string } | null>(null);
   const threads = useQuietThreadShells();
   const projects = useProjects();
   const [filter, setFilter] = useState("All");
   const [limit, setLimit] = useState(20);
   const navigate = useNavigate();
-  const mode = useRouterState({
-    select: (s) =>
-      new URLSearchParams(s.location.searchStr).get("panel") === "pull-request"
-        ? "pull-request"
-        : new URLSearchParams(s.location.searchStr).get("panel") === "changes"
-          ? "changes"
-          : "conversation",
+  // During navigation the URL can advance before the route commits. Keep the
+  // thread and panel from the same match through the closing animation.
+  const panelRoute = useMatch({
+    from: "/_chat/feed_/$environmentId/$threadId",
+    shouldThrow: false,
+    structuralSharing: true,
+    select: ({ params, search }) => ({
+      environmentId: params.environmentId,
+      threadId: params.threadId,
+      panel: search.panel,
+    }),
   });
+  const selection = useMemo(() => {
+    if (!panelRoute) return null;
+    const target = resolveThreadRouteTarget(panelRoute);
+    return target?.kind === "server" ? { target, mode: panelRoute.panel } : null;
+  }, [panelRoute]);
+  const target = selection?.target;
   const { active, durationMs } = usePanelAnimationSettings();
-  const environmentId = target?.threadRef.environmentId;
-  const threadId = target?.threadRef.threadId;
-  const selection = useMemo(
-    () =>
-      environmentId && threadId
-        ? {
-            target: { kind: "server" as const, threadRef: scopeThreadRef(environmentId, threadId) },
-            mode,
-          }
-        : null,
-    [environmentId, threadId, mode],
-  );
   const { present, value } = usePanelPresence(!!target, selection, active, "feed", durationMs);
   const rows = threads
     .filter(
@@ -590,7 +592,19 @@ export default function AgentFeed({ target }: { target: Target | null }) {
       data-open={open}
       style={{ "--feed-duration": (active ? durationMs : 0) + "ms" } as React.CSSProperties}
     >
-      <section ref={scroller} className="feed-scroll" aria-label="Task feed">
+      <section
+        ref={scroller}
+        className="feed-scroll"
+        aria-label="Task feed"
+        onBlurCapture={(event) => {
+          if (
+            event.relatedTarget instanceof Element &&
+            event.relatedTarget.closest('[data-slot="agent-link"]')
+          ) {
+            remember(event.target);
+          }
+        }}
+      >
         <div className="feed-stream">
           <header>
             <SidebarTrigger className="md:hidden" />

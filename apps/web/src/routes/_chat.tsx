@@ -36,7 +36,7 @@ function ChatRouteLayout() {
   if (feed)
     return (
       <Suspense fallback={null}>
-        <AgentFeed target={shownTarget?.kind === "server" ? shownTarget : null} />
+        <AgentFeed />
       </Suspense>
     );
   return (

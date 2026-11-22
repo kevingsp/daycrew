@@ -79,7 +79,17 @@ describe("sidebar toggle shortcut", () => {
         updatedAt: idle.updatedAt,
       },
     });
-    vi.mocked(useQuietThreadShells).mockReturnValue([working, waiting, idle]);
+    const batch = (thread: typeof idle, count: number) =>
+      Array.from({ length: count }, (_, index) => ({
+        ...thread,
+        id: ThreadId.make(thread.id + index),
+        title: thread.title + " " + index,
+      }));
+    vi.mocked(useQuietThreadShells).mockReturnValue([
+      ...batch(idle, 300),
+      ...batch(working, 5),
+      ...batch(waiting, 2),
+    ]);
     await using screen = await render(
       <AppSidebarLayout>
         <div />
@@ -88,11 +98,15 @@ describe("sidebar toggle shortcut", () => {
     const toggle = screen.getByRole("button", { name: "Toggle main sidebar" });
     if (toggle.element().getAttribute("aria-pressed") === "true") await userEvent.click(toggle);
     await expect
-      .element(screen.getByRole("link", { name: /Run checks/ }))
+      .element(screen.getByRole("link", { name: /Run checks 3/ }))
       .toHaveAttribute("data-attention", "false");
-    const link = screen.getByRole("link", { name: /Review import/ });
+    expect(screen.container.querySelectorAll('[data-slot="agent-link"]').length).toBe(7);
+    expect(
+      screen.container.querySelectorAll('[data-slot="agent-link"][data-attention="true"]').length,
+    ).toBe(2);
+    const link = screen.getByRole("link", { name: /Review import 1/ });
     await expect.element(link).toHaveAttribute("data-attention", "true");
-    await expect.element(link).toHaveAttribute("href", "/local/waiting");
+    await expect.element(link).toHaveAttribute("href", "/local/waiting1");
     await expect
       .element(screen.getByRole("link", { name: /Finished import/ }))
       .not.toBeInTheDocument();
