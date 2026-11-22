@@ -221,21 +221,30 @@ async function check() {
   await deepCard.getByRole("button", { name: "Replies" }).click();
   const editor = deepCard.getByRole("textbox");
   await editor.fill("Return to this draft");
+  const settleFeed = () =>
+    page.locator(".feed-layout").evaluate((el) =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .filter((a) => a.effect?.getTiming().iterations !== Infinity)
+          .map((a) => a.finished.catch(() => {})),
+      ).then(() => undefined),
+    );
+  await settleFeed();
   const top = await editor.evaluate((el) => el.getBoundingClientRect().top);
   await rail.getByRole("link", { name: /Approval B/ }).click();
   await page.getByRole("button", { name: "Approve", exact: true }).click();
   await rail.getByRole("link", { name: /Approval B/ }).waitFor({ state: "detached" });
   await rail.getByRole("link", { name: /Approval A/ }).waitFor();
   await page.getByRole("button", { name: "Close details", exact: true }).click({ timeout: 5000 });
+  await settleFeed();
   NodeAssert.equal(await editor.inputValue(), "Return to this draft");
   NodeAssert.ok(
     await editor.evaluate((el) => el === document.activeElement),
     "Return focus to the draft",
   );
-  NodeAssert.ok(
-    Math.abs((await editor.evaluate((el) => el.getBoundingClientRect().top)) - top) <= 2,
-    "Keep the draft at the same height",
-  );
+  const restoredTop = await editor.evaluate((el) => el.getBoundingClientRect().top);
+  NodeAssert.ok(Math.abs(restoredTop - top) <= 2, `Draft moved from ${top}px to ${restoredTop}px`);
   console.log(
     "300 completed threads, two simultaneous approvals, correct rail target, draft focus and scroll restored",
   );
@@ -293,6 +302,25 @@ async function check() {
   await replies.click();
   const output = NodePath.join(repo, "release", "daycrew-feed-checks");
   NodeFS.mkdirSync(output, { recursive: true });
+  // A Changes transition must never mount the conversation, even for one commit.
+  const observedChat = await page.evaluateHandle(() => {
+    let mounted = false;
+    const observer = new MutationObserver((records) => {
+      for (const record of records)
+        for (const node of record.addedNodes) {
+          if (
+            node instanceof Element &&
+            (node.matches("[data-chat-layout]") || node.querySelector("[data-chat-layout]"))
+          )
+            mounted = true;
+        }
+    });
+    observer.observe(document.querySelector(".feed-detail"), { childList: true, subtree: true });
+    return () => {
+      observer.disconnect();
+      return mounted;
+    };
+  });
   const timings = [];
   for (const width of [1366, 3440]) {
     await page.setViewportSize({ width, height: width === 1366 ? 768 : 1440 });
@@ -300,6 +328,12 @@ async function check() {
   }
   NodeFS.writeFileSync(NodePath.join(output, "timing.json"), JSON.stringify(timings, null, 2));
   console.log(JSON.stringify(timings));
+  NodeAssert.equal(
+    await observedChat.evaluate((finish) => finish()),
+    false,
+    "Changes navigation mounted a conversation",
+  );
+  await observedChat.dispose();
 }
 
 function waitForRun(runs, id, count) {
