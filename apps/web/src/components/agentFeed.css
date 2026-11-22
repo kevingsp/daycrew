@@ -1,4 +1,5 @@
 .feed-layout {
+  --feed-detail-width: min(55%, 1440px);
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
   height: 100dvh;
@@ -6,7 +7,7 @@
   position: relative;
 }
 .feed-layout[data-open="true"] {
-  grid-template-columns: minmax(0, 0.83fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) var(--feed-detail-width);
 }
 .feed-scroll,
 .feed-detail-content {
@@ -63,8 +64,10 @@
   margin-bottom: 12px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--card);
-  box-shadow: 0 1px 3px #00000008;
+  background: color-mix(in srgb, var(--card) 80%, transparent);
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 18%),
+    0 1px 3px #00000008;
   overflow-wrap: anywhere;
 }
 .feed-byline,
@@ -147,6 +150,7 @@
   padding-top: 12px;
 }
 .feed-reply-body form {
+  background: color-mix(in srgb, var(--background) 96%, transparent);
   display: flex;
   gap: 8px;
   align-items: flex-end;
@@ -167,12 +171,12 @@
   border-color: color-mix(in srgb, var(--foreground) 38%, var(--border));
 }
 .feed-scroll {
-  overflow-anchor: none;
+  scrollbar-gutter: stable;
 }
 .feed-detail {
   position: absolute;
   inset: 0 0 0 auto;
-  width: calc(100% / 1.83);
+  width: var(--feed-detail-width);
   transform: translateX(100%);
   transition: transform var(--feed-duration) cubic-bezier(0.2, 0.75, 0.25, 1);
   overflow: hidden;
@@ -186,7 +190,7 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--background);
+  background: color-mix(in srgb, var(--background) 97%, transparent);
 }
 .feed-detail-inner > header {
   justify-content: space-between;
@@ -319,4 +323,48 @@
 }
 .feed-pr a {
   text-decoration: underline;
+}
+
+/* Keep text readable as the sky moves behind the controls. */
+.feed-stream > header,
+.feed-filters {
+  color: var(--sky-ink);
+  text-shadow: 0 1px 3px var(--sky-text-shadow);
+}
+.feed-stream h1 svg {
+  color: currentColor;
+}
+.feed-filters button:is(:hover, [aria-pressed="true"]) {
+  color: var(--foreground);
+  background: var(--card);
+  text-shadow: none;
+}
+.feed-empty {
+  width: fit-content;
+  margin-inline: auto;
+  padding-inline: 24px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--background) 82%, transparent);
+}
+@media (min-width: 821px) {
+  .feed-detail {
+    height: clamp(min(29rem, 100%), 76%, 100%);
+    padding: 8px 8px 8px 0;
+  }
+  .feed-detail:has([data-slot="sidebar-inset"]) {
+    height: 100%;
+  }
+  .feed-detail-inner {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .feed-card,
+  .feed-detail-inner,
+  .feed-reply-body form,
+  .feed-empty {
+    background: var(--card);
+  }
 }

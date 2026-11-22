@@ -3,6 +3,7 @@ import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/model
 import { derivePendingThreadRequests } from "@t3tools/client-runtime/state/thread-requests";
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import * as Option from "effect/Option";
+import * as Schema from "effect/Schema";
 import {
   ArrowUp,
   Bot,
@@ -25,8 +26,11 @@ import { SidebarInset, SidebarTrigger } from "./ui/sidebar";
 import { resolveSidebarThreadStatus } from "./Sidebar.logic";
 import { Button } from "./ui/button";
 import { useEnvironmentScope } from "../state/session";
-import { AuthOrchestrationOperateScope } from "@t3tools/contracts";
+import { useEnvironmentShellStatus } from "../state/shell";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+import { AuthOrchestrationOperateScope, MessageId, CommandId } from "@t3tools/contracts";
 import { useAtomValue } from "@effect/atom-react";
+import { T } from "gt-react";
 import { serverEnvironment } from "../state/server";
 import { useQuietThreadShell } from "../state/entities";
 import {
@@ -48,7 +52,14 @@ import "./agentFeed.css";
 const DiffPanel = lazy(() => import("./DiffPanel"));
 type Shell = EnvironmentThreadShell;
 type Target = Extract<ThreadRouteTarget, { kind: "server" }>;
-const drafts = new Map<string, string>();
+// Keep the receipt identity alongside the text: an acknowledgement can be lost after commit.
+const FeedReplyDraft = Schema.NullOr(
+  Schema.Struct({
+    text: Schema.String,
+    messageId: MessageId,
+    createdAt: Schema.String,
+  }),
+);
 function ReviewAction({
   threadRef,
   patch,
@@ -102,10 +113,9 @@ function ReviewAction({
       setReceipt(result._tag === "Success" ? "Review sent to Claude" : "Review could not be sent");
     } catch {
       setReceipt("Review could not be sent");
-    } finally {
-      lock.current = false;
-      setBusy(false);
     }
+    lock.current = false;
+    setBusy(false);
   }
   return (
     <div className="feed-review">
@@ -206,9 +216,12 @@ function TaskCard({
   const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
   const draftKey = scopedThreadKey(ref);
-  const [reply, setReply] = useState(() => drafts.get(draftKey) ?? "");
+  const [draft, setDraft] = useLocalStorage("daycrew:feed-reply:" + draftKey, null, FeedReplyDraft);
+  const reply = draft?.text ?? "";
+  const connected = useEnvironmentShellStatus(thread.environmentId) === "live";
   const [receipt, setReceipt] = useState("");
   const inFlight = useRef(false);
+  const composer = useRef<HTMLTextAreaElement>(null);
   const [visible, setVisible] = useState(false);
   const card = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -279,12 +292,13 @@ function TaskCard({
   const canSend = useEnvironmentScope(thread.environmentId, AuthOrchestrationOperateScope);
   async function submit() {
     const text = reply.trim();
-    if (!text || inFlight.current || !canSend) return;
+    if (!draft || !text || inFlight.current || !canSend || !connected) return;
     if (/^@claude(?:\s+code)?\b/i.test(text)) {
       onReview(thread, text);
       return;
     }
     inFlight.current = true;
+    composer.current?.focus({ preventScroll: true });
     setBusy(true);
     setReceipt("");
     try {
@@ -292,24 +306,23 @@ function TaskCard({
         environmentId: ref.environmentId,
         input: {
           threadId: ref.threadId,
-          message: { messageId: newMessageId(), role: "user", text, attachments: [] },
+          commandId: CommandId.make(draft.messageId),
+          message: { messageId: draft.messageId, role: "user", text, attachments: [] },
           runtimeMode: thread.runtimeMode,
           interactionMode: thread.interactionMode,
-          createdAt: new Date().toISOString(),
+          createdAt: draft.createdAt,
           dispatchMode: "auto",
         },
       });
       if (result._tag === "Success") {
-        drafts.delete(draftKey);
-        setReply("");
+        setDraft((current) => (current?.messageId === draft.messageId ? null : current));
         setReceipt("Reply sent");
-      } else setReceipt("Couldn’t send. Your reply is saved here.");
+      } else setReceipt("Send failed. Retry with the send button.");
     } catch {
-      setReceipt("Couldn’t send. Your reply is saved here.");
-    } finally {
-      inFlight.current = false;
-      setBusy(false);
+      setReceipt("Send failed. Retry with the send button.");
     }
+    inFlight.current = false;
+    setBusy(false);
   }
   const state = category(thread);
   return (
@@ -404,6 +417,14 @@ function TaskCard({
             {state === "Needs you" ? "Review request" : "Review diff"}
           </Link>
         )}
+        {thread.runtime?.status === "failed" && (
+          <Link
+            to="/settings/providers"
+            search={{ environmentId: thread.environmentId, instanceId: thread.providerInstanceId }}
+          >
+            <T>Provider settings</T>
+          </Link>
+        )}
         <button aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
           <MessageSquare size={14} /> Replies
         </button>
@@ -427,14 +448,21 @@ function TaskCard({
               }}
             >
               <textarea
+                ref={composer}
                 rows={2}
                 aria-label={"Reply to " + thread.title}
-                disabled={busy || !canSend}
+                readOnly={connected && !canSend}
+                aria-busy={busy}
                 placeholder="Reply to this task…"
                 value={reply}
                 onChange={(e) => {
-                  setReply(e.target.value);
-                  drafts.set(draftKey, e.target.value);
+                  const text = e.target.value;
+                  setDraft(
+                    text
+                      ? { text, messageId: newMessageId(), createdAt: new Date().toISOString() }
+                      : null,
+                  );
+                  setReceipt("");
                 }}
                 onKeyDown={(e) => {
                   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -447,12 +475,18 @@ function TaskCard({
                 type="submit"
                 size="icon-sm"
                 aria-label="Send reply"
-                disabled={!canSend || busy || !reply.trim()}
+                disabled={!connected || !canSend || busy || !reply.trim()}
               >
                 <ArrowUp size={16} />
               </Button>
             </form>
-            {receipt && <small role="status">{receipt}</small>}
+            <small role="status">
+              {!connected ? (
+                <T>Reconnecting. Your draft is saved.</T>
+              ) : (
+                receipt || (busy ? <T>Sending…</T> : "\u00a0")
+              )}
+            </small>
           </div>
         </div>
       </div>
@@ -524,6 +558,7 @@ export default function AgentFeed({ target }: { target: Target | null }) {
     void navigate({ to: "/feed" });
   }
   const selectedKey = target && scopedThreadKey(target.threadRef);
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Route selection changes restore the clicked card's geometry and native keyboard focus.
   useLayoutEffect(() => {
     const origin = anchor.current;
     const scroll = scroller.current;
@@ -538,7 +573,7 @@ export default function AgentFeed({ target }: { target: Target | null }) {
           { duration: durationMs, easing: "cubic-bezier(.2,.75,.25,1)" },
         );
     }
-    if (open) closeButton.current?.focus({ preventScroll: true });
+    if (selectedKey) closeButton.current?.focus({ preventScroll: true });
     else if (wasOpen.current) {
       const back = trigger.current?.isConnected
         ? trigger.current

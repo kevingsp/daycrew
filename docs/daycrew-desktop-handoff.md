@@ -8,14 +8,14 @@ The source was reconstructed from the shipped Daycrew patch against pingdotgg/t3
 
 ## Existing features and code
 
-| Area | Entry point |
-| --- | --- |
-| Task feed, replies, approvals, files and PR details | `apps/web/src/components/AgentFeed.tsx`, `agentFeed.css` |
-| Workspaces and scoped feed panels | `apps/web/src/routes/_chat.workspaces.tsx` and the feed routes in that directory |
-| Project tree and New task | `apps/web/src/components/Sidebar.tsx` and `components/sidebar/` |
-| Diff review and optional Claude review | `apps/web/src/components/DiffPanel.tsx` and `AgentFeed.tsx` |
-| Desktop window, preload, packaging | `apps/desktop/src/main.ts`, `apps/desktop/src/preload.ts`, `apps/desktop/src/window/DesktopWindow.ts`, `scripts/build-desktop-artifact.ts` |
-| Preview launchers and agent bootstrap | `packaging/daycrew/windows/` |
+| Area                                                | Entry point                                                                                                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Task feed, replies, approvals, files and PR details | `apps/web/src/components/AgentFeed.tsx`, `agentFeed.css`                                                                                   |
+| Workspaces and scoped feed panels                   | `apps/web/src/routes/_chat.workspaces.tsx` and the feed routes in that directory                                                           |
+| Project tree and New task                           | `apps/web/src/components/Sidebar.tsx` and `components/sidebar/`                                                                            |
+| Diff review and optional Claude review              | `apps/web/src/components/DiffPanel.tsx` and `AgentFeed.tsx`                                                                                |
+| Desktop window, preload, packaging                  | `apps/desktop/src/main.ts`, `apps/desktop/src/preload.ts`, `apps/desktop/src/window/DesktopWindow.ts`, `scripts/build-desktop-artifact.ts` |
+| Preview launchers and agent bootstrap               | `packaging/daycrew/windows/`                                                                                                               |
 
 Agent setup is documented in [AGENTS-SETUP.txt](../packaging/daycrew/windows/AGENTS-SETUP.txt). Cloud agents include Codex, Meta Muse Code, Grok Build and Google Antigravity for Gemini 4 Neon where the account offers it. Inkling 2 Mini uses a dedicated Pi profile and local llama.cpp. Its weights download separately. Claude review needs a configured Claude provider. Skill factory management was discussed as a future idea.
 
@@ -40,6 +40,22 @@ pnpm run dist:desktop:win:x64
 
 The last two commands are upstream entry points for the desktop work. Run the Windows packaging command on Windows x64 and verify the generated installer. See [AGENTS.md](../AGENTS.md) and [development notes](operations/development.md) for repo conventions.
 
+### Standalone desktop operation
+
+The desktop installer uses the Daycrew name and Start menu shortcut. Close the portable preview's launcher terminal before opening Daycrew. Both use `%LOCALAPPDATA%\T3CodeWorkspaces`; the desktop checks the legacy preview port and the server's ownership lock before starting its managed backend. An explicit `T3CODE_HOME` still overrides this location. Quit Daycrew to stop its owned backend. Externally started model servers remain under their launcher's control.
+
+The Electron profile lives separately at `%APPDATA%\daycrew`. On first use, the desktop can copy legacy Windows credential keys without copying locked Chromium databases. Projects, worktrees, threads and provider settings remain in the original workspace home. Uninstalling the desktop keeps that home.
+
+Inkling's existing Pi profile and `http://127.0.0.1:47832/v1` endpoint are retained through the same provider settings. The desktop does not install Pi, download weights or start a GPU runtime. Cloud-only startup does not require those components. The portable Inkling launcher also starts the preview server; close that preview before switching to the desktop, and run the model server separately if it must stay available.
+
+Local installers are unsigned. Automatic desktop updates are off unless a build explicitly sets both `DAYCREW_ENABLE_AUTO_UPDATE=true` and `T3CODE_DESKTOP_UPDATE_REPOSITORY=kevingsp/daycrew`. `GITHUB_REPOSITORY` does not select an update destination. Review the Daycrew release feed and signing before opting in.
+
+### Windows installer validation
+
+The [Daycrew Windows x64 workflow](../.github/workflows/daycrew-windows.yml) builds on a disposable Windows x64 runner. Its smoke probe installs the NSIS package, reuses a migrated fixture database at the production default path, checks the Start menu and taskbar identity, exercises feed interactions at laptop and ultrawide sizes, closes the window, replaces the installation, launches through the actual shortcut, and uninstalls while checking retained data. Do not run this installer probe against a personal Windows installation: it changes the Daycrew installer registration and shortcuts.
+
+The run artifact includes the installer, SHA-256 digest, screenshots, native payload inventory, and `daycrew-windows-check/verification.json` with completed checks and frame/input samples. Samples come from the hosted runner. Physical-display performance, authenticated cloud sessions, actual GPU inference, live PR integrations and upgrades from a previous installed desktop require separate verification before claiming coverage of those paths.
+
 ## Verification baseline
 
 Previous Chromium checks covered feed navigation, inline replies, draft retention, reduced motion, diff opening/closing, keyboard focus restoration, project groups, file counts and thumbnails. The branded web client was rebuilt and its sidebar and browser title were verified. A real Pi agent routed a task through a local test endpoint. Actual GPU inference on the RTX 5090, authenticated cloud runs, a live PR card, and the Windows desktop installer remain to be verified. Earlier source checks reported lint and dependency-analysis findings; run the repository checks before shipping a desktop release.
@@ -49,3 +65,13 @@ Previous Chromium checks covered feed navigation, inline replies, draft retentio
 The upstream GitHub Actions definitions are preserved under `.github/upstream-workflows/` as inactive references. Review their release targets, permissions and signing secrets before enabling any for Daycrew. The private repository starts from the complete source tree for the pinned upstream revision and the Daycrew changes described above.
 
 At handoff the changed-files check reported formatting, lint and unused-code findings. The type checker could not start a subprocess under this host's sandbox. The tests stopped while loading the mobile Vite configuration. Rerun on the Windows development machine before packaging.
+
+### Windows 11 x64 personal-PC pilot
+
+Use a separate Windows user account and a disposable Git project for this check. The automated installer smoke test uninstalls software and is intended for disposable CI machines.
+
+1. In the test account, install the previous Daycrew prerelease from Releases. Open a small Git project, configure a provider using its normal sign-in flow, and start a thread. Note its title and a message you can recognize after upgrading.
+2. Quit Daycrew and the preview launcher. Download the new installer and its checksum from the same release. Compare the result of `Get-FileHash -Algorithm SHA256 <installer-path>` with the published checksum. The release notes identify the Authenticode status. Follow your organization's normal installation policy.
+3. Install the new version over the old one and launch **Daycrew** from Start. Check the existing project, provider selection, and thread. For the clean-install comparison use a second fresh test account.
+4. With the provider in approval-on-request mode, ask it to add one line to the test project's README. Open the waiting thread from the collapsed rail, review the requested action and approve the intended edit. Send a follow-up, open Changes, and confirm the edit is present. Quit and reopen from Start and check the thread, diff, and settings.
+5. In a disposable provider session, disconnect the network while composing a feed reply. Reconnect, send the draft, and confirm it appears once. If the provider requires sign-in, open Provider settings, sign in again, and resume. Record the Windows build, Daycrew version, provider, and the step that failed. Keep credentials and private project contents out of reports.

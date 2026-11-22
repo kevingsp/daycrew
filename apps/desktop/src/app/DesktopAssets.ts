@@ -99,6 +99,17 @@ const resolveIconPath = Effect.fn("desktop.assets.resolveIconPath")(function* (
 > {
   const fileSystem = yield* FileSystem.FileSystem;
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
+  if (!environment.isPackaged && ext !== "icns") {
+    const daycrewIcon = environment.path.join(
+      environment.rootDir,
+      "assets",
+      "daycrew",
+      ext === "ico" ? "daycrew.ico" : "daycrew.png",
+    );
+    if (yield* fileSystem.exists(daycrewIcon).pipe(Effect.orElseSucceed(() => false))) {
+      return Option.some(daycrewIcon);
+    }
+  }
   const sourceTreeIconPath = resolveSourceTreeIconPath(environment, ext);
   if (sourceTreeIconPath !== undefined) {
     const sourceTreeIconExists = yield* fileSystem.exists(sourceTreeIconPath).pipe(

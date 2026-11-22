@@ -48,6 +48,8 @@ describe("DesktopEnvironment", () => {
       });
 
       assert.equal(environment.appRoot, "/install/resources/app.asar");
+      assert.equal(environment.baseDir, "/Users/alice/AppData/Local/T3CodeWorkspaces");
+      assert.equal(environment.stateDir, "/Users/alice/AppData/Local/T3CodeWorkspaces/userdata");
       assert.equal(environment.serverRoot, "/install/resources/server.asar");
       assert.equal(
         environment.backendEntryPath,
@@ -57,6 +59,31 @@ describe("DesktopEnvironment", () => {
         environment.clientAssetsDir,
         "/install/resources/server.asar/apps/server/dist/client",
       );
+    }),
+  );
+
+  it.effect("reuses the preview home under LOCALAPPDATA and honors explicit homes", () =>
+    Effect.gen(function* () {
+      const defaults = yield* makeEnvironment(
+        { platform: "win32", isPackaged: true },
+        { LOCALAPPDATA: "/local-data" },
+      );
+      const explicit = yield* makeEnvironment(
+        { platform: "win32", isPackaged: true },
+        { LOCALAPPDATA: "/local-data", T3CODE_HOME: "/isolated" },
+      );
+      const development = yield* makeEnvironment(
+        { platform: "win32" },
+        { LOCALAPPDATA: "/local-data", VITE_DEV_SERVER_URL: "http://localhost:5173" },
+      );
+      assert.equal(defaults.baseDir, "/local-data/T3CodeWorkspaces");
+      assert.equal(
+        defaults.serverSettingsPath,
+        "/local-data/T3CodeWorkspaces/userdata/settings.json",
+      );
+      assert.equal(explicit.baseDir, "/isolated");
+      assert.equal(explicit.stateDir, "/isolated/userdata");
+      assert.equal(development.stateDir, "/Users/alice/.t3/dev");
     }),
   );
 

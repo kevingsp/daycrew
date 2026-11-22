@@ -1,0 +1,182 @@
+name: Daycrew Windows x64
+
+on:
+  push:
+    branches: [codex/daycrew-windows-desktop]
+  workflow_dispatch:
+    inputs:
+      installer_run_id:
+        description: "Optional prior run whose installer should be rechecked without rebuilding"
+        type: string
+        default: ""
+      publish_verified:
+        description: "Publish the draft release using a successful Windows verification run"
+        type: boolean
+        default: false
+
+permissions:
+  actions: read
+  contents: read
+
+env:
+  DAYCREW_VERSION: 0.1.11-daycrew.2
+
+jobs:
+  installer:
+    if: inputs.publish_verified != true
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      T3CODE_TELEMETRY_ENABLED: "false"
+      T3CODE_OTEL_SDK_DISABLED: "true"
+      T3CODE_DISABLE_AUTO_UPDATE: "true"
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+      - name: Install pinned package manager
+        run: npm install --global pnpm@12.14.0
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Check desktop lifecycle and data paths
+        working-directory: apps/desktop
+        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopUserData.test.ts src/app/DesktopClerk.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts src/backend/DesktopHomeOwner.test.ts
+      - name: Build Windows x64 installer
+        if: inputs.installer_run_id == ''
+        id: build
+        continue-on-error: true
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          AZURE_TRUSTED_SIGNING_PUBLISHER_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_PUBLISHER_NAME }}
+        run: |
+          $fields = @($env:AZURE_CLIENT_ID, $env:AZURE_CLIENT_SECRET, $env:AZURE_TENANT_ID, $env:AZURE_TRUSTED_SIGNING_ENDPOINT, $env:AZURE_TRUSTED_SIGNING_ACCOUNT_NAME, $env:AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE_NAME, $env:AZURE_TRUSTED_SIGNING_PUBLISHER_NAME)
+          $configured = @($fields | Where-Object { $_ }).Count
+          if ($configured -gt 0 -and $configured -ne $fields.Count) { throw "Incomplete Azure Trusted Signing configuration" }
+          $env:T3CODE_DESKTOP_SIGNED = if ($configured) { "true" } else { "false" }
+          "DAYCREW_EXPECT_SIGNED=$env:T3CODE_DESKTOP_SIGNED" >> $env:GITHUB_ENV
+          pnpm run dist:desktop:win:x64 --build-version $env:DAYCREW_VERSION --keep-stage
+      - name: Inspect payload and verify native runtime
+        if: inputs.installer_run_id == ''
+        shell: pwsh
+        run: |
+          $stage = Get-ChildItem $env:TEMP -Directory -Filter 't3code-desktop-win-stage-*' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if (!$stage) { throw 'No packaged staging directory was produced' }
+          $dist = Join-Path $stage.FullName 'app/dist'
+          $app = Join-Path $dist 'win-unpacked'
+          New-Item -ItemType Directory -Force release/daycrew-windows-check | Out-Null
+          Get-ChildItem $app -Recurse -File | ForEach-Object { $_.FullName.Substring($app.Length + 1) } | Tee-Object -FilePath release/daycrew-windows-check/payload-files.txt
+          Copy-Item "$dist/Daycrew-*-Windows-x64.exe" release/ -ErrorAction Stop
+          pnpm exec node scripts/verify-windows-desktop-artifact.ts --app-dir "$app" --arch x64 --build-version $env:DAYCREW_VERSION
+      - name: Download installer for repeat verification
+        if: inputs.installer_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          name: Daycrew-Windows-x64
+          path: release
+          run-id: ${{ inputs.installer_run_id }}
+          github-token: ${{ github.token }}
+      - name: Fetch published predecessor for upgrade check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download v0.1.11-daycrew.1 --repo $env:GITHUB_REPOSITORY --pattern Daycrew-0.1.11-daycrew.1-Windows-x64.exe --dir $env:RUNNER_TEMP
+      - name: Install, launch, upgrade, reopen, quit, reinstall, and uninstall
+        run: pnpm exec node scripts/smoke-daycrew-windows.ts
+      - name: Compute installer digest
+        shell: pwsh
+        run: |
+          Get-ChildItem release/Daycrew-*-Windows-x64.exe | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $($_.Name)" | Set-Content -Encoding utf8NoBOM "$($_.FullName).sha256"
+          }
+      - name: Require packaging validation
+        if: steps.build.outcome == 'failure'
+        run: throw 'Installer checks completed, but packaging validation still needs repair. See payload-files.txt.'
+      - name: Upload installer and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Daycrew-Windows-x64
+          if-no-files-found: warn
+          path: |
+            release/Daycrew-*-Windows-x64.exe
+            release/*.sha256
+            release/daycrew-windows-check/**
+
+  publish:
+    if: inputs.publish_verified == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERIFIED_RUN_ID: ${{ inputs.installer_run_id }}
+    steps:
+      - name: Require a successful Windows installer verification
+        shell: python
+        run: |
+          import json, os, subprocess
+          run_id = os.environ['VERIFIED_RUN_ID']
+          assert run_id.isdecimal(), 'Supply the successful Windows verification run ID'
+          repo = os.environ['GH_REPO']
+          run = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}']))
+          assert run['conclusion'] == 'success' and run['name'] == 'Daycrew Windows x64'
+          assert run['repository']['full_name'] == repo
+          jobs = json.loads(subprocess.check_output(['gh', 'api', f'repos/{repo}/actions/runs/{run_id}/jobs']))
+          assert any(job['name'] == 'installer' and job['conclusion'] == 'success' for job in jobs['jobs'])
+      - name: Download verified installer and evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: Daycrew-Windows-x64
+          path: release
+          run-id: ${{ inputs.installer_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify installer digest and completed checks
+        shell: python
+        run: |
+          import hashlib, json, os, pathlib
+          installer = pathlib.Path(f'release/Daycrew-{os.environ["DAYCREW_VERSION"]}-Windows-x64.exe')
+          expected = pathlib.Path(str(installer) + '.sha256').read_text().split()[0]
+          actual = hashlib.file_digest(installer.open('rb'), 'sha256').hexdigest()
+          report = json.loads(pathlib.Path('release/daycrew-windows-check/verification.json').read_text())
+          assert actual == expected == report['sha256']
+          assert report['version'] == os.environ['DAYCREW_VERSION'] and report['upgradedFrom'] == '0.1.11-daycrew.1'
+          assert report['platform'] == 'win32' and report['arch'] == 'x64'
+          assert report['checks'][-1] == 'uninstall removes app and preserves user data'
+          assert sorted(sample['width'] for sample in report['timing']) == [1366, 3440]
+          print('Verified installer SHA-256:', actual)
+      - name: Publish tested installer
+        shell: bash
+        run: |
+          test "$(gh release view v${DAYCREW_VERSION} --json isDraft --jq .isDraft)" = true
+          gh release upload v${DAYCREW_VERSION} \
+            release/Daycrew-${DAYCREW_VERSION}-Windows-x64.exe \
+            release/Daycrew-${DAYCREW_VERSION}-Windows-x64.exe.sha256 \
+            release/daycrew-windows-check/verification.json \
+            release/daycrew-windows-check/payload-files.txt --clobber
+          gh release edit v${DAYCREW_VERSION} --draft=false --prerelease
+      - name: Verify the published download
+        shell: bash
+        run: |
+          gh release download v${DAYCREW_VERSION} --pattern Daycrew-${DAYCREW_VERSION}-Windows-x64.exe --dir downloaded
+          python - <<'PY'
+          import hashlib, os, pathlib
+          expected = pathlib.Path(f'release/Daycrew-{os.environ["DAYCREW_VERSION"]}-Windows-x64.exe.sha256').read_text().split()[0]
+          actual = hashlib.file_digest(pathlib.Path(f'downloaded/Daycrew-{os.environ["DAYCREW_VERSION"]}-Windows-x64.exe').open('rb'), 'sha256').hexdigest()
+          assert actual == expected
+          print('Published download SHA-256 verified:', actual)
+          PY

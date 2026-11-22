@@ -208,6 +208,19 @@ const startLocalBackend = Effect.gen(function* () {
     return yield* new DesktopDevelopmentBackendPortRequiredError();
   }
 
+  // Older previews may predate the ownership lock but always bind this loopback port.
+  if (
+    !(settings.wslOnly && settings.wslBackendEnabled) &&
+    (yield* DesktopHomeOwner.legacyPreviewIsRunning)
+  ) {
+    yield* (yield* ElectronDialog.ElectronDialog).showErrorBox(
+      environment.displayName,
+      "Port 47831 is already in use. Close the Daycrew preview launcher terminal, then reopen Daycrew to reuse your projects, threads and provider settings. If another application owns this port, use a separate T3CODE_HOME.",
+    );
+    yield* (yield* ElectronApp.ElectronApp).quit;
+    return false;
+  }
+
   // A backend started while another server holds this home's lock can only exit with code 78.
   if (
     !(settings.wslOnly && settings.wslBackendEnabled) &&

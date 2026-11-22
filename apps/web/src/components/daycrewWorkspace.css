@@ -1,0 +1,127 @@
+[data-daycrew-shell] {
+  background: var(--sidebar);
+  --daycrew-rail-width: max(3.25rem, var(--workspace-titlebar-content-left));
+}
+
+[data-slot="daycrew-workspace"] {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: clip;
+  background-color: var(--sky-base);
+  background-image:
+    url("./sky-dither.png"),
+    radial-gradient(
+      circle clamp(16rem, 39vw, 59rem) at var(--sky-x) var(--sky-y),
+      var(--sky-light) 0%,
+      color-mix(in srgb, var(--sky-light) 95%, transparent) 55%,
+      color-mix(in srgb, var(--sky-light) 83%, transparent) 78%,
+      color-mix(in srgb, var(--sky-light) 30%, transparent) 95%,
+      transparent 113%
+    ),
+    linear-gradient(167deg, var(--sky-top) 8%, var(--sky-base) 94%);
+  box-shadow: inset 0 -1px rgb(44 43 77 / 18%);
+}
+
+[data-slot="daycrew-workspace"] > [data-slot="sidebar-inset"] {
+  height: 100%;
+  background-color: color-mix(in srgb, var(--background) 81%, transparent);
+  background-image: none;
+}
+
+[data-slot="daycrew-workspace"] > .feed-layout {
+  background: transparent;
+}
+
+[data-slot="daycrew-workspace"] > [data-slot="sidebar-inset"] [data-chat-layout],
+[data-chat-layout] [data-workspace-area="conversation"] {
+  background-color: transparent;
+}
+
+@media (min-width: 768px) {
+  [data-slot="daycrew-workspace"] {
+    margin: 4px 4px 4px 0;
+    border-radius: 15px;
+  }
+
+  [data-daycrew-shell] > [data-state="collapsed"] > [data-slot="sidebar-gap"] {
+    width: var(--daycrew-rail-width);
+  }
+}
+
+[data-slot="agent-rail"] {
+  position: fixed;
+  top: calc(var(--workspace-controls-top) + var(--workspace-topbar-height));
+  bottom: 0.5rem;
+  left: 0;
+  z-index: 9;
+  width: var(--daycrew-rail-width);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--sidebar-foreground);
+}
+
+[data-slot="active-agents"] {
+  display: flex;
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 4px 0;
+}
+
+[data-slot="agent-link"],
+[data-slot="agent-rail"] > a {
+  position: relative;
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+}
+
+[data-slot="agent-link"] {
+  border: 2px solid var(--info);
+  border-right-color: var(--sidebar-border);
+}
+
+[data-slot="agent-link"][data-attention="true"] {
+  border-color: var(--warning, #b87925);
+}
+
+[data-slot="agent-pause"] {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  z-index: 31;
+  width: 13px;
+  height: 13px;
+  padding: 1px;
+  border-radius: 50%;
+  background: var(--sidebar);
+  stroke-width: 3;
+}
+
+[data-slot="agent-rail"] a:hover,
+[data-slot="agent-rail"] a[aria-current="page"] {
+  background: var(--sidebar-row-selected);
+}
+
+[data-slot="agent-rail"] a:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+@media (forced-colors: active) {
+  [data-slot="daycrew-workspace"] {
+    background: Canvas;
+  }
+}
