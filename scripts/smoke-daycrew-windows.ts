@@ -209,7 +209,7 @@ try {
       await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length),
       1,
     );
-    NodeAssert.match(await page.title(), /Daycrew/);
+    NodeAssert.match(await page.title(), /Release launch check/);
     checks.push(`${pass}: packaged window and migrated project/thread/message`);
     const backend = JSON.parse(
       NodeFS.readFileSync(NodePath.join(userdata, "server-runtime.json"), "utf8"),
