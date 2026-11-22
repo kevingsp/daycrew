@@ -183,7 +183,7 @@ try {
   )?.path;
   NodeAssert.ok(shortcut, "Start menu shortcut is missing");
   const appId = powerShell(
-    `$shell = New-Object -ComObject Shell.Application; $folder = $shell.NameSpace([IO.Path]::GetDirectoryName($env.DAYCREW_LINK)); $folder.ParseName([IO.Path]::GetFileName($env.DAYCREW_LINK)).ExtendedProperty('System.AppUserModel.ID')`,
+    `$shell = New-Object -ComObject Shell.Application; $folder = $shell.NameSpace([IO.Path]::GetDirectoryName($env:DAYCREW_LINK)); $folder.ParseName([IO.Path]::GetFileName($env:DAYCREW_LINK)).ExtendedProperty('System.AppUserModel.ID')`,
     { DAYCREW_LINK: shortcut },
   );
   NodeAssert.equal(appId, "com.nyshift.daycrew");
@@ -329,13 +329,13 @@ try {
     await waitFor(
       () =>
         powerShell(
-          `$p = Get-Process -Id $env.DAYCREW_PID -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne 0) { 'ready' }`,
+          `$p = Get-Process -Id $env:DAYCREW_PID -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne 0) { 'ready' }`,
           { DAYCREW_PID: String(blocked.pid) },
         ) === "ready",
       "legacy preview conflict dialog",
     );
     const dialog = powerShell(
-      `Add-Type -AssemblyName UIAutomationClient; $p = Get-Process -Id $env.DAYCREW_PID; $root = [System.Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle); $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition) | ForEach-Object { $_.Current.Name }`,
+      `Add-Type -AssemblyName UIAutomationClient; $p = Get-Process -Id $env:DAYCREW_PID; $root = [System.Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle); $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition) | ForEach-Object { $_.Current.Name }`,
       { DAYCREW_PID: String(blocked.pid) },
     );
     NodeFS.writeFileSync(NodePath.join(evidence, "preview-conflict.txt"), dialog);
@@ -347,7 +347,7 @@ try {
       databaseBeforeConflict,
     );
     powerShell(
-      `$p = Get-Process -Id $env.DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close conflict dialog' }; if (!$p.WaitForExit(30000)) { throw 'Blocked app did not quit' }`,
+      `$p = Get-Process -Id $env:DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close conflict dialog' }; if (!$p.WaitForExit(30000)) { throw 'Blocked app did not quit' }`,
       { DAYCREW_PID: String(blocked.pid) },
     );
     checks.push(
@@ -360,11 +360,11 @@ try {
     );
   }
 
-  powerShell(`Start-Process -FilePath $env.DAYCREW_LINK`, { DAYCREW_LINK: shortcut });
+  powerShell(`Start-Process -FilePath $env:DAYCREW_LINK`, { DAYCREW_LINK: shortcut });
   let startMenuPid = 0;
   await waitFor(() => {
     const result = powerShell(
-      `Get-Process | Where-Object { $_.Path -eq $env.DAYCREW_EXE -and $_.MainWindowTitle -like '*Daycrew*' } | Select-Object -First 1 -ExpandProperty Id`,
+      `Get-Process | Where-Object { $_.Path -eq $env:DAYCREW_EXE -and $_.MainWindowTitle -like '*Daycrew*' } | Select-Object -First 1 -ExpandProperty Id`,
       { DAYCREW_EXE: executable },
     );
     startMenuPid = Number(result);
@@ -372,7 +372,7 @@ try {
   }, "Start menu opens Daycrew window");
   checks.push("actual Start menu shortcut launch");
   powerShell(
-    `$p = Get-Process -Id $env.DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close Daycrew window' }; if (!$p.WaitForExit(30000)) { throw 'Daycrew did not quit' }`,
+    `$p = Get-Process -Id $env:DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close Daycrew window' }; if (!$p.WaitForExit(30000)) { throw 'Daycrew did not quit' }`,
     { DAYCREW_PID: String(startMenuPid) },
   );
   checks.push("native window close quits after Start menu launch");
