@@ -1,0 +1,41 @@
+DAYCREW FOR WINDOWS x64
+
+Extract the full ZIP. Install Node.js 22.19+ and Git for Windows.
+Use Start-Daycrew.cmd for cloud agents. Use Start-Daycrew-Inkling.cmd to run
+the same crew plus local Inkling inference. Close the other launcher first.
+The existing Daycrew project and thread data directory is reused.
+
+CLOUD AGENTS
+The launcher registers Codex, Muse Code, Grok Build, and Antigravity.
+Install each CLI you plan to use and authenticate on this PC. Open a new
+terminal after installation, then start Daycrew. In Settings > Providers,
+check the agent's connection. In a new task, select the provider and model.
+Previously configured providers keep their settings; enable them if disabled.
+
+Codex: https://developers.openai.com/codex/cli/
+Muse Code: https://dev.meta.ai/docs/muse-code
+Grok Build: https://docs.x.ai/build/overview
+Gemini 4 Neon: Install the Google Antigravity CLI and connect your Google
+account. Choose Gemini 4 Neon from its reported model list. Availability
+depends on your account. https://antigravity.google/
+
+LOCAL INKLING (OPTIONAL, TEXT)
+1. Install Pi from a terminal:
+   npm install -g @earendil-works/pi-coding-agent@1.6.0
+2. Install a CUDA-enabled llama.cpp Windows x64 build b12600 or newer.
+   Keep its DLLs together with llama-server.exe. Put them in a folder named
+   llama beside Start-Daycrew-Inkling.cmd, or put the directory on PATH.
+   Releases: https://github.com/ggml-org/llama.cpp/releases
+3. Double-click Start-Daycrew-Inkling.cmd. First launch downloads a 16.53 GB
+   model into %LOCALAPPDATA%\T3CodeWorkspaces\inkling and verifies SHA-256.
+   Leave room for the file and runtime. Subsequent launches reuse the file.
+4. Select Inkling Local in a new task, then Inkling 2 Mini (daycrew-local/
+   inkling-2-mini-q4). Try: "Read the project README and summarize how to run it."
+   The model server uses loopback port 47832 and a 16,384-token context.
+   Keep the launcher open. Ctrl+C stops the local service with Daycrew.
+
+Model: https://huggingface.co/AtomicChat/Inkling-2-Mini-Uncensored-GGUF
+Revision: 40886ab636cabb4decf4998224f790b462ab048e
+File: Inkling-2-Mini-Uncensored-AD-Q4_K.gguf (adapter already included).
+This profile accepts text. Its model and Pi preferences are separate from
+your other Pi profiles. The cloud agents use their own credentials and terms.

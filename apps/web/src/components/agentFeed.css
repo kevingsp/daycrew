@@ -1,0 +1,322 @@
+.feed-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
+  height: 100dvh;
+  overflow: hidden;
+  position: relative;
+}
+.feed-layout[data-open="true"] {
+  grid-template-columns: minmax(0, 0.83fr) minmax(0, 1fr);
+}
+.feed-scroll,
+.feed-detail-content {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.feed-stream {
+  max-width: 800px;
+  margin: auto;
+  padding: clamp(18px, 3vw, 48px);
+}
+.feed-stream > header,
+.feed-byline,
+.feed-actions,
+.feed-context,
+.feed-context span,
+.feed-detail-inner > header,
+.feed-stream h1,
+.feed-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.feed-stream h1 {
+  font-size: 28px;
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  gap: 12px;
+}
+.feed-stream h1 svg {
+  color: var(--muted-foreground);
+}
+.feed-filters {
+  margin: 20px 0;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.feed-filters button,
+.feed-actions :is(button, a) {
+  font-size: 13px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.feed-filters button[aria-pressed="true"],
+.feed-actions :is(button, a):hover,
+.feed-filters button:hover {
+  background: var(--accent);
+}
+.feed-card {
+  padding: 18px 20px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+  box-shadow: 0 1px 3px #00000008;
+  overflow-wrap: anywhere;
+}
+.feed-byline,
+.feed-context,
+.feed-actions,
+.feed-message strong,
+.feed-reply-body small {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+.feed-byline strong {
+  text-transform: capitalize;
+  color: var(--foreground);
+}
+.feed-byline time {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.feed-card h2 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 12px 0 6px;
+}
+.feed-state::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #3584da;
+}
+.feed-card[data-state="Needs you"] .feed-state::before {
+  background: #da941d;
+}
+.feed-card[data-state="Ready to review"] .feed-state::before {
+  background: #2a986b;
+}
+.feed-summary,
+.feed-message p {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.55;
+  margin: 12px 0;
+  max-height: 12em;
+  overflow: auto;
+}
+.feed-actions {
+  margin-top: 12px;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+.feed-actions :is(a, button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.feed-actions a:first-child {
+  color: var(--foreground);
+  background: var(--muted);
+}
+.feed-replies {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows var(--feed-duration) ease,
+    opacity var(--feed-duration) ease;
+}
+.feed-replies[data-open="true"] {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.feed-replies > div {
+  min-height: 0;
+  overflow: hidden;
+}
+.feed-reply-body {
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.feed-reply-body form {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 8px;
+}
+.feed-reply-body textarea {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  resize: vertical;
+}
+.feed-message p {
+  margin: 3px 0 12px;
+}
+.feed-card[data-selected="true"] {
+  border-color: color-mix(in srgb, var(--foreground) 38%, var(--border));
+}
+.feed-scroll {
+  overflow-anchor: none;
+}
+.feed-detail {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: calc(100% / 1.83);
+  transform: translateX(100%);
+  transition: transform var(--feed-duration) cubic-bezier(0.2, 0.75, 0.25, 1);
+  overflow: hidden;
+  min-width: 0;
+}
+.feed-layout[data-open="true"] .feed-detail {
+  transform: translateX(0);
+}
+.feed-detail-inner {
+  border-left: 1px solid var(--border);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+.feed-detail-inner > header {
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 16px;
+  font-size: 13px;
+}
+.feed-detail-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+.feed-detail-content [data-slot="sidebar-inset"] {
+  height: 100%;
+  min-height: 0;
+}
+.feed-empty {
+  text-align: center;
+  padding: 50px 12px;
+  color: var(--muted-foreground);
+}
+.feed-empty svg {
+  margin: auto;
+}
+.feed-empty h2 {
+  margin: 10px;
+}
+@media (max-width: 820px) {
+  .feed-layout,
+  .feed-layout[data-open="true"] {
+    display: flex !important;
+    flex-direction: column;
+  }
+  .feed-detail {
+    position: fixed;
+    width: 100%;
+    inset: 0;
+    z-index: 45;
+    visibility: hidden;
+    transform: translateX(100%);
+    transition:
+      transform var(--feed-duration) ease,
+      visibility var(--feed-duration);
+  }
+  .feed-layout[data-open="true"] .feed-detail {
+    visibility: visible;
+    transform: none;
+  }
+}
+@keyframes t3-feed-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .feed-card,
+  .feed-message,
+  .feed-detail-content,
+  .feed-reply-body small {
+    animation: t3-feed-arrive min(140ms, var(--feed-duration)) ease-out both;
+  }
+}
+
+.feed-review {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.feed-review small {
+  color: var(--muted-foreground);
+}
+
+.feed-result {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.45rem 0.7rem;
+  margin-top: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.45rem;
+  font-size: 0.83rem;
+  background: var(--muted);
+  color: var(--foreground);
+}
+.feed-result:hover {
+  background: var(--accent);
+}
+.feed-result span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feed-result small {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.feed-added {
+  color: var(--color-success, currentColor);
+}
+.feed-removed {
+  color: var(--color-error, currentColor);
+}
+
+.feed-thumbnail {
+  height: 48px;
+  width: 70px;
+  object-fit: contain;
+  border-radius: 4px;
+  background: var(--background);
+}
+.feed-pr {
+  padding: 20px;
+}
+.feed-pr h2 {
+  font-weight: 600;
+}
+.feed-pr p {
+  margin: 0.6rem 0;
+  color: var(--muted-foreground);
+}
+.feed-pr a {
+  text-decoration: underline;
+}
