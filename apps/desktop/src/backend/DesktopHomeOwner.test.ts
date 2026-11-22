@@ -1,3 +1,4 @@
+import * as NetService from "@t3tools/shared/Net";
 import * as NodeSqlite from "node:sqlite";
 
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -120,3 +121,76 @@ describe("DesktopHomeOwner.awaitHomeOwnershipRelease", () => {
     ),
   );
 });
+
+it.effect.each([
+  {
+    platform: "win32",
+    development: false,
+    home: "/local/T3CodeWorkspaces",
+    available: false,
+    expected: true,
+  },
+  {
+    platform: "win32",
+    development: false,
+    home: "/LOCAL/t3codeworkspaces",
+    available: false,
+    expected: true,
+  },
+  {
+    platform: "win32",
+    development: false,
+    home: "/local/T3CodeWorkspaces",
+    available: true,
+    expected: false,
+  },
+  { platform: "win32", development: false, home: "/isolated", available: false, expected: false },
+  {
+    platform: "win32",
+    development: true,
+    home: "/local/T3CodeWorkspaces",
+    available: false,
+    expected: false,
+  },
+  {
+    platform: "linux",
+    development: false,
+    home: "/local/T3CodeWorkspaces",
+    available: false,
+    expected: false,
+  },
+] as const)("detects a legacy preview without requiring a database lock: %j", (input) =>
+  Effect.gen(function* () {
+    const config = DesktopConfig.layerTest({
+      LOCALAPPDATA: "/local",
+      T3CODE_HOME: input.home,
+      ...(input.development ? { VITE_DEV_SERVER_URL: "http://localhost:5173" } : {}),
+    });
+    const environment = DesktopEnvironment.layer({
+      dirname: "/repo/apps/desktop/src",
+      homeDirectory: "/user",
+      platform: input.platform,
+      processArch: "x64",
+      appVersion: "0.1.11",
+      appPath: "/repo",
+      isPackaged: true,
+      resourcesPath: "/resources",
+      runningUnderArm64Translation: false,
+    }).pipe(Layer.provideMerge(config), Layer.provide(NodeServices.layer));
+    const result = yield* DesktopHomeOwner.legacyPreviewIsRunning.pipe(
+      Effect.provide(
+        Layer.mergeAll(
+          environment,
+          Layer.mock(NetService.NetService, {
+            canListenOnHost: (port, host) => {
+              assert.equal(port, 47831);
+              assert.equal(host, "127.0.0.1");
+              return Effect.succeed(input.available);
+            },
+          }),
+        ),
+      ),
+    );
+    assert.equal(result, input.expected);
+  }),
+);

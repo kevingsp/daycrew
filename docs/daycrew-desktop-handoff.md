@@ -42,7 +42,7 @@ The last two commands are upstream entry points for the desktop work. Run the Wi
 
 ### Standalone desktop operation
 
-The desktop installer uses the Daycrew name and Start menu shortcut. Close the portable preview's launcher terminal before opening Daycrew. Both use `%LOCALAPPDATA%\T3CodeWorkspaces`; the desktop checks the server's ownership lock before starting its managed backend. An explicit `T3CODE_HOME` still overrides this location. Quit Daycrew to stop its owned backend. Externally started model servers remain under their launcher's control.
+The desktop installer uses the Daycrew name and Start menu shortcut. Close the portable preview's launcher terminal before opening Daycrew. Both use `%LOCALAPPDATA%\T3CodeWorkspaces`; the desktop checks the legacy preview port and the server's ownership lock before starting its managed backend. An explicit `T3CODE_HOME` still overrides this location. Quit Daycrew to stop its owned backend. Externally started model servers remain under their launcher's control.
 
 The Electron profile lives separately at `%APPDATA%\daycrew`. On first use, the desktop can copy legacy Windows credential keys without copying locked Chromium databases. Projects, worktrees, threads and provider settings remain in the original workspace home. Uninstalling the desktop keeps that home.
 

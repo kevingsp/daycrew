@@ -7,9 +7,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as Option from "effect/Option";
 import * as Path from "effect/Path";
 import * as Schema from "effect/Schema";
+import * as NetService from "@t3tools/shared/Net";
 import { msg } from "gt-i18n";
 
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
+import * as DesktopConfig from "../app/DesktopConfig.ts";
 import { m } from "../i18n/messages.ts";
 import { BACKEND_QUIT_STOP_TIMEOUT } from "./DesktopBackendManager.ts";
 
@@ -63,6 +65,24 @@ const isHomeOwnershipLocked = Effect.fn("DesktopHomeOwner.isHomeOwnershipLocked"
 // A quitting app's backend holds the lock until it exits, which can outlast the relaunch of an update.
 const HOME_OWNERSHIP_RELEASE_GRACE = Duration.sum(BACKEND_QUIT_STOP_TIMEOUT, Duration.seconds(3));
 const HOME_OWNERSHIP_RELEASE_POLL_INTERVAL = Duration.millis(250);
+
+export const legacyPreviewIsRunning = Effect.gen(function* () {
+  const environment = yield* DesktopEnvironment.DesktopEnvironment;
+  if (environment.platform !== "win32" || environment.isDevelopment) return false;
+  const config = yield* DesktopConfig.DesktopConfig;
+  const legacyHome = environment.path.join(
+    Option.getOrElse(config.localAppDataDirectory, () =>
+      environment.path.join(environment.homeDirectory, "AppData", "Local"),
+    ),
+    "T3CodeWorkspaces",
+  );
+  if (
+    environment.path.resolve(environment.baseDir).toLowerCase() !==
+    environment.path.resolve(legacyHome).toLowerCase()
+  )
+    return false;
+  return !(yield* (yield* NetService.NetService).canListenOnHost(47831, "127.0.0.1"));
+}).pipe(Effect.withSpan("DesktopHomeOwner.legacyPreviewIsRunning"));
 
 /** Whether the ownership lock is free, or frees within the grace a shutting-down server needs. */
 export const awaitHomeOwnershipRelease = Effect.fn("DesktopHomeOwner.awaitHomeOwnershipRelease")(

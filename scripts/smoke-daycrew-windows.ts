@@ -4,6 +4,7 @@ import * as NodeAssert from "node:assert/strict";
 import * as NodeChildProcess from "node:child_process";
 import * as NodeCrypto from "node:crypto";
 import * as NodeFS from "node:fs";
+import * as NodeNet from "node:net";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeSqlite from "node:sqlite";
@@ -39,6 +40,31 @@ NodeFS.copyFileSync(
   NodePath.join(userdata, "statev2.sqlite"),
 );
 const fixture = new NodeSqlite.DatabaseSync(NodePath.join(userdata, "statev2.sqlite"));
+const project = NodePath.join(temporary, "project");
+NodeFS.mkdirSync(project);
+NodeFS.writeFileSync(NodePath.join(project, "README.md"), "Daycrew verification workspace\n");
+NodeChildProcess.execFileSync("git", ["init", "-b", "main", project], { stdio: "ignore" });
+NodeChildProcess.execFileSync("git", ["-C", project, "add", "README.md"], { stdio: "ignore" });
+NodeChildProcess.execFileSync(
+  "git",
+  [
+    "-C",
+    project,
+    "-c",
+    "user.name=Daycrew Check",
+    "-c",
+    "user.email=daycrew-check@example.invalid",
+    "commit",
+    "-m",
+    "Seed verification workspace",
+  ],
+  { stdio: "ignore" },
+);
+fixture
+  .prepare(
+    "UPDATE projection_projects SET workspace_root = ? WHERE project_id = 'launch-check-project'",
+  )
+  .run(project);
 const timestamp = "2026-10-27T10:01:00.000Z";
 const run = {
   id: "daycrew-check-run",
@@ -288,6 +314,50 @@ try {
       verifyPreserved();
       checks.push("installer replacement retains data");
     }
+  }
+
+  const preview = NodeNet.createServer();
+  await new Promise<void>((resolve, reject) =>
+    preview.once("error", reject).listen(47831, "127.0.0.1", resolve),
+  );
+  const databaseBeforeConflict = NodeCrypto.createHash("sha256")
+    .update(NodeFS.readFileSync(NodePath.join(userdata, "statev2.sqlite")))
+    .digest("hex");
+  const blocked = NodeChildProcess.spawn(executable, [], { env, stdio: "ignore" });
+  try {
+    NodeAssert.ok(blocked.pid);
+    await waitFor(
+      () =>
+        powerShell(
+          `$p = Get-Process -Id $env.DAYCREW_PID -ErrorAction SilentlyContinue; if ($p -and $p.MainWindowHandle -ne 0) { 'ready' }`,
+          { DAYCREW_PID: String(blocked.pid) },
+        ) === "ready",
+      "legacy preview conflict dialog",
+    );
+    const dialog = powerShell(
+      `Add-Type -AssemblyName UIAutomationClient; $p = Get-Process -Id $env.DAYCREW_PID; $root = [System.Windows.Automation.AutomationElement]::FromHandle($p.MainWindowHandle); $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition) | ForEach-Object { $_.Current.Name }`,
+      { DAYCREW_PID: String(blocked.pid) },
+    );
+    NodeFS.writeFileSync(NodePath.join(evidence, "preview-conflict.txt"), dialog);
+    NodeAssert.match(dialog, /47831/);
+    NodeAssert.equal(
+      NodeCrypto.createHash("sha256")
+        .update(NodeFS.readFileSync(NodePath.join(userdata, "statev2.sqlite")))
+        .digest("hex"),
+      databaseBeforeConflict,
+    );
+    powerShell(
+      `$p = Get-Process -Id $env.DAYCREW_PID; if (!$p.CloseMainWindow()) { throw 'Could not close conflict dialog' }; if (!$p.WaitForExit(30000)) { throw 'Blocked app did not quit' }`,
+      { DAYCREW_PID: String(blocked.pid) },
+    );
+    checks.push(
+      "legacy preview port without a database lock shows a conflict and leaves the database unchanged",
+    );
+  } finally {
+    if (blocked.exitCode === null) blocked.kill();
+    await new Promise<void>((resolve, reject) =>
+      preview.close((error) => (error ? reject(error) : resolve())),
+    );
   }
 
   powerShell(`Start-Process -FilePath $env.DAYCREW_LINK`, { DAYCREW_LINK: shortcut });

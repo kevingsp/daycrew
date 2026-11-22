@@ -38,7 +38,7 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Check desktop lifecycle and data paths
         working-directory: apps/desktop
-        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopUserData.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts
+        run: pnpm exec vp test run src/app/DesktopEnvironment.test.ts src/app/DesktopAppIdentity.test.ts src/app/DesktopUserData.test.ts src/app/DesktopLifecycle.test.ts src/backend/DesktopBackendConfiguration.test.ts src/backend/DesktopHomeOwner.test.ts
       - name: Build Windows x64 installer
         if: inputs.installer_run_id == ''
         id: build
