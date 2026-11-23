@@ -38,14 +38,20 @@ function skyStyle(minute: number): CSSProperties {
   } as CSSProperties;
 }
 
-export function DaycrewWorkspace({ children }: { children: ReactNode }) {
+export function DaycrewWorkspace({
+  children,
+  mobileNavigation = true,
+}: {
+  children: ReactNode;
+  mobileNavigation?: boolean;
+}) {
   // The shared clock emits UTC. Sky phases follow the device’s local civil time.
   const local = new Date(useNowMinute() + ":00Z");
   const minute = local.getHours() * 60 + local.getMinutes();
   return (
     <div data-slot="daycrew-workspace" style={skyStyle(minute)}>
       {children}
-      <MobileNavigation />
+      {mobileNavigation ? <MobileNavigation /> : null}
     </div>
   );
 }

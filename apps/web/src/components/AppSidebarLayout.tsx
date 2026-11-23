@@ -474,7 +474,7 @@ export function AppSidebarLayout({
       <SidebarProvider
         data-daycrew-shell=""
         data-workspace-motion={panelAnimationsActive ? "on" : "off"}
-        className="h-dvh! min-h-0!"
+        className="h-(--daycrew-shell-height)! min-h-0!"
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
         storageKey="chat_thread_sidebar_open"
         style={sidebarProviderStyle}
@@ -509,7 +509,7 @@ export function AppSidebarLayout({
             <CollapsedAgentRail />
           </>
         ) : null}
-        <DaycrewWorkspace>{children}</DaycrewWorkspace>
+        <DaycrewWorkspace mobileNavigation={showSidebar}>{children}</DaycrewWorkspace>
         <BackgroundThreadAnnouncer />
         <SidebarControl showSidebar={showSidebar} />
         {isElectron ? <HistorySwipeNavigation /> : null}

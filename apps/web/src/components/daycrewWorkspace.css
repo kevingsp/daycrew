@@ -3,6 +3,7 @@
   isolation: isolate;
   background: var(--sidebar);
   --daycrew-rail-width: max(3.25rem, var(--workspace-titlebar-content-left));
+  --daycrew-shell-height: 100dvh;
 }
 
 [data-daycrew-shell] > .sidebar-stage-backdrop {
@@ -42,8 +43,22 @@
 }
 
 @media (max-width: 767px) {
+  html:has([data-daycrew-shell]),
+  body:has([data-daycrew-shell]) {
+    height: 100%;
+    min-height: 100dvh;
+  }
+
+  html:has([data-daycrew-shell]) {
+    --workspace-controls-top: env(safe-area-inset-top);
+  }
+
+  #root:has([data-daycrew-shell]) {
+    height: var(--daycrew-viewport-height, 100dvh);
+  }
+
   [data-daycrew-shell] {
-    height: var(--daycrew-viewport-height, 100dvh) !important;
+    --daycrew-shell-height: 100%;
   }
 
   [data-slot="daycrew-workspace"] {

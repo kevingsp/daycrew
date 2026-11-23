@@ -53,7 +53,7 @@ function AgentElapsed({ startedAt }: { readonly startedAt: string }) {
   ) : null;
 }
 
-function AgentCard({ row }: { readonly row: WorkspaceRow }) {
+function AgentCard({ row, compact }: { readonly row: WorkspaceRow; readonly compact: boolean }) {
   const gt = useGT();
   const providers = useAtomValue(sidebarProviderEntriesAtom);
   const live = useAtomValue(liveShellEnvironmentIdsAtom);
@@ -68,6 +68,51 @@ function AgentCard({ row }: { readonly row: WorkspaceRow }) {
     idle: gt("Idle"),
     done: gt("Done"),
   };
+  if (compact) {
+    const statusLabel = connected
+      ? status === "review"
+        ? gt("Review")
+        : labels[status]
+      : gt("Reconnecting");
+    return (
+      <Link
+        to="/$environmentId/$threadId"
+        params={buildThreadRouteParams(scopeThreadRef(thread.environmentId, thread.id))}
+        data-agent-card=""
+        data-status={status}
+        data-density="compact"
+        data-workspace-glass=""
+        aria-label={`${thread.title} · ${project.title} · ${provider?.displayName ?? instanceId} · ${connected ? labels[status] : gt("Reconnecting")}`}
+        className="flex min-h-17 min-w-0 flex-col justify-between gap-0.5 rounded-xl border border-border/60 p-2 text-foreground shadow-xs outline-none transition-colors hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
+        <div className="flex min-w-0 items-start gap-2">
+          <span className="flex size-5 shrink-0 items-center justify-center">
+            {provider ? (
+              <ProviderInstanceIcon {...provider} size="compact" />
+            ) : (
+              <BotIcon className="size-4" />
+            )}
+          </span>
+          <h2 className="line-clamp-2 min-w-0 text-sm font-medium leading-4 tracking-tight">
+            {thread.title}
+          </h2>
+        </div>
+        <div className="flex min-w-0 items-center gap-2 text-2xs">
+          <span className="min-w-6 flex-1 truncate text-muted-foreground">{project.title}</span>
+          <span className="inline-flex min-w-0 shrink items-center gap-1">
+            <span
+              aria-hidden="true"
+              className={cn(
+                "size-1.5 shrink-0 rounded-full",
+                connected ? statusColors[status] : "bg-muted-foreground/50",
+              )}
+            />
+            <span className="truncate">{statusLabel}</span>
+          </span>
+        </div>
+      </Link>
+    );
+  }
   return (
     <Link
       to="/$environmentId/$threadId"
@@ -171,14 +216,14 @@ export default function AgentGrid() {
       <div className="scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
         <div
           data-workspace-content=""
-          className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-10"
+          className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-8 sm:py-10"
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
               <h1 data-workspace-title="">
                 <T>Your crew</T>
               </h1>
-              <p data-sky-caption="" className="mt-2 text-sm">
+              <p data-sky-caption="" className="mt-2 hidden text-sm sm:block">
                 <T>A little space for every agent.</T>
               </p>
             </div>
@@ -199,7 +244,7 @@ export default function AgentGrid() {
             data-workspace-glass=""
             role="group"
             aria-label={gt("Filter by status")}
-            className="my-5 flex w-fit max-w-full flex-wrap gap-1 rounded-xl p-1"
+            className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl p-1 sm:my-5 sm:flex-wrap"
           >
             {(["all", "attention", "running", "review"] as const).map((status) => (
               <Button
@@ -212,7 +257,7 @@ export default function AgentGrid() {
                   setLimit(12);
                 }}
               >
-                {labels[status]}{" "}
+                {mobile && status === "review" ? gt("Review") : labels[status]}{" "}
                 <span className="tabular-nums opacity-70">
                   {status === "all"
                     ? allRows.length
@@ -224,11 +269,11 @@ export default function AgentGrid() {
           {rows.length > 0 ? (
             <ul
               aria-label={gt("Agents")}
-              className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4"
+              className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
             >
               {rows.slice(0, limit).map((row) => (
                 <li key={row.key} className="min-w-0">
-                  <AgentCard row={row} />
+                  <AgentCard row={row} compact={mobile} />
                 </li>
               ))}
             </ul>

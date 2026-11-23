@@ -79,6 +79,7 @@ describe("agent grid", () => {
       first!.getBoundingClientRect().bottom,
     );
     expect(first!.getBoundingClientRect().width).toBeGreaterThan(140);
+    expect(first!.getBoundingClientRect().height).toBeLessThanOrEqual(90);
     expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(390);
     await userEvent.click(screen.getByRole("button", { name: "Show more", exact: true }));
     expect(document.querySelectorAll("[data-agent-card]")).toHaveLength(16);
