@@ -9,6 +9,7 @@ import * as Schema from "effect/Schema";
 
 import * as ProjectEnrichment from "../project/ProjectEnrichmentService.ts";
 import * as ProjectService from "../project/ProjectService.ts";
+import * as ProjectTurnHook from "../project/ProjectTurnHook.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as VcsStatusBroadcaster from "../vcs/VcsStatusBroadcaster.ts";
 import * as WorkspaceEntries from "../workspace/WorkspaceEntries.ts";
@@ -32,6 +33,11 @@ export class RunFinalizationRefreshError extends Schema.TaggedError<RunFinalizat
 ) {}
 
 export class RunFinalizationObserver extends Context.Reference<{
+  readonly afterTurn?: (input: {
+    readonly cwd: string;
+    readonly threadId: ThreadId;
+    readonly runId: RunId;
+  }) => Effect.Effect<void>;
   readonly refreshAfterTurn: (projectId: ProjectId) => Effect.Effect<void>;
   readonly refresh: (input: {
     readonly cwd: string;
@@ -76,8 +82,17 @@ const make = Effect.gen(function* () {
           (cause) => new RunFinalizationError({ ...input, operation: "refresh-workspace", cause }),
         ),
       );
-    const cwd = projection.checkpointScopes.find((scope) => scope.id === input.scopeId)?.cwd;
+    const scope = projection.checkpointScopes.find((scope) => scope.id === input.scopeId);
+    const cwd = scope?.cwd;
     if (cwd !== undefined) {
+      if (
+        scope?.kind === "root_run" &&
+        projection.runs.some((run) => run.id === input.runId && run.status === "completed")
+      ) {
+        yield* (
+          observer.afterTurn?.({ cwd, threadId: input.threadId, runId: input.runId }) ?? Effect.void
+        );
+      }
       // The refresh only updates the display, so the thread's next turn must not wait for it.
       // Never replaced by a newer one: back-to-back turns would interrupt each before it publishes.
       yield* observer.refresh({ cwd, threadId: input.threadId, runId: input.runId }).pipe(
@@ -106,6 +121,7 @@ export const layerObserver = Layer.effect(
     const pullRequests = yield* PullRequestService.PullRequestService;
     const projects = yield* ProjectService.ProjectService;
     const enrichment = yield* ProjectEnrichment.ProjectEnrichmentService;
+    const turnHook = yield* ProjectTurnHook.ProjectTurnHook;
     const pullRequestLookups = yield* FiberMap.make<string>();
     const identityRefreshes = yield* FiberMap.make<ProjectId>();
     // A turn can add the first remote (`git remote add`, `gh repo create --push`), which the
@@ -131,6 +147,17 @@ export const layerObserver = Layer.effect(
         ),
     );
     return {
+      afterTurn: Effect.fn("RunFinalizationObserver.afterTurn")((input) =>
+        turnHook.run(input).pipe(
+          Effect.catchTags({
+            ProjectTurnHookError: (error) =>
+              Effect.logWarning(
+                "Project source backup needs attention; local files are preserved",
+                error,
+              ),
+          }),
+        ),
+      ),
       refreshAfterTurn: pullRequests.refreshAfterTurn,
       refresh: Effect.fn("RunFinalizationService.refresh")(
         function* ({ cwd, threadId, runId }) {

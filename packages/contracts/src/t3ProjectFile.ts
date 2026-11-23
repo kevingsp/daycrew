@@ -118,6 +118,15 @@ export const T3ProjectFile = Schema.Struct({
       })
       .check(Schema.isMaxLength(T3_PROJECT_FILE_MAX_SCRIPTS)),
   ),
+  afterTurn: Schema.optionalKey(
+    Schema.Struct({
+      command: trimmedNonEmpty({ description: "Executable to run after a completed chat reply." }),
+      args: Schema.Array(Schema.String),
+    }).annotate({
+      description:
+        "Runs on the host after a successful root turn and its checkpoint, in that turn's checkout. Receives T3CODE_THREAD_ID, T3CODE_THREAD_TITLE, and T3CODE_RUN_ID. Omit to disable. Restricted shared links never run it.",
+    }),
+  ),
 }).annotate({
   title: "T3 project file",
   description:

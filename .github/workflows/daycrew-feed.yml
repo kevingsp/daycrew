@@ -1,7 +1,7 @@
 name: Daycrew feed checks
 on:
   push:
-    branches: [main, "codex/**"]
+    branches: [main, "codex/**", "!codex/backup-**"]
   pull_request:
   workflow_dispatch:
   workflow_call:
@@ -36,6 +36,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check development saves and release verification
         run: node --test .github/scripts/daycrew-dev.test.cjs .github/scripts/daycrew-release.test.cjs
+      - name: Check automatic chat backups
+        run: pnpm --dir apps/server exec vp test run src/project/ProjectTurnHook.test.ts src/orchestration-v2/RunFinalizationService.test.ts
       - run: node scripts/node_modules/playwright-core/cli.js install --with-deps --only-shell chromium
       - run: pnpm exec vp run --filter t3 build
       - run: node scripts/check-daycrew-recovery.mjs

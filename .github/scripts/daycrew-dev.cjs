@@ -2,6 +2,7 @@ const { execFileSync, spawnSync } = require("node:child_process");
 const { randomBytes } = require("node:crypto");
 const path = require("node:path");
 const { nextVersion, latestRelease } = require("./daycrew-release.cjs");
+const { backup, backupStatuses } = require("./daycrew-backup.cjs");
 
 function git(cwd, ...args) {
   return execFileSync("git", ["-c", "core.longpaths=true", ...args], {
@@ -113,6 +114,11 @@ function status(cwd) {
   console.log(`Repository: ${repo}\nBranch: ${git(cwd, "branch", "--show-current")}`);
   console.log(`Local changes:\n${git(cwd, "status", "--short") || "Clean"}`);
   console.log(`Published desktop: ${released.tag_name}\n${released.html_url}`);
+  for (const saved of backupStatuses(cwd)) {
+    console.log(
+      `${saved.pending ? "Upload pending (saved locally)" : "Backed up on GitHub"}: ${saved.title}\n  ${saved.branch} (${saved.commit.slice(0, 8)})`,
+    );
+  }
   if (/^[a-f0-9]{40}$/.test(released.target_commitish)) {
     const commits = git(cwd, "log", "--oneline", `${released.target_commitish}..origin/main`);
     console.log(`Source waiting for the next desktop release:\n${commits || "None"}`);
@@ -154,7 +160,18 @@ function main(args = process.argv.slice(2)) {
   const cwd = git(process.cwd(), "rev-parse", "--show-toplevel");
   const [command, ...options] = args;
   const messageIndex = options.indexOf("--message");
-  if (command === "save") {
+  if (command === "backup") {
+    const result = backup(cwd, {
+      threadId: process.env.T3CODE_THREAD_ID,
+      title: process.env.T3CODE_THREAD_TITLE,
+      runId: process.env.T3CODE_RUN_ID,
+    });
+    console.log(
+      result.noChanges
+        ? "No new source changes to back up."
+        : `Backed up on GitHub: ${result.branch} (${result.commit.slice(0, 8)})`,
+    );
+  } else if (command === "save") {
     const result = save(cwd, { message: messageIndex < 0 ? undefined : options[messageIndex + 1] });
     console.log(
       `${result.alreadySaved ? "Already saved" : "Saved and pushed"}: ${result.branch} (${result.commit.slice(0, 8)})`,

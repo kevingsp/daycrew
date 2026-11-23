@@ -130,6 +130,7 @@ import * as ProviderUsageLimitsIngestion from "./provider/ProviderUsageLimitsIng
 import * as UsageLimitSources from "./usage/UsageLimitSources.ts";
 import * as ProjectFaviconResolver from "./project/ProjectFaviconResolver.ts";
 import * as T3ProjectFileLoader from "./project/T3ProjectFileLoader.ts";
+import * as ProjectTurnHook from "./project/ProjectTurnHook.ts";
 import * as RepositoryIdentityResolver from "./project/RepositoryIdentityResolver.ts";
 import * as WorkspaceEntries from "./workspace/WorkspaceEntries.ts";
 import * as KnownWorkspaces from "./workspace/KnownWorkspaces.ts";
@@ -619,6 +620,13 @@ const layerOrchestrationV2Runtime = RuntimeLayer.layerProduction.pipe(
   Layer.provide(layerGitWorkflow),
   Layer.provide(
     RunFinalizationService.layerObserver.pipe(
+      Layer.provide(
+        ProjectTurnHook.layer.pipe(
+          Layer.provide(T3ProjectFileLoader.layer),
+          Layer.provide(ProcessRunner.layer),
+          Layer.provide(ProjectionStoreV2.layer),
+        ),
+      ),
       Layer.provide(ProjectionStoreV2.layer),
       Layer.provide(layerPullRequestService),
       Layer.provide(RuntimeLayer.layerProjectService),

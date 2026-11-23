@@ -21,6 +21,12 @@ describe("T3ProjectFileFromJson", () => {
 });
 
 describe("parseT3ProjectFile", () => {
+  it("reads an optional completed-turn hook and rejects malformed arguments", () => {
+    expect(parseT3ProjectFile('{"afterTurn":{"command":"node","args":["backup.cjs"]}}')).toEqual({
+      afterTurn: { command: "node", args: ["backup.cjs"] },
+    });
+    expect(parseT3ProjectFile('{"afterTurn":{"command":"node","args":"backup.cjs"}}')).toBeNull();
+  });
   it("reads project defaults from JSONC with a URL in a block comment", () => {
     expect(
       parseT3ProjectFile(`{

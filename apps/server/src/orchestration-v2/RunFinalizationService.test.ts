@@ -22,6 +22,7 @@ import * as ProcessRunner from "../processRunner.ts";
 import * as ProjectEnrichment from "../project/ProjectEnrichmentService.ts";
 import * as ProjectFaviconResolver from "../project/ProjectFaviconResolver.ts";
 import * as ProjectService from "../project/ProjectService.ts";
+import * as ProjectTurnHook from "../project/ProjectTurnHook.ts";
 import * as RepositoryIdentityResolver from "../project/RepositoryIdentityResolver.ts";
 import * as PullRequestService from "../pullRequest/PullRequestService.ts";
 import * as VcsStatusBroadcaster from "../vcs/VcsStatusBroadcaster.ts";
@@ -35,12 +36,15 @@ const layerNoProject = Layer.mergeAll(
   Layer.mock(ProjectService.ProjectService)({ getById: () => Effect.succeedNone }),
   Layer.mock(ProjectEnrichment.ProjectEnrichmentService)({}),
 );
+const layerNoTurnHook = Layer.succeed(ProjectTurnHook.ProjectTurnHook, { run: () => Effect.void });
 
 const finalizationLayer = (
   scopeId: CheckpointScopeId,
   runId: RunId,
   steps: string[],
   refresh: (typeof RunFinalization.RunFinalizationObserver)["Service"]["refresh"],
+  status: "completed" | "failed" = "completed",
+  kind: "root_run" | "subagent" = "root_run",
 ) =>
   RunFinalization.layer.pipe(
     Layer.provide(
@@ -54,13 +58,17 @@ const finalizationLayer = (
         Layer.mock(ProjectionStore.ProjectionStoreV2)({
           getCheckpointContext: () =>
             Effect.succeed({
-              runs: [],
-              checkpointScopes: [{ id: scopeId, runId, kind: "root_run" as const, cwd: "/repo" }],
+              runs: [{ id: runId, ordinal: 1, status }],
+              checkpointScopes: [{ id: scopeId, runId, kind, cwd: "/repo" }],
               checkpoints: [],
             }),
         }),
         Layer.succeed(RunFinalization.RunFinalizationObserver, {
           refresh,
+          afterTurn: () =>
+            Effect.sync(() => {
+              steps.push("backup");
+            }),
           refreshAfterTurn: () => Effect.void,
         }),
       ),
@@ -84,7 +92,7 @@ it.effect("completes finalization when the post-checkpoint workspace refresh fai
   return Effect.gen(function* () {
     const service = yield* RunFinalization.RunFinalizationService;
     yield* service.finalize({ threadId, runId, scopeId });
-    assert.deepEqual(captured, ["checkpoint", "refresh"]);
+    assert.deepEqual(captured, ["checkpoint", "backup", "refresh"]);
   }).pipe(Effect.provide(layer));
 });
 
@@ -111,6 +119,22 @@ it.effect("completes finalization without waiting for the display refresh", () =
     yield* Deferred.succeed(release, undefined);
     yield* Deferred.await(refreshed);
   }).pipe(Effect.provide(layer));
+});
+
+it.effect.each([
+  ["failed root", "failed", "root_run"],
+  ["subagent checkpoint", "completed", "subagent"],
+] as const)("does not run the completion hook for %s", ([, status, kind]) => {
+  const scopeId = CheckpointScopeId.make("scope-no-backup");
+  const runId = RunId.make("run-no-backup");
+  const steps: string[] = [];
+  return Effect.gen(function* () {
+    const service = yield* RunFinalization.RunFinalizationService;
+    yield* service.finalize({ threadId: ThreadId.make("thread-no-backup"), runId, scopeId });
+    assert.deepEqual(steps, ["checkpoint"]);
+  }).pipe(
+    Effect.provide(finalizationLayer(scopeId, runId, steps, () => Effect.void, status, kind)),
+  );
 });
 
 it.effect.each(
@@ -152,6 +176,7 @@ it.effect.each(
   const threadId = ThreadId.make("thread-pr-refresh");
   const runId = RunId.make("completed-run");
   const layer = RunFinalization.layerObserver.pipe(
+    Layer.provide(layerNoTurnHook),
     Layer.provide(
       Layer.mergeAll(
         layerNoProject,
@@ -200,6 +225,7 @@ it.effect("returns from the post-turn refresh without waiting for the PR lookup"
   const threadId = ThreadId.make("thread-slow-forge");
   const runId = RunId.make("completed-run");
   const layer = RunFinalization.layerObserver.pipe(
+    Layer.provide(layerNoTurnHook),
     Layer.provide(
       Layer.mergeAll(
         layerNoProject,
@@ -251,6 +277,7 @@ it.effect("replaces a still-running PR lookup when a newer turn finishes", () =>
   const secondLookedUp = Deferred.makeUnsafe<void>();
   let lookups = 0;
   const layer = RunFinalization.layerObserver.pipe(
+    Layer.provide(layerNoTurnHook),
     Layer.provide(
       Layer.mergeAll(
         layerNoProject,
@@ -305,6 +332,7 @@ const layerIdentityRefresh = <R>(
   resolver: Layer.Layer<RepositoryIdentityResolver.RepositoryIdentityResolver, never, R>,
 ) =>
   RunFinalization.layerObserver.pipe(
+    Layer.provide(layerNoTurnHook),
     Layer.provideMerge(
       Layer.mergeAll(
         Layer.effect(ProjectEnrichment.ProjectEnrichmentService, ProjectEnrichment.make()).pipe(

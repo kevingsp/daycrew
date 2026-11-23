@@ -4,6 +4,10 @@ Local Dev runs the source checkout and refreshes as you edit. Installed Windows 
 
 ## Save your work
 
+Daycrew automatically backs up source changes to GitHub after each completed chat reply. The checked-in `afterTurn` hook runs on the host after checkpointing, including when the client is closed. Each chat gets a `codex/backup-<area>-<title>-<id>` branch. These are source snapshots, not production releases: they preserve unfinished edits without changing the checkout's branch, HEAD, staging area, or files. Chats and local credentials stay local.
+
+Uploads retry twice if unavailable. A failed upload keeps a local Git backup and is retried on that chat's next completed reply. **Source & release status** shows each chat's backup branch and pending uploads. Remove `afterTurn` from `t3.json` to disable automatic backups. Worktrees created from an older commit need to sync the updated configuration first.
+
 Start a new task in a worktree from `origin/main`. Name its branch `codex/<area>-<task>-<id>`, using `ui` for shared interface work, `backend` for server work, or `windows`/`macos` for changes specific to that operating system.
 
 Use **Save & push changes** in the project's Actions menu, or run:
@@ -14,7 +18,7 @@ vp run daycrew:save -- --message "feat(ui): improve workspace navigation"
 
 This checks, commits, and pushes source to the current branch. A failed check still allows a WIP checkpoint to be saved; fix it before merging into `main`. Edits made directly on `main` are saved on a new checkpoint branch. A repeated save does nothing when the branch is already saved. Chats, local settings, credentials, and Dev data are excluded.
 
-The action also runs when a worktree task is settled, once imported from `t3.json`. Agents are instructed to save and push completed source changes. Ordinary pushes run source checks and never build desktop installers.
+The manual action also runs when a worktree task is settled, once imported from `t3.json`. Agents are instructed to save and push completed source changes. Ordinary task pushes run source checks; automatic backup branches skip CI. Neither builds desktop installers.
 
 ## Integrate ready changes
 

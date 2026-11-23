@@ -5,6 +5,7 @@ const os = require("node:os");
 const path = require("node:path");
 const test = require("node:test");
 const { save, sync } = require("./daycrew-dev.cjs");
+const { backup, backupStatuses } = require("./daycrew-backup.cjs");
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), "daycrew-save-test-"));
@@ -129,4 +130,63 @@ test("sync refuses local edits and divergent commits without changing either", (
   git("switch", "main");
   assert.throws(() => sync(cwd));
   assert.equal(git("rev-parse", "HEAD"), local);
+});
+
+test("automatic backup uploads the chat's full source without changing HEAD, branch, index, or edits", (t) => {
+  const { cwd, git, baseline } = fixture(t);
+  fs.writeFileSync(path.join(cwd, "README.md"), "staged version\n");
+  git("add", "README.md");
+  fs.writeFileSync(path.join(cwd, "README.md"), "latest unstaged version\n");
+  fs.writeFileSync(path.join(cwd, "ui.js"), "unfinished source still gets saved\n");
+  fs.writeFileSync(path.join(cwd, ".env.local"), "PRIVATE=never upload\n");
+  fs.writeFileSync(path.join(cwd, ".env.example"), "PUBLIC_EXAMPLE=example\n");
+  const index = fs.readFileSync(path.join(cwd, ".git/index"));
+  const result = backup(cwd, {
+    threadId: "chat-ui-1",
+    title: "[UI] Better workspace",
+    runId: "turn-1",
+  });
+  assert.match(result.branch, /^codex\/backup-ui-ui-better-workspace-[a-f0-9]{6}$/);
+  assert.equal(git("rev-parse", "HEAD"), baseline);
+  assert.equal(git("branch", "--show-current"), "main");
+  assert.deepEqual(fs.readFileSync(path.join(cwd, ".git/index")), index);
+  assert.equal(git("show", `${result.commit}:README.md`), "latest unstaged version");
+  assert.equal(git("show", `${result.commit}:ui.js`), "unfinished source still gets saved");
+  assert.equal(git("show", `${result.commit}:.env.example`), "PUBLIC_EXAMPLE=example");
+  assert(!git("ls-tree", "-r", "--name-only", result.commit).includes(".env.local"));
+  assert.equal(
+    git("ls-remote", "origin", `refs/heads/${result.branch}`).split(/\s/)[0],
+    result.commit,
+  );
+  assert.equal(fs.readFileSync(path.join(cwd, "README.md"), "utf8"), "latest unstaged version\n");
+});
+
+test("offline backups survive locally, retry without duplicating, and keep the branch when a chat is renamed", (t) => {
+  const { cwd, git } = fixture(t);
+  const remote = git("remote", "get-url", "origin");
+  git("remote", "set-url", "origin", path.join(cwd, "unavailable.git"));
+  fs.writeFileSync(path.join(cwd, "work.js"), "save even offline\n");
+  assert.throws(() => backup(cwd, { threadId: "chat-1", title: "Backend changes" }));
+  const [pending] = backupStatuses(cwd);
+  assert.equal(pending.pending, true);
+  assert.equal(git("show", `${pending.commit}:work.js`), "save even offline");
+  git("remote", "set-url", "origin", remote);
+  const result = backup(cwd, { threadId: "chat-1", title: "Renamed chat" });
+  assert.equal(result.branch, pending.branch);
+  assert.equal(result.commit, pending.commit);
+  assert.equal(backupStatuses(cwd)[0].pending, false);
+  fs.writeFileSync(path.join(cwd, "work.js"), "second completed turn\n");
+  const next = backup(cwd, { threadId: "chat-1", title: "Renamed chat" });
+  assert.notEqual(next.commit, result.commit);
+  git("merge-base", "--is-ancestor", result.commit, next.commit);
+});
+
+test("separate chats receive separate backup branches and no-change chats create none", (t) => {
+  const { cwd, git, baseline } = fixture(t);
+  assert.deepEqual(backup(cwd, { threadId: "no-edit" }), { noChanges: true });
+  fs.writeFileSync(path.join(cwd, "work.js"), "source\n");
+  const first = backup(cwd, { threadId: "chat-1" });
+  const second = backup(cwd, { threadId: "chat-2" });
+  assert.notEqual(first.branch, second.branch);
+  assert.equal(git("rev-parse", "origin/main"), baseline);
 });
