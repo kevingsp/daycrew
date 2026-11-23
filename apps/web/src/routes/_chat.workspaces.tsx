@@ -146,10 +146,15 @@ function WorkspaceOverview() {
   return (
     <SidebarInset
       {...workspaceAreaProps("home", 1, gt("Workspaces"))}
+      data-sky-surface="workspaces"
       role="main"
-      className="flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden bg-background"
+      className="flex h-dvh min-h-0 min-w-0 flex-col overflow-hidden"
     >
-      <WorkspacePageHeader electron={isElectron} className="border-b border-border/60">
+      <WorkspacePageHeader
+        electron={isElectron}
+        data-workspace-topbar=""
+        className="border-b border-border/60"
+      >
         <SidebarTrigger className="no-drag shrink-0 md:hidden" />
         <LayoutGridIcon aria-hidden="true" className="size-4 text-muted-foreground" />
         <span className="text-sm font-medium">
@@ -157,10 +162,13 @@ function WorkspaceOverview() {
         </span>
       </WorkspacePageHeader>
       <div className="min-h-0 flex-1 overflow-y-auto">
-        <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12">
+        <div
+          data-workspace-content=""
+          className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-8 sm:py-12"
+        >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-semibold tracking-tight">
+              <h1 data-workspace-title="">
                 <T>Project overview</T>
               </h1>
               {project ? (
@@ -204,7 +212,8 @@ function WorkspaceOverview() {
           {project ? (
             <section className="mt-8" aria-label={gt("Project sessions")}>
               <div
-                className="mb-3 flex flex-wrap gap-1.5"
+                data-workspace-glass=""
+                className="mb-3 flex w-fit flex-wrap gap-1.5 rounded-lg p-1"
                 role="group"
                 aria-label={gt("Filter by status")}
               >
@@ -222,7 +231,10 @@ function WorkspaceOverview() {
                 ))}
               </div>
 
-              <div className="overflow-hidden rounded-xl border border-border/70 bg-card">
+              <div
+                data-workspace-glass=""
+                className="overflow-hidden rounded-xl border border-border/70"
+              >
                 {rows.length > 0 ? (
                   <ul className="divide-y divide-border/65">
                     {rows.map(({ thread, status }) => {
@@ -319,7 +331,7 @@ function WorkspaceOverview() {
               </div>
             </section>
           ) : (
-            <p className="mt-6 text-sm text-muted-foreground">
+            <p data-sky-caption="" className="mt-6 text-sm">
               {bootstrapped
                 ? gt("Add a Git repository to see its coding sessions here.")
                 : gt("Loading projects…")}

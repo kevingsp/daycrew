@@ -364,7 +364,7 @@ export function DraftHeroHeadline({
           {projectSelector}
         </DraftHeroProjectHeading>
       ) : (
-        <h1 className="w-full text-center font-normal text-2xl text-foreground tracking-tight sm:text-3xl">
+        <h1 data-workspace-title="" className="w-full text-center">
           {isScratchDraft ? (
             <T>What should we work on?</T>
           ) : canChooseProject ? (
@@ -377,7 +377,7 @@ export function DraftHeroHeadline({
         </h1>
       )}
       {scratchWorkspaceRoot === null ? null : (
-        <p className="mt-2 flex h-6 w-full items-center justify-center text-sm">
+        <p data-sky-caption="" className="mt-2 flex h-6 w-full items-center justify-center text-sm">
           {isScratchDraft ? projectSelector : orStartWithoutProject}
         </p>
       )}

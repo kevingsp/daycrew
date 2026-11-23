@@ -471,6 +471,7 @@ export function AppSidebarLayout({
     <PanelAnimationSuppressionProvider value={panelAnimationsSuppressed}>
       <SidebarProvider
         data-daycrew-shell=""
+        data-workspace-motion={panelAnimationsActive ? "on" : "off"}
         className="h-dvh! min-h-0!"
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
         storageKey="chat_thread_sidebar_open"

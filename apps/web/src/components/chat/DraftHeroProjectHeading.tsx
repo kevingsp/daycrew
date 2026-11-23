@@ -48,7 +48,8 @@ export function DraftHeroProjectHeading({
       >
         <span
           ref={inlineRef}
-          className="flex w-max items-baseline gap-2 whitespace-nowrap font-normal text-3xl tracking-tight"
+          data-workspace-title-measure=""
+          className="flex w-max items-baseline gap-2 whitespace-nowrap"
         >
           <span>{buildIn}</span>
           <span>
@@ -57,14 +58,17 @@ export function DraftHeroProjectHeading({
           </span>
         </span>
       </span>
-      <h1 className="flex w-full flex-col items-center justify-center gap-2 text-center font-normal text-2xl text-foreground tracking-tight sm:text-3xl lg:group-data-[inline=true]/draft-hero:flex-row">
+      <h1
+        data-workspace-title=""
+        className="flex w-full flex-col items-center justify-center gap-2 text-center lg:group-data-[inline=true]/draft-hero:flex-row"
+      >
         <span className="max-w-full lg:group-data-[inline=true]/draft-hero:shrink-0 [@media(max-height:28rem)]:sr-only">
           <span className="lg:group-data-[inline=true]/draft-hero:hidden">
             {gt("What should we build?")}
           </span>
           <span className="hidden lg:group-data-[inline=true]/draft-hero:inline">{buildIn}</span>
         </span>
-        <span className="flex min-w-0 max-w-full items-baseline justify-center text-base tracking-normal lg:group-data-[inline=true]/draft-hero:text-3xl lg:group-data-[inline=true]/draft-hero:tracking-tight">
+        <span className="flex min-w-0 max-w-full items-baseline justify-center max-lg:text-base max-lg:tracking-normal group-data-[inline=false]/draft-hero:text-base group-data-[inline=false]/draft-hero:tracking-normal">
           <span className="min-w-0">{children}</span>
           <span className="hidden shrink-0 whitespace-pre lg:group-data-[inline=true]/draft-hero:inline [@media(max-height:28rem)]:hidden!">
             {buildInSuffix}

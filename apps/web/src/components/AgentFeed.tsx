@@ -589,6 +589,7 @@ export default function AgentFeed() {
   return (
     <SidebarInset
       className="feed-layout"
+      data-sky-surface="feed"
       data-open={open}
       style={{ "--feed-duration": (active ? durationMs : 0) + "ms" } as React.CSSProperties}
     >
@@ -605,10 +606,10 @@ export default function AgentFeed() {
           }
         }}
       >
-        <div className="feed-stream">
+        <div data-workspace-content="" className="feed-stream">
           <header>
             <SidebarTrigger className="md:hidden" />
-            <h1>
+            <h1 data-workspace-title="">
               <Rss size={22} /> Agent feed
             </h1>
           </header>

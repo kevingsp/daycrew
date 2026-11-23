@@ -23,10 +23,13 @@ export function TriageDraftHero(props: {
   });
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col items-center">
-      <h1 className="w-full text-center font-normal text-2xl text-foreground tracking-tight sm:text-3xl">
+      <h1 data-workspace-title="" className="w-full text-center">
         <T>What went wrong?</T>
       </h1>
-      <p className="mt-2 flex h-6 w-full items-center justify-center gap-1.5 text-sm">
+      <p
+        data-sky-caption=""
+        className="mt-2 flex h-6 w-full items-center justify-center gap-1.5 text-sm"
+      >
         <Tooltip>
           <TooltipTrigger
             render={<span tabIndex={0} className="min-w-0 truncate font-medium text-foreground" />}

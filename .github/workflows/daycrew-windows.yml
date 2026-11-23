@@ -19,9 +19,9 @@ permissions:
   contents: read
 
 env:
-  DAYCREW_VERSION: 0.1.11-daycrew.3
-  DAYCREW_PREVIOUS_VERSION: 0.1.11-daycrew.2
-  DAYCREW_PREVIOUS_SHA256: 9df7ca44f04ae841b10e5c35f37d08e74f019e5b08986d86c5992f2e9ab3dbd4
+  DAYCREW_VERSION: 0.1.11-daycrew.4
+  DAYCREW_PREVIOUS_VERSION: 0.1.11-daycrew.3
+  DAYCREW_PREVIOUS_SHA256: d54c052d22dc7844bde9b8a79ace384dfaa25432152f53ede55f85b1a66fb9f4
 
 jobs:
   installer:

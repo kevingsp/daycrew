@@ -1,6 +1,6 @@
 import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 
-import { lazy, Suspense, useEffect, useRef } from "react";
+import { lazy, Suspense } from "react";
 const AgentFeed = lazy(() => import("../components/AgentFeed"));
 
 import { ThreadRouteView } from "../components/ThreadRouteView";
@@ -12,27 +12,11 @@ import { retainThreadFindForRoute } from "../components/chat/threadFindStore";
 import { ThreadLinkPrompt } from "../components/promptLinks/ThreadLinkPrompt";
 import { useShownThreadRouteTarget } from "../hooks/useShownThreadRouteTarget";
 
-import { usePanelAnimationSettings } from "../panelAnimations";
-
 function ChatRouteLayout() {
   // Render both routes here so draft promotion keeps the same ChatView mounted.
   const { shownTarget, modalOpen } = useShownThreadRouteTarget();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const feed = /^\/feed(?:\/|$)/.test(pathname);
-  const pageKey = feed ? "/feed" : pathname;
-  const previousPage = useRef(pageKey);
-  const { active, durationMs } = usePanelAnimationSettings();
-  useEffect(() => {
-    if (previousPage.current === pageKey) return;
-    previousPage.current = pageKey;
-    if (!active) return;
-    const content = document.querySelector('[data-slot="sidebar-inset"]');
-    const animation = content?.animate([{ opacity: 0.72 }, { opacity: 1 }], {
-      duration: durationMs,
-      easing: "ease-out",
-    });
-    return () => animation?.cancel();
-  }, [active, durationMs, pageKey]);
   if (feed)
     return (
       <Suspense fallback={null}>
