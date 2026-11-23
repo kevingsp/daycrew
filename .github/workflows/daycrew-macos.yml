@@ -1,0 +1,86 @@
+name: Daycrew macOS
+
+on:
+  push:
+    branches: [codex/daycrew-macos]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DAYCREW_VERSION: 0.1.11-daycrew.4
+  T3CODE_TELEMETRY_ENABLED: "false"
+  T3CODE_OTEL_SDK_DISABLED: "true"
+  T3CODE_DISABLE_AUTO_UPDATE: "true"
+
+jobs:
+  installer:
+    name: Build and verify macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            rust-target: aarch64-apple-darwin
+          - arch: x64
+            runner: macos-15-intel
+            rust-target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      DAYCREW_ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            /*
+            !/.repos/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: stable
+          targets: ${{ matrix.rust-target }}
+      - name: Install dependencies
+        run: |
+          npm install --global pnpm@12.14.0
+          pnpm install --frozen-lockfile
+      - name: Build Daycrew disk image
+        run: pnpm run dist:desktop:dmg --arch "$DAYCREW_ARCH" --build-version "$DAYCREW_VERSION"
+      - name: Launch Daycrew from the disk image
+        run: |
+          set -euo pipefail
+          image="release/Daycrew-${DAYCREW_VERSION}-${DAYCREW_ARCH}.dmg"
+          mount="$(mktemp -d "$RUNNER_TEMP/daycrew-dmg.XXXXXX")"
+          hdiutil attach -nobrowse -readonly -mountpoint "$mount" "$image"
+          trap 'hdiutil detach "$mount" -force >/dev/null' EXIT
+          app="$mount/Daycrew.app"
+          name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          executable="$app/Contents/MacOS/$name"
+          lipo -verify_arch "$(uname -m)" "$executable"
+          node scripts/smoke-desktop-app.ts \
+            --executable "$executable" --artifacts-dir "$RUNNER_TEMP/daycrew-launch-check"
+      - name: Generate installer checksum
+        working-directory: release
+        run: |
+          image="Daycrew-${DAYCREW_VERSION}-${DAYCREW_ARCH}.dmg"
+          shasum -a 256 "$image" > "$image.sha256"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Daycrew-macOS-${{ matrix.arch }}
+          path: |
+            release/Daycrew-${{ env.DAYCREW_VERSION }}-${{ matrix.arch }}.dmg
+            release/Daycrew-${{ env.DAYCREW_VERSION }}-${{ matrix.arch }}.dmg.sha256
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Daycrew-macOS-launch-check-${{ matrix.arch }}
+          path: ${{ runner.temp }}/daycrew-launch-check/
+          if-no-files-found: ignore
