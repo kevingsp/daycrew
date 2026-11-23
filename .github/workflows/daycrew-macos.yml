@@ -32,13 +32,16 @@ jobs:
     env:
       DAYCREW_ARCH: ${{ matrix.arch }}
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-        with:
-          persist-credentials: false
-          sparse-checkout: |
-            /*
-            !/.repos/
-          sparse-checkout-cone-mode: false
+      # The imported .repos tree contains gitlinks without .gitmodules entries.
+      - name: Check out the source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git init -q
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git sparse-checkout set --no-cone '/*' '!/.repos/'
+          git -c credential.helper='!gh auth git-credential' fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
       - uses: actions/setup-node@v6
         with:
           node-version-file: package.json
@@ -70,7 +73,7 @@ jobs:
         run: |
           image="Daycrew-${DAYCREW_VERSION}-${DAYCREW_ARCH}.dmg"
           shasum -a 256 "$image" > "$image.sha256"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: Daycrew-macOS-${{ matrix.arch }}
           path: |
@@ -78,7 +81,7 @@ jobs:
             release/Daycrew-${{ env.DAYCREW_VERSION }}-${{ matrix.arch }}.dmg.sha256
           if-no-files-found: error
           compression-level: 0
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: failure()
         with:
           name: Daycrew-macOS-launch-check-${{ matrix.arch }}
