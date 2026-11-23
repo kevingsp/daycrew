@@ -59,6 +59,10 @@ export interface DaycrewSkyTokens {
   readonly "--sky-accent-border": string;
   readonly "--sky-exposed-focus-ring": string;
   readonly "--sky-glass-focus-ring": string;
+  readonly "--sky-warning-ink": string;
+  readonly "--sky-error-ink": string;
+  readonly "--sky-diff-addition-ink": string;
+  readonly "--sky-diff-blue-ink": string;
 }
 
 export interface DaycrewSkyResolution {
@@ -142,6 +146,7 @@ const MIDNIGHT_ACCENT_STOP: AccentStop = { ...ACCENT_STOPS[0]!, hour: 24 };
 
 const MINUTES_PER_DAY = 1440;
 const GLOW_PEAK_ALPHA = 0.66;
+const HOVER_TINT_ALPHA = 0.11;
 const SELECTED_TINT_ALPHA = 0.18;
 const DARK_SCRIM_HEX = "#050619";
 const LIGHT_SCRIM_HEX = "#fff8ef";
@@ -513,6 +518,22 @@ export function resolveDaycrewSky(
 
   const direction = polarity === "dark" ? "lighter" : "darker";
 
+  const timelineSurfaces = [
+    ...compositedAllSamples,
+    ...compositedAllSamples.map((sample) => mixRgb(sample, tintBaseRgb, HOVER_TINT_ALPHA)),
+  ];
+  const timelineInk = (hue: number) =>
+    rgbToHex(
+      oklchToRgb(
+        solveOklchLightness(
+          { L: polarity === "dark" ? 0.81 : 0.38, C: 0.15, h: hue },
+          timelineSurfaces,
+          4.8,
+          direction,
+        ),
+      ),
+    );
+
   const samePolarity = appearance === polarity;
   const glassL1Percent = samePolarity ? 76 : 89;
   const glassL2Percent = samePolarity ? 80 : 92;
@@ -644,12 +665,16 @@ export function resolveDaycrewSky(
     "--sky-glass-l3-opacity": `${glassL3Percent}%`,
     "--sky-accent": rgbToHex(accentRgb),
     "--sky-accent-ink": rgbToHex(accentInkRgb),
-    "--sky-accent-hover": rgbToRgbaString(tintBaseRgb, 0.11),
+    "--sky-accent-hover": rgbToRgbaString(tintBaseRgb, HOVER_TINT_ALPHA),
     "--sky-accent-active": rgbToRgbaString(tintBaseRgb, 0.17),
     "--sky-accent-selected": rgbToRgbaString(tintBaseRgb, SELECTED_TINT_ALPHA),
     "--sky-accent-border": rgbToRgbaString(tintBaseRgb, 0.36),
     "--sky-exposed-focus-ring": rgbToHex(focusRingRgb),
     "--sky-glass-focus-ring": rgbToHex(shellFocusRingRgb),
+    "--sky-warning-ink": timelineInk(65),
+    "--sky-error-ink": timelineInk(24),
+    "--sky-diff-addition-ink": timelineInk(152),
+    "--sky-diff-blue-ink": timelineInk(254),
   };
 
   return {

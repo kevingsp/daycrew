@@ -89,6 +89,33 @@
   background-color: var(--sky-accent-hover);
 }
 
+[data-slot="daycrew-workspace"] [data-sky-conversation] .group\/timeline-row {
+  --warning-foreground: var(--sky-warning-ink);
+  --destructive-foreground: var(--sky-error-ink);
+}
+
+[data-slot="daycrew-workspace"] [data-sky-conversation] [data-changed-files-state] {
+  --diff-addition-foreground: var(--sky-diff-addition-ink);
+  --diff-deletion-foreground: var(--sky-error-ink);
+  background-color: color-mix(in srgb, var(--sky-scrim-color) 24%, transparent);
+  box-shadow: inset 0 0 0 1px var(--sky-hairline);
+}
+
+:root[data-diff-color-scheme="blue-orange"]
+  [data-slot="daycrew-workspace"]
+  [data-sky-conversation]
+  [data-changed-files-state] {
+  --diff-addition-foreground: var(--sky-diff-blue-ink);
+  --diff-deletion-foreground: var(--sky-warning-ink);
+}
+
+[data-slot="daycrew-workspace"] [data-sky-conversation] [data-changed-files-header] {
+  background: color-mix(in srgb, var(--sky-scrim-color) 62%, transparent);
+  -webkit-backdrop-filter: blur(var(--glass-l1-blur));
+  backdrop-filter: blur(var(--glass-l1-blur));
+  box-shadow: inset 0 -1px var(--sky-hairline);
+}
+
 /* Restore standard theme tokens inside solid and frosted islands nested within sky lanes. */
 [data-slot="daycrew-workspace"]
   [data-sky-surface="chat"]
@@ -139,6 +166,52 @@
     --accent: var(--app-theme-accent-surface, --alpha(var(--color-white) / 4%));
     --accent-foreground: var(--app-theme-accent-surface-foreground, var(--color-neutral-100));
     --info-foreground: var(--color-blue-400);
+  }
+}
+
+/* The code surface and syntax palette share the same lightness range. */
+[data-slot="daycrew-workspace"] [data-sky-conversation] .chat-markdown .chat-markdown-codeblock {
+  --chat-code-tint: light-dark(#fffcf8, #0c0b15);
+  --chat-code-opacity: 88%;
+  --chat-code-ink: light-dark(#251c28, #f8eff8);
+  --chat-code-muted: light-dark(#57495a, #ded2e0);
+  --contrast-foreground: var(--chat-code-ink);
+  --contrast-muted-foreground: var(--chat-code-muted);
+  --contrast-secondary-foreground: var(--chat-code-ink);
+  --contrast-accent-foreground: var(--chat-code-ink);
+  --accent: color-mix(in srgb, var(--chat-code-ink) 10%, transparent);
+  --secondary: var(--accent);
+  --ring: var(--chat-code-muted);
+  --sky-focus-ring: var(--chat-code-muted);
+  background-color: color-mix(in srgb, var(--chat-code-tint) var(--chat-code-opacity), transparent);
+  border-color: color-mix(in srgb, var(--chat-code-ink) 16%, transparent);
+  color: var(--chat-code-ink);
+  -webkit-backdrop-filter: blur(var(--glass-l1-blur));
+  backdrop-filter: blur(var(--glass-l1-blur));
+
+  & .chat-markdown-codeblock-header {
+    background-color: color-mix(in srgb, var(--chat-code-ink) 4%, transparent);
+    box-shadow: inset 0 -1px color-mix(in srgb, var(--chat-code-ink) 12%, transparent);
+    color: var(--chat-code-muted);
+    padding-block: 0.25rem;
+  }
+
+  & pre {
+    color: inherit;
+  }
+
+  @variant dark {
+    --chat-code-opacity: 80%;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    --chat-code-opacity: 100%;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-slot="daycrew-workspace"] [data-sky-conversation] [data-changed-files-header] {
+    background: var(--sky-scrim-color);
   }
 }
 
@@ -195,5 +268,14 @@
 @media (forced-colors: active) {
   [data-slot="daycrew-workspace"]::before {
     display: none;
+  }
+
+  [data-slot="daycrew-workspace"]
+    [data-sky-conversation]
+    :is([data-changed-files-header], .chat-markdown-codeblock) {
+    background: Canvas;
+    box-shadow: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
   }
 }

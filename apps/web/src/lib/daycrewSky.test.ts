@@ -47,6 +47,16 @@ describe("resolveDaycrewSky", () => {
 
         // Secondary ink >= 4.6:1, tertiary >= 3.2:1, accent-ink >= 4.5:1, focus ring & strong border >= 3.0:1.
         for (const sample of allSkySamples) {
+          const hovered = compositeSkyColor(tokens["--sky-accent-hover"], sample);
+          for (const ink of [
+            "--sky-warning-ink",
+            "--sky-error-ink",
+            "--sky-diff-addition-ink",
+            "--sky-diff-blue-ink",
+          ] as const) {
+            expect(skyContrastRatio(tokens[ink], sample), ink).toBeGreaterThanOrEqual(4.5);
+            expect(skyContrastRatio(tokens[ink], hovered), ink).toBeGreaterThanOrEqual(4.5);
+          }
           expect(
             skyContrastRatio(tokens["--sky-ink-secondary"], sample),
             `secondary ink contrast at minute=${minute} (${appearance})`,

@@ -2447,7 +2447,6 @@ code {
     [data-language="plain" i],
     [data-language="plaintext" i]
   ) {
-  &,
   & :is(pre, pre *) {
     color: inherit !important;
   }
