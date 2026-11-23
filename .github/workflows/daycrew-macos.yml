@@ -1,15 +1,23 @@
 name: Daycrew macOS
 
 on:
-  push:
-    branches: [codex/daycrew-macos, "codex/daycrew-pilot-*"]
+  workflow_call:
+    inputs:
+      version:
+        type: string
+        required: true
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build"
+        type: string
+        required: true
 
 permissions:
   contents: read
 
 env:
-  DAYCREW_VERSION: 0.1.11-daycrew.6
+  DAYCREW_VERSION: ${{ inputs.version }}
   T3CODE_TELEMETRY_ENABLED: "false"
   T3CODE_OTEL_SDK_DISABLED: "true"
   T3CODE_DISABLE_AUTO_UPDATE: "true"

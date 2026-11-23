@@ -1,0 +1,18 @@
+changelog:
+  categories:
+    - title: Interface
+      labels: ["area:ui"]
+    - title: Backend
+      labels: ["area:backend"]
+    - title: Windows
+      labels: ["area:windows"]
+    - title: macOS
+      labels: ["area:macos"]
+    - title: Mobile
+      labels: ["area:mobile"]
+    - title: Features
+      labels: ["area:feature"]
+    - title: Development and documentation
+      labels: ["area:tooling", "area:docs"]
+    - title: Other changes
+      labels: ["*"]

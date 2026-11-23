@@ -2,7 +2,7 @@
 
 > For maintainers. Using T3 Code? See [docs/user](../user/).
 
-This document covers the unified release workflow for stable and nightly desktop releases.
+For Daycrew Windows and Mac installers, use [Daycrew development and desktop releases](./daycrew.md). The workflow details below describe the inactive upstream release references under `.github/upstream-workflows/`.
 
 Beta is the product label, not a release channel or version suffix. Release channels
 remain stable and nightly. To ship 0.1.0 Beta, use `channel=stable` and

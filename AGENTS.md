@@ -78,6 +78,14 @@ The most common defect in this repo is a change that works on the path you teste
 
 ## Dev servers
 
+### Daycrew source and desktop releases
+
+- Use one `codex/<area>-<task>-<id>` branch per task. Areas are `ui`, `backend`, `windows`, `macos`, `mobile`, `docs`, `tooling`, and `feature`. Shared interface changes use `ui` on every operating system.
+- After completing requested Daycrew changes, run `vp run daycrew:save -- --message "<conventional commit message>"` to check, commit, and push the task branch. It can preserve an unfinished checkpoint when checks fail; report those failures and fix them before integrating into `main`.
+- Source pushes and merges into `main` do not build desktop installers. Keep integrating ready source changes between releases. Use `vp run daycrew:sync` to fast-forward a clean Dev checkout; resolve divergent work explicitly.
+- Build and publish installers only when the user requests a desktop release. Use `vp run daycrew:release` or the **Publish Daycrew desktop** GitHub workflow. It builds Windows, Apple Silicon Mac, and Intel Mac from one `main` commit and publishes after their checks pass.
+- `.daycrew-dev`, `.t3`, local settings, credentials, and chat databases stay local. Never add them to a source commit.
+
 - `vp i` installs. Worktrees get this from the t3.json setup script; if module resolution looks broken, it probably did not run.
 - Setup runs in the background. While `.t3/setup-running` names a live PID, wait for it and do not run `vp i`. It ends with `.t3/setup-done` or `.t3/setup-failed` (with the error tail). With no marker at all, setup never ran here, so run `vp i` yourself.
 - `vp run dev` starts server and web. In a worktree, state defaults to that worktree's gitignored `.t3`, which deliberately outranks an ambient `T3CODE_HOME` so you cannot land on shared state by accident. An explicit `--home-dir` still wins. A plain `git clone` is not a worktree: it shares `~/.t3/dev` with the main checkout and is not seeded. To isolate one, run `vp run migrate-dev-db --base-dir <clone>/.t3`, then `vp run dev --home-dir <clone>/.t3`.

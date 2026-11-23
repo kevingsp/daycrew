@@ -1,0 +1,98 @@
+name: Publish Daycrew desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "New version, for example 0.1.11-daycrew.7"
+        type: string
+        required: true
+      publish:
+        description: "Build and publish Windows and both Mac installers (off = validate only)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daycrew-desktop-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.plan.outputs.version }}
+      previous_version: ${{ steps.plan.outputs.previous_version }}
+      previous_sha256: ${{ steps.plan.outputs.previous_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26.13.1"
+      - name: Validate source, version, and upgrade predecessor
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DAYCREW_VERSION: ${{ inputs.version }}
+          PUBLISH_INSTALLERS: ${{ inputs.publish }}
+        run: node .github/scripts/daycrew-release.cjs prepare
+
+  checks:
+    needs: prepare
+    if: inputs.publish
+    uses: ./.github/workflows/daycrew-feed.yml
+
+  windows:
+    needs: prepare
+    if: inputs.publish
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/daycrew-windows.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+      previous_version: ${{ needs.prepare.outputs.previous_version }}
+      previous_sha256: ${{ needs.prepare.outputs.previous_sha256 }}
+    secrets: inherit
+
+  macos:
+    needs: prepare
+    if: inputs.publish
+    uses: ./.github/workflows/daycrew-macos.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+
+  publish:
+    needs: [prepare, checks, windows, macos]
+    if: inputs.publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          sparse-checkout: |
+            .github/scripts
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "26.13.1"
+      - uses: actions/download-artifact@v4
+        with:
+          path: release
+      - name: Verify all installers, publish, and check published downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DAYCREW_VERSION: ${{ needs.prepare.outputs.version }}
+          DAYCREW_PREVIOUS_VERSION: ${{ needs.prepare.outputs.previous_version }}
+        run: node .github/scripts/daycrew-release.cjs publish

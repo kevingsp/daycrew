@@ -3,6 +3,27 @@
   "iconPath": "assets/dev/blueprint-web-apple-touch-180.png",
   "scripts": [
     {
+      "name": "Save & push changes",
+      "command": "vp run daycrew:save",
+      "icon": "configure",
+      "runOnSettle": true
+    },
+    {
+      "name": "Source & release status",
+      "command": "vp run daycrew:status",
+      "icon": "debug"
+    },
+    {
+      "name": "Sync Dev from main",
+      "command": "vp run daycrew:sync",
+      "icon": "configure"
+    },
+    {
+      "name": "Publish Windows + Mac installers",
+      "command": "vp run daycrew:release",
+      "icon": "build"
+    },
+    {
       "name": "Dev",
       "command": "vp run dev",
       "icon": "play",
