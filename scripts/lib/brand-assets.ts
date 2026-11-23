@@ -38,3 +38,5 @@ export function resolveWebIconOverrides(brand: WebAssetBrand, targetDirectory: s
     targetRelativePath: `${targetDirectory}/${filename}`,
   }));
 }
+
+export const DEVELOPMENT_ICON_OVERRIDES = resolveWebIconOverrides("development", "dist/client");
