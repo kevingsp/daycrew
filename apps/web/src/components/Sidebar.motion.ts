@@ -1,4 +1,6 @@
-const motionTiming = { duration: 150, easing: "ease-out" };
+import { MOTION_EASE_DRAWER, MOTION_PANEL_DURATION_MS } from "../motion";
+
+const motionTiming = { duration: MOTION_PANEL_DURATION_MS, easing: MOTION_EASE_DRAWER };
 const rowTravel = (height: number) => Math.min(height, 40);
 // Fades clone removed rows and animate clones and entries; intervening layout reads force reflows.
 const MAX_FADED_ROWS_PER_UPDATE = 40;

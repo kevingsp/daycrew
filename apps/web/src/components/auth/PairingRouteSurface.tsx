@@ -40,13 +40,14 @@ export function PairingRouteSurface({
 }) {
   const gt = useGT();
   const messages = useMessages();
-  const [autoPairToken] = useState(peekPairingTokenFromUrl);
-  const [credential, setCredential] = useState(autoPairToken ?? "");
+  const [credential, setCredential] = useState(() => peekPairingTokenFromUrl() ?? "");
   const [errorMessage, setErrorMessage] = useState(initialErrorMessage ?? "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const autoSubmitAttemptedRef = useRef(false);
+  const autoSubmittedTokens = useRef(new Set<string>());
+  const submissionRef = useRef(0);
 
   const submitCredential = async (nextCredential: string) => {
+    const submission = ++submissionRef.current;
     setIsSubmitting(true);
     setErrorMessage("");
 
@@ -55,6 +56,7 @@ export function PairingRouteSurface({
       (error) => errorMessageFromUnknown(error),
     );
 
+    if (submission !== submissionRef.current) return;
     setIsSubmitting(false);
 
     if (submitError) {
@@ -73,19 +75,27 @@ export function PairingRouteSurface({
   };
 
   const autoSubmit = useEffectEvent((token: string) => {
+    stripPairingTokenFromUrl();
+    if (autoSubmittedTokens.current.has(token)) return;
+    autoSubmittedTokens.current.add(token);
+    setCredential(token);
     void submitCredential(token);
   });
 
-  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- strips the pairing token from the URL and submits it once when the route carries one
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- pairing links can replace the URL fragment while this form is already open; consume each new token once.
   useEffect(() => {
-    if (!autoPairToken || autoSubmitAttemptedRef.current) {
-      return;
-    }
-
-    autoSubmitAttemptedRef.current = true;
-    stripPairingTokenFromUrl();
-    autoSubmit(autoPairToken);
-  }, [autoPairToken]);
+    const submitFromUrl = () => {
+      const token = peekPairingTokenFromUrl();
+      if (token) autoSubmit(token);
+    };
+    submitFromUrl();
+    window.addEventListener("hashchange", submitFromUrl);
+    window.addEventListener("popstate", submitFromUrl);
+    return () => {
+      window.removeEventListener("hashchange", submitFromUrl);
+      window.removeEventListener("popstate", submitFromUrl);
+    };
+  }, []);
 
   return (
     <StandalonePage>

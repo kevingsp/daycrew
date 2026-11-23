@@ -1,0 +1,199 @@
+@reference "../index.css";
+
+/* Dusk-to-dawn adaptive scrim, contrast-safe sky lanes, glass opacities, and hover accents. */
+
+[data-daycrew-shell] {
+  --sidebar-row-hover: var(--sky-accent-hover);
+  --sidebar-row-active: var(--sky-accent-active);
+  --sidebar-row-selected: var(--sky-accent-selected);
+}
+
+[data-slot="daycrew-workspace"] {
+  isolation: isolate;
+}
+
+[data-slot="daycrew-workspace"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: inherit;
+  background-color: var(--sky-scrim-color, transparent);
+  opacity: var(--sky-scrim-opacity, 0);
+}
+
+[data-slot="daycrew-workspace"] [data-slot="composer-shell"] {
+  --glass-opacity: var(--sky-glass-l2-opacity, 82%);
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-slot="daycrew-workspace"] [data-slot="composer-shell"] {
+    --glass-opacity: 96%;
+  }
+}
+
+[data-slot="daycrew-workspace"] [data-sky-surface] [data-sky-caption] {
+  color: var(--sky-ink-secondary);
+  --sky-focus-ring: var(--sky-exposed-focus-ring);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface]
+  [data-sky-caption]
+  :is(button, a, [role="combobox"]):is(:hover, [data-pressed]) {
+  color: var(--sky-ink);
+}
+
+/* Scoped semantic token remapping on transparent sky lanes. */
+[data-slot="daycrew-workspace"] [data-sky-surface="chat"] [data-sky-conversation],
+[data-slot="daycrew-workspace"] [data-sky-surface="draft"] [data-slot="composer-context-strip"],
+[data-slot="daycrew-workspace"]
+  :is([data-sky-surface="chat"], [data-sky-surface="draft"])
+  [data-chat-header] {
+  --contrast-foreground: var(--daycrew-header-ink, var(--sky-ink));
+  --contrast-muted-foreground: var(--daycrew-header-muted, var(--sky-ink-secondary));
+  --contrast-secondary-label: var(--daycrew-header-muted, var(--sky-ink-secondary));
+  --contrast-icon-muted: var(--daycrew-header-muted, var(--sky-ink-tertiary));
+  --contrast-border: var(--sky-hairline);
+  --info-foreground: var(--sky-accent-ink);
+  --accent: var(--sky-accent-hover);
+  --accent-foreground: var(--daycrew-header-ink, var(--sky-ink));
+  --contrast-accent-foreground: var(--daycrew-header-ink, var(--sky-ink));
+  --sky-focus-ring: var(--daycrew-header-ring, var(--sky-exposed-focus-ring));
+  --ring: var(--sky-focus-ring);
+}
+
+[data-slot="daycrew-workspace"]
+  :is([data-sky-surface="chat"], [data-sky-surface="draft"])
+  [data-chat-header] {
+  --contrast-toolbar-foreground: var(--daycrew-header-ink, var(--sky-ink));
+  --contrast-toolbar-control-foreground: var(--daycrew-header-ink, var(--sky-ink));
+  --contrast-toolbar-border: var(--sky-hairline);
+  --toolbar-control: transparent;
+  --toolbar-control-hover: var(--sky-accent-hover);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="chat"]
+  [data-sky-conversation]
+  .chat-markdown
+  hr {
+  border-color: var(--sky-hairline);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="chat"]
+  [data-sky-conversation]
+  button.group\/timeline-row:hover {
+  background-color: var(--sky-accent-hover);
+}
+
+/* Restore standard theme tokens inside solid and frosted islands nested within sky lanes. */
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="chat"]
+  [data-sky-conversation]
+  :is(
+    [data-user-message-bubble],
+    [data-workspace-glass],
+    .chat-markdown-codeblock,
+    [data-slot="composer-shell"]
+  ) {
+  --accent: var(--app-theme-accent-surface, var(--color-zinc-100));
+  --accent-foreground: var(--app-theme-accent-surface-foreground, var(--color-zinc-900));
+  --info-foreground: var(--color-blue-700);
+  --ring: var(--app-theme-focus, var(--primary));
+  --sky-focus-ring: var(--sky-glass-focus-ring);
+  --contrast-foreground: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--foreground) var(--appearance-contrast-base), var(--background)),
+    var(--appearance-contrast-target) var(--appearance-contrast-boost)
+  );
+  --contrast-muted-foreground: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--muted-foreground) var(--appearance-contrast-base), var(--background)),
+    var(--appearance-contrast-target) var(--appearance-contrast-boost)
+  );
+  --contrast-secondary-label: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--secondary-label) var(--appearance-contrast-base), var(--background)),
+    var(--appearance-contrast-target) var(--appearance-contrast-boost)
+  );
+  --contrast-icon-muted: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--icon-muted) var(--appearance-contrast-base), var(--background)),
+    var(--appearance-contrast-target) var(--appearance-contrast-boost)
+  );
+  --contrast-border: color-mix(
+    in srgb,
+    color-mix(in srgb, var(--border) var(--appearance-contrast-base), transparent),
+    var(--foreground) var(--appearance-contrast-border-boost)
+  );
+  --contrast-accent-foreground: color-mix(
+    in oklab,
+    color-mix(in oklab, var(--accent-foreground) var(--appearance-contrast-base), var(--accent)),
+    var(--appearance-contrast-target) var(--appearance-contrast-boost)
+  );
+
+  @variant dark {
+    --accent: var(--app-theme-accent-surface, --alpha(var(--color-white) / 4%));
+    --accent-foreground: var(--app-theme-accent-surface-foreground, var(--color-neutral-100));
+    --info-foreground: var(--color-blue-400);
+  }
+}
+
+/* Draft context strip floats directly over the sky beneath the frosted composer card. */
+[data-slot="daycrew-workspace"] [data-sky-surface="draft"] [data-slot="composer-context-strip"] {
+  color: var(--sky-ink-secondary);
+  text-shadow: 0 1px 2px var(--sky-text-shadow);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="draft"]
+  [data-slot="composer-context-strip"]
+  :is(button, [role="combobox"], [data-composer-context-control]):is(:hover, [data-pressed]) {
+  background-color: var(--sky-accent-hover);
+  color: var(--sky-ink);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="draft"]
+  [data-slot="composer-context-strip"]
+  :is(button, [role="combobox"], [data-composer-context-control]):active {
+  background-color: var(--sky-accent-active);
+  color: var(--sky-ink);
+}
+
+[data-slot="daycrew-workspace"]
+  [data-sky-surface="draft"]
+  [data-slot="composer-context-strip"]
+  :is(button, [role="combobox"], [data-composer-context-control]):focus-visible {
+  outline: 2px solid var(--sky-focus-ring);
+  outline-offset: -2px;
+}
+
+/* Distinct hover, active, selected, and inset focus states on the collapsed agent rail. */
+[data-slot="agent-rail"] a:hover {
+  background: var(--sky-accent-hover, var(--sidebar-row-hover));
+}
+
+[data-slot="agent-rail"] a:active {
+  background: var(--sky-accent-active, var(--sidebar-row-active));
+}
+
+[data-slot="agent-rail"] a[aria-current="page"],
+[data-slot="agent-rail"] a[aria-current="page"]:hover {
+  background: var(--sky-accent-selected, var(--sidebar-row-selected));
+  box-shadow: inset 0 0 0 1px var(--sky-accent-border, var(--contrast-sidebar-border));
+}
+
+[data-slot="agent-rail"] a:focus-visible {
+  outline: 2px solid var(--sky-focus-ring, var(--ring));
+  outline-offset: -2px;
+}
+
+@media (forced-colors: active) {
+  [data-slot="daycrew-workspace"]::before {
+    display: none;
+  }
+}

@@ -1288,6 +1288,32 @@ describe("DesktopWindow", () => {
     }),
   );
 
+  it.effect("keeps the sky caption color across app theme updates and clears it on exit", () =>
+    Effect.gen(function* () {
+      const { window } = makeFakeBrowserWindow();
+      Object.defineProperty(window.webContents, "id", { value: 5 });
+      const layer = layerTest({
+        window,
+        createCount: yield* Ref.make(0),
+        mainWindow: yield* Ref.make(Option.some(window)),
+        platform: "win32",
+      });
+
+      yield* Effect.gen(function* () {
+        const desktopWindow = yield* DesktopWindow.DesktopWindow;
+        assert.isFalse(yield* desktopWindow.setWindowControlsAppearance(6, "dark"));
+        assert.isTrue(yield* desktopWindow.setWindowControlsAppearance(5, "dark"));
+        yield* desktopWindow.syncAppearance;
+        assert.isTrue(yield* desktopWindow.setWindowControlsAppearance(5, null));
+      }).pipe(Effect.provide(layer));
+
+      assert.deepEqual(
+        vi.mocked(window.setTitleBarOverlay).mock.calls.map(([overlay]) => overlay.symbolColor),
+        ["#f8fafc", "#f8fafc", "#1f2937"],
+      );
+    }),
+  );
+
   it.effect.each([
     { window: "normal", write: "flush" },
     { window: "normal", write: "debounce" },

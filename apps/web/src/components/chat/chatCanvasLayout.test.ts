@@ -145,14 +145,22 @@ describe("chat canvas layout", () => {
     expect(result.overlapsDetailsCard).toBe(false);
     expect(result.chat).toEqual({ left: 424, width: 736, insetStart: 0, insetEnd: 0 });
   });
-  it("moves the chat left only as far as a details card it would crowd requires", () => {
+  it("centers an empty chat independently of details and reserves space for a conversation", () => {
     const { chat } = resolveChatCanvasLayout({
+      container: { width: 1344, height: 988 },
+      maxChatWidth: 736,
+      detailsCard: { left: 1052, right: 1332, bottom: 339 },
+      reserveDetailsSpace: false,
+      preview: null,
+    });
+    expect(chat).toEqual({ left: 304, width: 736, insetStart: 0, insetEnd: 0 });
+    const active = resolveChatCanvasLayout({
       container: { width: 1344, height: 988 },
       maxChatWidth: 736,
       detailsCard: { left: 1052, right: 1332, bottom: 339 },
       preview: null,
     });
-    expect(chat).toMatchObject({ left: 1052 - 32 - 736, width: 736 });
+    expect(active.chat).toEqual({ left: 284, width: 736, insetStart: 0, insetEnd: 40 });
   });
   it("keeps the chat canvas-centered when it clears the details card", () => {
     const result = resolveChatCanvasLayout({
@@ -338,12 +346,12 @@ describe("workspace card beside chat", () => {
   it("keeps chat centered while the card fits beside it", () => {
     expect(withCard(1500).chat).toEqual({ left: 382, width: 736, insetStart: 0, insetEnd: 0 });
   });
-  it("narrows chat only after it reaches the left padding", () => {
-    expect(withCard(1108).chat).toMatchObject({ left: 48, width: 736 });
+  it("narrows the conversation when the floating card would cover it", () => {
+    expect(withCard(1108).chat).toEqual({ left: 48, width: 736, insetStart: 0, insetEnd: 276 });
     expect(withCard(1028).chat).toEqual({ left: 48, width: 656, insetStart: 0, insetEnd: 276 });
-    expect(withCard(1012).chat).toMatchObject({ left: 48, width: 640 });
+    expect(withCard(1012).chat).toEqual({ left: 48, width: 640, insetStart: 0, insetEnd: 276 });
   });
-  it("reserves the marker gutter across widths where the details card fits", () => {
+  it("keeps the conversation clear and the card right-anchored as the canvas resizes", () => {
     for (let width = 1012; width <= 1440; width++) {
       const container = { width, height: 900 };
       const card = resolveThreadDetailsCardLayout({
@@ -354,7 +362,8 @@ describe("workspace card beside chat", () => {
       const chat = withCard(width).chat;
       expect(chat.left).toBeGreaterThanOrEqual(48);
       expect(chat.width).toBeGreaterThanOrEqual(640);
-      expect(card.x - chat.left - chat.width).toBeGreaterThanOrEqual(32);
+      expect(chat.left + chat.width).toBeLessThanOrEqual(card.x - 32);
+      expect(card.x + card.width).toBe(width - 12);
     }
   });
   it("stays out of a panel animation that ends or starts too narrow for it", () => {

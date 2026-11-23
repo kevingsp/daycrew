@@ -129,19 +129,19 @@ function SelectPopup({
       >
         <SelectPrimitive.Popup
           // Electron drag hit-testing ignores z-index; items over a drag region would swallow clicks.
-          className="origin-(--transform-origin) rounded-lg text-foreground outline-none [-webkit-app-region:no-drag]"
+          className="origin-(--transform-origin) rounded-(--radius-popover) text-foreground outline-none transition-[scale,opacity] duration-[var(--duration-micro,160ms)] ease-[var(--ease-spring-snappy,cubic-bezier(0.2,0.9,0.3,1))] will-change-transform data-ending-style:scale-[0.96] data-starting-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none [-webkit-app-region:no-drag]"
           data-slot="select-popup"
           {...props}
         >
           <SelectPrimitive.ScrollUpArrow
-            className="top-0 z-50 flex h-6 w-full cursor-default items-center justify-center before:pointer-events-none before:absolute before:inset-x-px before:top-px before:h-[200%] before:rounded-t-[calc(var(--radius-lg)-1px)] before:bg-linear-to-b before:from-50% before:from-popover"
+            className="top-0 z-50 flex h-6 w-full cursor-default items-center justify-center before:pointer-events-none before:absolute before:inset-x-px before:top-px before:h-[200%] before:rounded-t-[calc(var(--radius-popover)-1px)] before:bg-linear-to-b before:from-50% before:from-popover"
             data-slot="select-scroll-up-arrow"
           >
             <ChevronUpIcon className="relative size-4.5 sm:size-4" />
           </SelectPrimitive.ScrollUpArrow>
           <div
             className={cn(
-              "dropdown-glass relative h-full rounded-lg shadow-[0_16px_40px_-18px_rgb(0_0_0/55%)] dark:shadow-[0_18px_44px_-18px_rgb(0_0_0/80%)]",
+              "dropdown-glass relative h-full rounded-(--radius-popover)",
               matchTriggerWidth && "min-w-(--anchor-width)",
             )}
           >
@@ -153,7 +153,7 @@ function SelectPopup({
             </SelectPrimitive.List>
           </div>
           <SelectPrimitive.ScrollDownArrow
-            className="bottom-0 z-50 flex h-6 w-full cursor-default items-center justify-center before:pointer-events-none before:absolute before:inset-x-px before:bottom-px before:h-[200%] before:rounded-b-[calc(var(--radius-lg)-1px)] before:bg-linear-to-t before:from-50% before:from-popover"
+            className="bottom-0 z-50 flex h-6 w-full cursor-default items-center justify-center before:pointer-events-none before:absolute before:inset-x-px before:bottom-px before:h-[200%] before:rounded-b-[calc(var(--radius-popover)-1px)] before:bg-linear-to-t before:from-50% before:from-popover"
             data-slot="select-scroll-down-arrow"
           >
             <ChevronDownIcon className="relative size-4.5 sm:size-4" />

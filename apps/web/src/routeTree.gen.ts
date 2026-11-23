@@ -25,6 +25,7 @@ import { Route as ChatPullRequestsRouteImport } from './routes/_chat.pull-reques
 import { Route as ChatNewRouteImport } from './routes/_chat.new'
 import { Route as ChatIssuesRouteImport } from './routes/_chat.issues'
 import { Route as ChatFeedRouteImport } from './routes/_chat.feed'
+import { Route as ChatAgentsRouteImport } from './routes/_chat.agents'
 import { Route as ThreadsEnvironmentIdThreadIdRouteImport } from './routes/threads.$environmentId.$threadId'
 import { Route as ChatSettingsWorktreesRouteImport } from './routes/_chat.settings.worktrees'
 import { Route as ChatSettingsVoiceRouteImport } from './routes/_chat.settings.voice'
@@ -134,6 +135,11 @@ const ChatIssuesRoute = ChatIssuesRouteImport.update({
 const ChatFeedRoute = ChatFeedRouteImport.update({
   id: '/feed',
   path: '/feed',
+  getParentRoute: () => ChatRoute,
+} as any)
+const ChatAgentsRoute = ChatAgentsRouteImport.update({
+  id: '/agents',
+  path: '/agents',
   getParentRoute: () => ChatRoute,
 } as any)
 const ThreadsEnvironmentIdThreadIdRoute =
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/guest': typeof GuestRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
+  '/agents': typeof ChatAgentsRoute
   '/feed': typeof ChatFeedRoute
   '/issues': typeof ChatIssuesRoute
   '/new': typeof ChatNewRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/guest': typeof GuestRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
+  '/agents': typeof ChatAgentsRoute
   '/feed': typeof ChatFeedRoute
   '/issues': typeof ChatIssuesRoute
   '/new': typeof ChatNewRoute
@@ -404,6 +412,7 @@ export interface FileRoutesById {
   '/guest': typeof GuestRoute
   '/pair': typeof PairRoute
   '/welcome': typeof WelcomeRoute
+  '/_chat/agents': typeof ChatAgentsRoute
   '/_chat/feed': typeof ChatFeedRoute
   '/_chat/issues': typeof ChatIssuesRoute
   '/_chat/new': typeof ChatNewRoute
@@ -455,6 +464,7 @@ export interface FileRouteTypes {
     | '/guest'
     | '/pair'
     | '/welcome'
+    | '/agents'
     | '/feed'
     | '/issues'
     | '/new'
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/guest'
     | '/pair'
     | '/welcome'
+    | '/agents'
     | '/feed'
     | '/issues'
     | '/new'
@@ -551,6 +562,7 @@ export interface FileRouteTypes {
     | '/guest'
     | '/pair'
     | '/welcome'
+    | '/_chat/agents'
     | '/_chat/feed'
     | '/_chat/issues'
     | '/_chat/new'
@@ -717,6 +729,13 @@ declare module '@tanstack/react-router' {
       path: '/feed'
       fullPath: '/feed'
       preLoaderRoute: typeof ChatFeedRouteImport
+      parentRoute: typeof ChatRoute
+    }
+    '/_chat/agents': {
+      id: '/_chat/agents'
+      path: '/agents'
+      fullPath: '/agents'
+      preLoaderRoute: typeof ChatAgentsRouteImport
       parentRoute: typeof ChatRoute
     }
     '/threads/$environmentId/$threadId': {
@@ -1004,6 +1023,7 @@ const ChatSettingsRouteWithChildren = ChatSettingsRoute._addFileChildren(
 )
 
 interface ChatRouteChildren {
+  ChatAgentsRoute: typeof ChatAgentsRoute
   ChatFeedRoute: typeof ChatFeedRoute
   ChatIssuesRoute: typeof ChatIssuesRoute
   ChatNewRoute: typeof ChatNewRoute
@@ -1018,6 +1038,7 @@ interface ChatRouteChildren {
 }
 
 const ChatRouteChildren: ChatRouteChildren = {
+  ChatAgentsRoute: ChatAgentsRoute,
   ChatFeedRoute: ChatFeedRoute,
   ChatIssuesRoute: ChatIssuesRoute,
   ChatNewRoute: ChatNewRoute,

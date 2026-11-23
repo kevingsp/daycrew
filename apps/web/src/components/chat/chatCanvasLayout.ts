@@ -29,6 +29,7 @@ export function resolveChatCanvasLayout({
   minChatWidth = 640,
   composerHeight = 0,
   detailsCard = null,
+  reserveDetailsSpace = true,
   findBar = null,
 }: {
   container: PreviewMiniPlayerSize;
@@ -38,12 +39,14 @@ export function resolveChatCanvasLayout({
   minChatWidth?: number;
   composerHeight?: number;
   detailsCard?: PreviewMiniPlayerObstacles["detailsCard"];
+  reserveDetailsSpace?: boolean;
   findBar?: PreviewMiniPlayerObstacles["detailsCard"];
 }) {
   const centeredWidth = Math.max(0, Math.min(maxChatWidth, container.width - padding * 2));
-  const laneRight = detailsCard
-    ? detailsCard.left - DETAILS_CARD_CLEARANCE
-    : container.width - padding;
+  const laneRight =
+    detailsCard && reserveDetailsSpace
+      ? Math.min(container.width - padding, detailsCard.left - DETAILS_CARD_CLEARANCE)
+      : container.width - padding;
   const normalWidth = Math.max(0, Math.min(centeredWidth, laneRight - padding));
   const canvasCenterLeft = (container.width - normalWidth) / 2;
   const normalLeft = Math.max(padding, Math.min(canvasCenterLeft, laneRight - normalWidth));

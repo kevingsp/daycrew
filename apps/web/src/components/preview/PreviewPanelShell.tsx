@@ -161,18 +161,19 @@ function PreviewPanelShellFrame(
       onMouseDown={props.onMouseDown}
       onMouseUp={props.onMouseUp}
       className={cn(
-        "relative flex h-full min-h-0 min-w-0 max-w-full flex-col self-stretch bg-background",
+        "surface-glass relative flex h-full min-h-0 min-w-0 max-w-full flex-col self-stretch",
         isInline
           ? maximized
             ? // Maximizing meets the sidebar border or window edge; omit the duplicate border.
               "flex-1"
-            : "shrink-0 border-l border-border"
+            : "shrink-0 border-l border-border/50"
           : "w-full",
         collapsible &&
-          "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:duration-(--panel-animation-duration) [[data-panel-animations=true]_&]:ease-out",
+          "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:duration-(--duration-panel) [[data-panel-animations=true]_&]:ease-(--ease-drawer) motion-reduce:transition-none",
         collapsible && open && "[[data-panel-animations=true]_&]:starting:w-0!",
         collapsible && !open && "pointer-events-none",
       )}
+      data-preview-panel-shell=""
       style={
         isInline
           ? ({

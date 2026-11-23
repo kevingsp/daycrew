@@ -332,7 +332,7 @@ function TaskCard({
   return (
     <article ref={card} className="feed-card" data-state={state} data-selected={selected}>
       <div className="feed-byline">
-        <Bot size={16} />
+        <Bot size={16} aria-hidden="true" />
         <strong>{thread.providerInstanceId}</strong>
         <span>·</span>
         <span>{project}</span>
@@ -429,8 +429,8 @@ function TaskCard({
             <T>Provider settings</T>
           </Link>
         )}
-        <button aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
-          <MessageSquare size={14} /> Replies
+        <button type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
+          <MessageSquare size={14} aria-hidden="true" /> Replies
         </button>
         <Link to="/$environmentId/$threadId" params={params}>
           Open thread ↗
@@ -610,12 +610,13 @@ export default function AgentFeed() {
           <header>
             <SidebarTrigger className="md:hidden" />
             <h1 data-workspace-title="">
-              <Rss size={22} /> Agent feed
+              <Rss size={20} aria-hidden="true" /> Agent feed
             </h1>
           </header>
           <nav className="feed-filters" aria-label="Filter activity">
             {["All", "Needs you", "Ready to review", "In progress"].map((name) => (
               <button
+                type="button"
                 key={name}
                 aria-pressed={filter === name}
                 onClick={() => {

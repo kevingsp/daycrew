@@ -11,7 +11,11 @@ import * as Semaphore from "effect/Semaphore";
 import * as Electron from "electron";
 import { msg } from "gt-i18n";
 
-import { type DesktopSnapShotEvent, DEFAULT_CLIENT_SETTINGS } from "@t3tools/contracts";
+import {
+  type DesktopSnapShotEvent,
+  type WindowControlsAppearance,
+  DEFAULT_CLIENT_SETTINGS,
+} from "@t3tools/contracts";
 
 import * as DesktopAssets from "../app/DesktopAssets.ts";
 import * as DesktopEnvironment from "../app/DesktopEnvironment.ts";
@@ -144,6 +148,10 @@ export class DesktopWindow extends Context.Service<
     // Electron zoom roles target focused guests; zoomMain must always target the app.
     readonly zoomMain: (direction: MainWindowZoomDirection) => Effect.Effect<void>;
     readonly runMainContentsCommand: (command: MainWindowContentsCommand) => Effect.Effect<void>;
+    readonly setWindowControlsAppearance: (
+      senderId: number,
+      appearance: WindowControlsAppearance,
+    ) => Effect.Effect<boolean>;
     readonly syncAppearance: Effect.Effect<void>;
   }
 >()("@t3tools/desktop/window/DesktopWindow") {}
@@ -348,6 +356,7 @@ function syncWindowAppearance(
   hasTitleBarOverlay: boolean,
   shouldUseDarkColors: boolean,
   platform: NodeJS.Platform,
+  controlsAppearance?: Exclude<WindowControlsAppearance, null>,
 ): Effect.Effect<void> {
   return Effect.sync(() => {
     if (window.isDestroyed()) {
@@ -355,7 +364,10 @@ function syncWindowAppearance(
     }
 
     window.setBackgroundColor(getInitialWindowBackgroundColor(shouldUseDarkColors));
-    const { titleBarOverlay } = getWindowTitleBarOptions(shouldUseDarkColors, platform);
+    const { titleBarOverlay } = getWindowTitleBarOptions(
+      controlsAppearance === undefined ? shouldUseDarkColors : controlsAppearance === "dark",
+      platform,
+    );
     if (hasTitleBarOverlay && typeof titleBarOverlay === "object") {
       window.setTitleBarOverlay(titleBarOverlay);
     }
@@ -404,6 +416,10 @@ export const make = Effect.gen(function* () {
   const runPromise = Effect.runPromiseWith(context);
   const mainWindowMutex = yield* Semaphore.make(1);
   const pendingMainReveals = new WeakMap<Electron.BrowserWindow, Effect.Effect<void>>();
+  const windowControlsAppearances = new WeakMap<
+    Electron.BrowserWindow,
+    Exclude<WindowControlsAppearance, null>
+  >();
   const revealMain = Effect.fn("desktop.window.revealMain")((window: Electron.BrowserWindow) =>
     Effect.suspend(() => pendingMainReveals.get(window) ?? electronWindow.reveal(window)),
   );
@@ -907,6 +923,16 @@ export const make = Effect.gen(function* () {
       return retryInMs;
     };
 
+    window.webContents.on("did-start-navigation", (event) => {
+      if (!event.isMainFrame || event.isSameDocument || !windowControlsAppearances.delete(window)) {
+        return;
+      }
+      runFork(
+        electronTheme.shouldUseDarkColors.pipe(
+          Effect.flatMap((dark) => syncWindowAppearance(window, true, dark, environment.platform)),
+        ),
+      );
+    });
     window.webContents.on("did-finish-load", () => {
       if (
         environment.isDevelopment &&
@@ -1232,10 +1258,46 @@ export const make = Effect.gen(function* () {
       else if (command === "forceReload") webContents.reloadIgnoringCache();
       else webContents.toggleDevTools();
     }),
+    setWindowControlsAppearance: Effect.fn("desktop.window.setWindowControlsAppearance")(
+      function* (senderId, appearance) {
+        if (environment.platform !== "win32") return false;
+        const main = yield* electronWindow.main;
+        if (
+          Option.isNone(main) ||
+          main.value.isDestroyed() ||
+          main.value.webContents.id !== senderId
+        ) {
+          return false;
+        }
+        const useDarkColors = yield* electronTheme.shouldUseDarkColors;
+        let applied = false;
+        yield* electronWindow.syncAllAppearance((window, { titleBarOverlay }) =>
+          Effect.sync(() => {
+            if (window !== main.value || !titleBarOverlay || window.isDestroyed()) return;
+            const { titleBarOverlay: options } = getWindowTitleBarOptions(
+              appearance === null ? useDarkColors : appearance === "dark",
+              environment.platform,
+            );
+            if (typeof options !== "object") return;
+            window.setTitleBarOverlay(options);
+            if (appearance === null) windowControlsAppearances.delete(window);
+            else windowControlsAppearances.set(window, appearance);
+            applied = true;
+          }),
+        );
+        return applied;
+      },
+    ),
     syncAppearance: Effect.gen(function* () {
       const shouldUseDarkColors = yield* electronTheme.shouldUseDarkColors;
       yield* electronWindow.syncAllAppearance((window, { titleBarOverlay }) =>
-        syncWindowAppearance(window, titleBarOverlay, shouldUseDarkColors, environment.platform),
+        syncWindowAppearance(
+          window,
+          titleBarOverlay,
+          shouldUseDarkColors,
+          environment.platform,
+          windowControlsAppearances.get(window),
+        ),
       );
     }).pipe(Effect.withSpan("desktop.window.syncAppearance")),
   });

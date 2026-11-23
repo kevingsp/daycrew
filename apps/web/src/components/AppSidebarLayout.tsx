@@ -47,7 +47,7 @@ import { DaycrewWorkspace } from "./DaycrewWorkspace";
 import { SidebarBrandWidthProbe } from "./sidebar/SidebarChrome";
 import { isAppModalPage } from "./sidebar/mainAppLocation";
 import type { SidebarRouteReveal } from "./sidebar/routeReveal";
-import { useSidebarStageBackdropVariant } from "./SidebarStageBackdrop";
+import { SidebarStageBackdrop, useSidebarStageBackdropVariant } from "./SidebarStageBackdrop";
 import {
   clampThreadSidebarWidth,
   resolveInitialThreadSidebarWidth,
@@ -389,12 +389,12 @@ function SidebarControl({ showSidebar }: { readonly showSidebar: boolean }) {
     <div
       ref={appShellCommandsRef}
       className={cn(
-        "pointer-events-none fixed left-[var(--workspace-controls-left)] top-[var(--workspace-controls-top)] z-50 ml-px flex h-[var(--workspace-topbar-height)] items-center",
+        "pointer-events-none fixed left-[var(--workspace-controls-left)] top-[var(--workspace-controls-top)] z-50 flex h-[var(--workspace-topbar-height)] items-center",
         mobileSidebarSheetMounted && "hidden",
       )}
       data-sidebar-control=""
     >
-      {showSidebar ? (
+      {showSidebar && !isSidebarVisible ? (
         <Tooltip>
           <TooltipTrigger
             render={
@@ -427,6 +427,8 @@ export function AppSidebarLayout({
   showSidebar?: boolean;
 }) {
   const gt = useGT();
+  const environmentIdentificationMode = useEnvironmentIdentificationMode();
+  const stageBackdropVariant = useSidebarStageBackdropVariant(environmentIdentificationMode);
   const sidebarArea = workspaceAreaProps("sidebar", 0, gt("Threads"));
   const [sidebarRouteReveal] = useState<SidebarRouteReveal>(() => ({
     observedKey: null,
@@ -472,11 +474,14 @@ export function AppSidebarLayout({
       <SidebarProvider
         data-daycrew-shell=""
         data-workspace-motion={panelAnimationsActive ? "on" : "off"}
-        className="h-dvh! min-h-0!"
+        className="h-(--daycrew-shell-height)! min-h-0!"
         data-panel-animations={routePanelAnimationsActive ? "true" : "false"}
         storageKey="chat_thread_sidebar_open"
         style={sidebarProviderStyle}
       >
+        {showSidebar && stageBackdropVariant ? (
+          <SidebarStageBackdrop variant={stageBackdropVariant} />
+        ) : null}
         {showSidebar ? (
           <>
             <SidebarBrandWidthProbe isElectron={isElectron} onWidthChange={setBrandWidth} />
@@ -504,7 +509,7 @@ export function AppSidebarLayout({
             <CollapsedAgentRail />
           </>
         ) : null}
-        <DaycrewWorkspace>{children}</DaycrewWorkspace>
+        <DaycrewWorkspace mobileNavigation={showSidebar}>{children}</DaycrewWorkspace>
         <BackgroundThreadAnnouncer />
         <SidebarControl showSidebar={showSidebar} />
         {isElectron ? <HistorySwipeNavigation /> : null}

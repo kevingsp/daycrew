@@ -16,8 +16,8 @@ const surfaceColors = cn(
 );
 
 const neutralOutline = cn(
-  "[--chat-composer-attached-outline:var(--chat-composer-outline,color-mix(in_srgb,var(--contrast-foreground)_8%,transparent))]",
-  "dark:[--chat-composer-attached-outline:var(--chat-composer-outline,color-mix(in_srgb,var(--color-white)_5%,transparent))]",
+  "[--chat-composer-attached-outline:var(--chat-composer-outline,var(--glass-l2-border))]",
+  "dark:[--chat-composer-attached-outline:var(--chat-composer-outline,var(--glass-l2-border))]",
   "[html[data-theme-id]_&]:[--chat-composer-attached-outline:var(--chat-composer-outline,var(--app-theme-toolbar-border))]",
   "dark:[html[data-theme-id]:not([data-theme-id=t3-chat])_&]:[--chat-composer-attached-outline:var(--chat-composer-outline,color-mix(in_srgb,var(--app-theme-input)_30%,var(--background)))]",
   "dark:[html[data-theme-id=t3-chat]_&]:[--chat-composer-attached-outline:#241e28]",
@@ -60,8 +60,8 @@ function Surface({
           ? "[--chat-composer-attachment-overlap:0px] before:rounded-2xl"
           : // Bleed the mask 1px past the seam to cover Chromium's fractional-pixel backdrop loss.
             "[--chat-composer-attachment-overlap:calc(1rem+1px)] before:rounded-t-2xl before:mask-t-from-transparent before:mask-t-from-4 before:mask-t-to-black before:mask-t-to-4",
-        "before:pointer-events-none before:absolute before:inset-0 before:-z-1 before:border before:border-(--chat-composer-attached-outline)",
-        "before:bg-(--chat-composer-attached-surface)/(--glass-opacity) before:bg-linear-to-b before:from-(--chat-composer-attached-tint) before:to-(--chat-composer-attached-tint) before:backdrop-blur-(--glass-blur) before:backdrop-saturate-(--glass-saturation)",
+        "before:pointer-events-none before:absolute before:inset-0 before:-z-1 before:border before:border-(--chat-composer-attached-outline) before:bg-clip-padding",
+        "before:bg-(--chat-composer-attached-surface)/(--glass-opacity) before:bg-composer-banner-glass before:backdrop-blur-(--glass-blur) before:backdrop-saturate-(--glass-saturation)",
         "before:shadow-composer dark:before:shadow-composer-dark",
         !detached &&
           "dark:supports-[(backdrop-filter:blur(1px))_or_(-webkit-backdrop-filter:blur(1px))]:before:bg-composer-seam-above",

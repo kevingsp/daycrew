@@ -112,6 +112,7 @@ import { resolvePullRequestState } from "./pullRequest/pullRequestPresentation";
 import { PullRequestGlyph } from "~/components/pullRequest/pullRequestIcons";
 import { observeResize } from "~/lib/observeResize";
 import { surfaceShortcutKey } from "~/lib/surfaceShortcutKey";
+import { prefersReducedMotion } from "~/motion";
 
 export interface RightPanelTabsProps {
   mode: PreviewPanelMode;
@@ -515,9 +516,11 @@ function RightPanelEmptyState(props: {
               >
                 <button
                   type="button"
+                  data-right-panel-launcher-item=""
+                  data-highlighted={isHighlighted(action) ? "true" : undefined}
                   onClick={action.onClick}
                   className={cn(
-                    "flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-(--control-radius) px-2.5 text-left text-sm transition-colors group-hover:bg-accent/60",
+                    "flex h-8 w-full cursor-pointer items-center gap-2.5 rounded-(--control-radius) px-2.5 text-left text-sm outline-none transition-colors duration-(--duration-micro) ease-(--ease-spring-snappy) motion-reduce:transition-none group-hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                     isHighlighted(action) && "bg-accent/60",
                   )}
                 >
@@ -567,7 +570,7 @@ function RightPanelEmptyState(props: {
                   <div
                     tabIndex={0}
                     aria-disabled="true"
-                    className="flex h-8 w-full cursor-default items-center gap-2.5 rounded-(--control-radius) px-2.5 text-left text-sm opacity-50"
+                    className="flex h-8 w-full cursor-default items-center gap-2.5 rounded-(--control-radius) px-2.5 text-left text-sm opacity-50 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                   >
                     {actionIcon(action, "size-4")}
                     <span className="min-w-0 flex-1 truncate">{messages(action.label)}</span>
@@ -991,7 +994,7 @@ function RightPanelTab(
             render={
               <button
                 type="button"
-                className="cursor-pointer flex size-4 shrink-0 items-center justify-center rounded-sm hover:bg-muted"
+                className="cursor-pointer flex size-4 shrink-0 items-center justify-center rounded-sm outline-none transition-colors duration-(--duration-micro) ease-(--ease-spring-snappy) motion-reduce:transition-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 aria-label={
                   audio === "muted"
                     ? gt("Unmute {title}", { title })
@@ -1044,7 +1047,7 @@ function RightPanelTab(
                 onDoubleClick={() => {
                   if (surface.kind === "device" && props.canRename) onStartRename(surface.id);
                 }}
-                className="cursor-pointer flex min-w-0 items-center"
+                className="cursor-pointer flex min-w-0 items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 aria-label={
                   sideChatState === null
                     ? undefined
@@ -1076,6 +1079,7 @@ function RightPanelTab(
   );
   return (
     <div
+      data-right-panel-tab=""
       data-active-tab={props.active}
       onMouseDown={preventTabMiddleButtonDefault}
       onMouseUp={preventTabMiddleButtonDefault}
@@ -1083,9 +1087,12 @@ function RightPanelTab(
       onContextMenu={(event) => onContextMenu(event, surface)}
       {...listeners}
       ref={setNodeRef}
-      style={{ transform: CSS.Translate.toString(transform), transition }}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition: prefersReducedMotion() ? undefined : transition,
+      }}
       className={cn(
-        "cursor-pointer group/tab flex h-6 max-w-36 shrink-0 items-center gap-0.5 rounded-md pr-2 pl-1.5 text-xs",
+        "cursor-pointer group/tab flex h-6 max-w-36 shrink-0 items-center gap-0.5 rounded-md pr-2 pl-1.5 text-xs transition-colors duration-(--duration-micro) ease-(--ease-spring-snappy) motion-reduce:transition-none",
         props.ownsDesktopTitleBar && "[-webkit-app-region:no-drag]",
         props.active
           ? "bg-accent text-foreground"

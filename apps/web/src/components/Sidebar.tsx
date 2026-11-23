@@ -68,6 +68,7 @@ import {
 } from "@t3tools/client-runtime/state/threads";
 
 import {
+  BotIcon,
   CheckIcon,
   ChevronDownIcon,
   FolderIcon,
@@ -2953,13 +2954,31 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
           <SidebarGroup className="z-[1]">
             <Link
               to="/feed"
-              className="mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium hover:bg-sidebar-row-hover"
-              activeProps={{ className: "bg-sidebar-row-selected" }}
+              className="mb-1 flex h-8 items-center gap-2 rounded-lg px-(--sidebar-row-content-inset) text-sm font-medium text-sidebar-foreground outline-none transition-colors duration-150 hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
+              activeProps={{
+                "aria-current": "page",
+                className: "bg-sidebar-row-selected text-sidebar-foreground",
+              }}
               onClick={() => {
                 if (isMobile) setOpenMobile(false);
               }}
             >
-              <RssIcon aria-hidden="true" className="size-4" /> <T>Agent feed</T>
+              <RssIcon aria-hidden="true" className="size-4 shrink-0" />
+              <T>Agent feed</T>
+            </Link>
+            <Link
+              to="/agents"
+              className="mb-1 flex h-8 items-center gap-2 rounded-lg px-(--sidebar-row-content-inset) text-sm font-medium text-sidebar-foreground outline-none transition-colors duration-150 hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
+              activeProps={{
+                "aria-current": "page",
+                className: "bg-sidebar-row-selected text-sidebar-foreground",
+              }}
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+            >
+              <BotIcon aria-hidden="true" className="size-4 shrink-0" />
+              <T>Agents</T>
             </Link>
             <Link
               to="/workspaces"
@@ -2967,7 +2986,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                 "aria-current": "page",
                 className: "bg-sidebar-row-selected text-sidebar-foreground",
               }}
-              className="mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-sidebar-foreground outline-none hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className="mb-1 flex h-8 items-center gap-2 rounded-lg px-(--sidebar-row-content-inset) text-sm font-medium text-sidebar-foreground outline-none transition-colors duration-150 hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
               onClick={() => {
                 if (isMobile) setOpenMobile(false);
               }}
@@ -3307,7 +3326,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
             snoozedThreads.length ===
             0 &&
           (settledCount === 0 || scopedProjectGroups.length > 0) ? (
-            <div className="flex flex-col items-center gap-2 px-2 py-6 text-center text-xs text-muted-foreground/60">
+            <div className="flex flex-col items-center gap-2 px-2 py-6 text-center text-xs text-sidebar-muted-foreground">
               {projects.length === 0 ? (
                 <>
                   <span>
@@ -3316,7 +3335,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                   <button
                     type="button"
                     onClick={openAddProjectCommandPalette}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-sidebar-border px-2.5 py-1 text-2xs font-medium text-sidebar-muted-foreground transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-sidebar-border px-2.5 py-1 text-2xs font-medium text-sidebar-muted-foreground outline-none transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
                   >
                     <PlusIcon className="-mx-0.5 size-3" />
                     <T>Add project</T>
@@ -3340,7 +3359,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                   <button
                     type="button"
                     onClick={() => setProjectScopeKeys([])}
-                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-md border border-sidebar-border px-2.5 py-1 text-2xs font-medium text-sidebar-muted-foreground transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+                    className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-sidebar-border px-2.5 py-1 text-2xs font-medium text-sidebar-muted-foreground outline-none transition-colors hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
                   >
                     <T>Show all projects</T>
                   </button>
@@ -3672,7 +3691,7 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
                             olderSettledShelf.retry();
                             showMoreSettled();
                           }}
-                          className="flex h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-left text-sm text-sidebar-muted-foreground hover:bg-sidebar-row-hover hover:text-sidebar-foreground aria-disabled:cursor-default"
+                          className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-(--sidebar-row-content-inset) text-left text-sm text-sidebar-muted-foreground outline-none transition-colors duration-150 hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring aria-disabled:cursor-default motion-reduce:transition-none"
                         >
                           {/* Plus means "add", so revealing more uses a chevron. */}
                           <ChevronDownIcon aria-hidden className="size-4 shrink-0" />

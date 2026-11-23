@@ -22,6 +22,11 @@ a connected one if any is connected.
 When you change a new thread's project, T3 Code stays in the current environment
 if that project exists there. Otherwise it selects an environment that has it.
 
+On web and desktop, correct a project's folder in **Settings → Projects → Checkouts →
+Change folder**. Chats without a worktree use the new folder on their next turn.
+Chat history, existing worktrees, and files are kept. Choose a folder that is not
+already assigned to another project on the same machine.
+
 ### Start without a project
 
 A thread does not need a project. To start one without a project, click **or

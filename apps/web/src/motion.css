@@ -1,0 +1,324 @@
+@property --sky-x {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 48%;
+}
+
+@property --sky-y {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 0%;
+}
+
+@property --sky-reach {
+  syntax: "<percentage>";
+  inherits: true;
+  initial-value: 79%;
+}
+
+:root {
+  --ease-spring-snappy: cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease-spring-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-ambient: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-instant: 120ms;
+  --duration-micro: 160ms;
+  --duration-view: 240ms;
+  --duration-panel: 260ms;
+  --duration-sky: 1600ms;
+}
+
+/* The sky and its ink change together so polarity changes never blend through low contrast. */
+[data-slot="daycrew-workspace"] {
+  transition:
+    --sky-x var(--duration-sky) var(--ease-ambient),
+    --sky-y var(--duration-sky) var(--ease-ambient),
+    --sky-reach var(--duration-sky) var(--ease-ambient);
+}
+
+@keyframes daycrew-workspace-title-arrive {
+  from {
+    translate: 0 6px;
+  }
+}
+
+@keyframes daycrew-workspace-content-arrive {
+  from {
+    translate: 0 4px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-daycrew-shell] {
+    --duration-panel: var(--panel-animation-duration, 260ms);
+  }
+
+  [data-daycrew-shell][data-workspace-motion="on"] [data-workspace-title] {
+    animation: daycrew-workspace-title-arrive min(var(--duration-panel), var(--duration-view))
+      var(--ease-spring-smooth);
+  }
+
+  [data-daycrew-shell][data-workspace-motion="on"]
+    :is([data-workspace-content], [data-sky-surface="draft"] [data-chat-composer-stack]) {
+    animation: daycrew-workspace-content-arrive min(var(--duration-panel), var(--duration-view))
+      var(--ease-spring-smooth) 30ms backwards;
+  }
+}
+
+[data-agent-card],
+.feed-card {
+  transition:
+    transform var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    box-shadow var(--duration-micro) var(--ease-spring-snappy);
+}
+
+@media (hover: hover) {
+  [data-agent-card]:hover,
+  .feed-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--sky-accent-border, var(--border));
+    box-shadow:
+      inset 0 1px rgb(255 255 255 / 22%),
+      0 8px 20px -12px rgb(0 0 0 / 22%);
+
+    @variant dark {
+      box-shadow:
+        inset 0 1px rgb(255 255 255 / 8%),
+        0 10px 24px -12px rgb(0 0 0 / 55%);
+    }
+  }
+}
+
+[data-agent-card]:active,
+.feed-card:active {
+  transform: scale(0.992);
+}
+
+/* Collapsed desktop agent rail entrance and avatar link tactile feedback. */
+[data-slot="agent-rail"] {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    transform var(--duration-view) var(--ease-spring-smooth),
+    opacity var(--duration-view) var(--ease-spring-smooth);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+[data-slot="agent-rail"] a {
+  transition:
+    transform var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy);
+}
+
+@media (hover: hover) {
+  [data-slot="agent-rail"] a:hover {
+    transform: scale(1.05);
+  }
+}
+
+[data-slot="agent-rail"] a:active {
+  transform: scale(0.95);
+}
+
+/* Timeline overlay entrances via @starting-style. */
+[data-scroll-to-end] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition:
+    transform var(--duration-micro) var(--ease-spring-snappy),
+    opacity var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy);
+
+  @starting-style {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+}
+
+@media (hover: hover) {
+  [data-scroll-to-end]:hover {
+    transform: translateY(-1px) scale(1.02);
+  }
+}
+
+[data-scroll-to-end]:active {
+  transform: scale(0.97);
+}
+
+[data-chat-workspace-drop-overlay] {
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    transform var(--duration-micro) var(--ease-spring-smooth),
+    opacity var(--duration-micro) var(--ease-spring-smooth);
+
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+}
+
+/* L1 frosted glass surface for the workspace right panel shell over the living sky. */
+[data-preview-panel-shell] {
+  background-color: color-mix(
+    in srgb,
+    var(--background) var(--sky-glass-l1-opacity, var(--glass-opacity)),
+    transparent
+  );
+  border-color: color-mix(in srgb, var(--contrast-foreground) 10%, transparent);
+  box-shadow: inset 1px 0 rgb(255 255 255 / 20%);
+
+  @variant dark {
+    border-color: color-mix(in srgb, var(--color-white) 9%, transparent);
+    box-shadow: inset 1px 0 rgb(255 255 255 / 5%);
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--background);
+  }
+}
+
+/* Right panel adaptive dusk-to-dawn tab and launcher tinting. */
+[data-right-panel-tab] {
+  border: 1px solid transparent;
+  transition:
+    color var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy);
+}
+
+[data-right-panel-tab][data-active-tab="false"]:hover {
+  background-color: var(--sky-accent-hover, color-mix(in srgb, var(--accent) 60%, transparent));
+}
+
+[data-right-panel-tab][data-active-tab="true"] {
+  background-color: var(--sky-accent-selected, var(--accent));
+  border-color: var(--sky-accent-border, color-mix(in srgb, var(--border) 75%, transparent));
+}
+
+[data-right-panel-launcher-item] {
+  border: 1px solid transparent;
+  transition:
+    color var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy);
+}
+
+[data-right-panel-launcher-item]:hover,
+[data-right-panel-launcher-item][data-highlighted="true"] {
+  background-color: var(--sky-accent-hover, color-mix(in srgb, var(--accent) 60%, transparent));
+  border-color: var(--sky-accent-border, transparent);
+}
+
+[data-right-panel-launcher-item]:focus-visible,
+[data-right-panel-tab] button:focus-visible {
+  --tw-ring-color: var(--sky-focus-ring, var(--ring));
+}
+
+/* L2 Liquid Glass mobile navigation bar with clear hover vs active differentiation. */
+[data-slot="mobile-navigation"] {
+  background-color: color-mix(
+    in srgb,
+    var(--background) var(--sky-glass-l2-opacity, 86%),
+    transparent
+  );
+  border-top-color: color-mix(in srgb, var(--contrast-foreground) 12%, transparent);
+  box-shadow: inset 0 1px rgb(255 255 255 / 26%);
+
+  @variant dark {
+    border-top-color: color-mix(in srgb, var(--color-white) 10%, transparent);
+    box-shadow: inset 0 1px rgb(255 255 255 / 6%);
+  }
+
+  @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    background-color: var(--background);
+  }
+}
+
+[data-slot="mobile-navigation"] [data-mobile-nav-item] {
+  border: 1px solid transparent;
+  transition:
+    transform var(--duration-micro) var(--ease-spring-snappy),
+    color var(--duration-micro) var(--ease-spring-snappy),
+    background-color var(--duration-micro) var(--ease-spring-snappy),
+    border-color var(--duration-micro) var(--ease-spring-snappy);
+}
+
+[data-slot="mobile-navigation"] [data-mobile-nav-item]:hover {
+  background-color: var(--sky-accent-hover, color-mix(in srgb, var(--accent) 45%, transparent));
+  color: var(--foreground);
+}
+
+[data-slot="mobile-navigation"] [data-mobile-nav-item]:active {
+  transform: scale(0.96);
+}
+
+[data-slot="mobile-navigation"] [data-mobile-nav-item][data-active="true"],
+[data-slot="mobile-navigation"] [data-mobile-nav-item][aria-current="page"] {
+  background-color: var(--sky-accent-selected, var(--accent));
+  border-color: var(--sky-accent-border, var(--border));
+  color: var(--foreground);
+}
+
+[data-slot="mobile-navigation"] [data-mobile-nav-item]:focus-visible {
+  --tw-ring-color: var(--sky-focus-ring, var(--ring));
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-preview-panel-shell],
+  [data-slot="mobile-navigation"] {
+    background-color: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Strict reduced-motion fallback: collapse durations and remove motion while preserving instant color/focus feedback. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-instant: 0ms;
+    --duration-micro: 0ms;
+    --duration-view: 0ms;
+    --duration-panel: 0ms;
+    --duration-sky: 0ms;
+  }
+
+  [data-daycrew-shell] [data-workspace-title],
+  [data-daycrew-shell] [data-workspace-content],
+  [data-daycrew-shell] [data-sky-surface="draft"] [data-chat-composer-stack] {
+    animation: none !important;
+  }
+
+  [data-slot="daycrew-workspace"],
+  [data-agent-card],
+  .feed-card,
+  [data-slot="agent-rail"],
+  [data-slot="agent-rail"] a,
+  [data-scroll-to-end],
+  [data-chat-workspace-drop-overlay],
+  [data-right-panel-tab],
+  [data-right-panel-launcher-item],
+  [data-slot="mobile-navigation"] [data-mobile-nav-item] {
+    transition: none !important;
+  }
+
+  [data-agent-card]:hover,
+  [data-agent-card]:active,
+  .feed-card:hover,
+  .feed-card:active,
+  [data-slot="agent-rail"] a:hover,
+  [data-slot="agent-rail"] a:active,
+  [data-scroll-to-end]:hover,
+  [data-scroll-to-end]:active,
+  [data-slot="mobile-navigation"] [data-mobile-nav-item]:active {
+    transform: none !important;
+  }
+}

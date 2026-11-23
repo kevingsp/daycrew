@@ -35,13 +35,8 @@ function AgentRailContents() {
 
   return (
     <nav data-slot="agent-rail" {...workspaceAreaProps("sidebar", 0)} aria-label={gt("Threads")}>
-      <Link
-        to="/feed"
-
-        title={gt("Agent feed")}
-        aria-label={gt("Agent feed")}
-      >
-        <Rss size={17} />
+      <Link to="/feed" title={gt("Agent feed")} aria-label={gt("Agent feed")}>
+        <Rss size={16} strokeWidth={2} aria-hidden="true" />
       </Link>
       <div data-slot="active-agents">
         {filterSidebarV2VisibleThreads(threads, null, delegated).map((thread) => {
@@ -75,7 +70,7 @@ function AgentRailContents() {
                 {provider ? (
                   <ProviderInstanceIcon {...provider} size="compact" />
                 ) : (
-                  <Bot size={16} />
+                  <Bot size={16} strokeWidth={2} aria-hidden="true" />
                 )}
                 {waiting && <Pause data-slot="agent-pause" aria-hidden />}
               </TooltipTrigger>
@@ -84,13 +79,8 @@ function AgentRailContents() {
           );
         })}
       </div>
-      <Link
-        to="/settings"
-
-        title={gt("Settings")}
-        aria-label={gt("Settings")}
-      >
-        <Settings size={17} />
+      <Link to="/settings" title={gt("Settings")} aria-label={gt("Settings")}>
+        <Settings size={16} strokeWidth={2} aria-hidden="true" />
       </Link>
     </nav>
   );

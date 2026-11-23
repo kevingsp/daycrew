@@ -12,6 +12,7 @@ import {
   PRIMARY_LOCAL_ENVIRONMENT_ID,
   REMOTE_CAPABLE_EDITOR_IDS,
   SystemSettingsPaneSchema,
+  WindowControlsAppearanceSchema,
   type DesktopEnvironmentBootstrap,
   type PickedThemeFile,
 } from "@t3tools/contracts";
@@ -45,6 +46,7 @@ import * as ElectronShell from "../../electron/ElectronShell.ts";
 import * as ElectronTheme from "../../electron/ElectronTheme.ts";
 import * as ElectronWindow from "../../electron/ElectronWindow.ts";
 import * as Electron from "electron";
+import * as DesktopWindow from "../../window/DesktopWindow.ts";
 import { msg } from "gt-i18n";
 import * as MacPermissions from "../../permissions/MacPermissions.ts";
 import { safariPermissionCheck } from "../../preview/BrowserImport/SafariPermission.ts";
@@ -335,6 +337,19 @@ export const setTheme = DesktopIpc.makeIpcMethod({
     const electronTheme = yield* ElectronTheme.ElectronTheme;
     yield* electronTheme.setSource(theme);
   }),
+});
+
+export const setWindowControlsAppearance = DesktopIpc.makeIpcMethod({
+  channel: IpcChannels.SET_WINDOW_CONTROLS_APPEARANCE_CHANNEL,
+  payload: WindowControlsAppearanceSchema,
+  result: Schema.Boolean,
+  handler: Effect.fn("desktop.ipc.window.setWindowControlsAppearance")(
+    function* (appearance, event) {
+      if (event === undefined) return false;
+      const desktopWindow = yield* DesktopWindow.DesktopWindow;
+      return yield* desktopWindow.setWindowControlsAppearance(event.sender.id, appearance);
+    },
+  ),
 });
 
 export const showContextMenu = DesktopIpc.makeIpcMethod({

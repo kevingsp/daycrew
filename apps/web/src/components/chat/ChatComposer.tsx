@@ -3530,12 +3530,12 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
             )}
           >
             {showCollapsedMobilePromptRow ? (
-              <div className="flex items-center justify-between gap-2 px-3 py-2">
+              <div className="flex items-center justify-between gap-2 px-4 py-2">
                 <button
                   type="button"
                   data-chat-composer-transition-prompt="true"
                   className={cn(
-                    "min-w-0 flex-1 truncate bg-transparent p-0 text-left text-sm focus:outline-none",
+                    "min-w-0 flex-1 truncate rounded-lg bg-transparent p-0 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
                     prompt.trim() ? "text-foreground" : "text-placeholder",
                   )}
                   onPointerDown={(event) => event.preventDefault()}
@@ -3568,7 +3568,8 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                   <button
                     type="button"
                     data-chat-composer-transition-actions="true"
-                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-message-action text-message-action-foreground hover:bg-message-action-hover disabled:opacity-64"
+                    data-sky-send={showResumeAction ? undefined : ""}
+                    className="flex size-8 shrink-0 items-center justify-center rounded-full bg-message-action text-message-action-foreground outline-none transition-[transform,opacity,background-color,color,border-color] duration-150 hover:bg-message-action-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:opacity-64 motion-reduce:transition-none"
                     disabled={collapsedComposerPrimaryActionDisabled}
                     aria-label={collapsedComposerPrimaryActionLabel}
                     onPointerDown={(event) => event.preventDefault()}
@@ -3591,9 +3592,9 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                         aria-hidden="true"
                       >
                         <path
-                          d="M8 3L8 13M8 3L4 7M8 3L12 7"
+                          d="M8 12.5V3.5M8 3.5L4 7.5M8 3.5L12 7.5"
                           stroke="currentColor"
-                          strokeWidth="2"
+                          strokeWidth="1.8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
@@ -3614,11 +3615,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                 };
               }}
               data-chat-composer-body="true"
-              className={cn(
-                "relative px-4 pb-2",
-                "pt-3.5 sm:pt-4",
-                isComposerCollapsedMobile && "hidden",
-              )}
+              className={cn("relative px-4 pt-4 pb-2", isComposerCollapsedMobile && "hidden")}
             >
               {isStashMenuOpen && !composerMenuOpen && (
                 <ComposerCommandMenuLayer anchor={composerMenuAnchor} canOverflowTop>
@@ -3792,7 +3789,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
               // column-reverse pins the scroll to the bottom; the single inner div keeps the text in normal order.
               <div
                 aria-label={gt("Live transcription")}
-                className="mx-3 mb-3 flex max-h-32 flex-col-reverse overflow-y-auto rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap sm:mx-4"
+                className="mx-4 mb-3 flex max-h-32 flex-col-reverse overflow-y-auto rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap"
               >
                 <div>
                   <span>{speechInput.preview.committed}</span>
@@ -3828,7 +3825,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     data-chat-composer-controls="footer"
                     data-chat-composer-footer-controls="true"
                     className={cn(
-                      "relative flex min-w-0 flex-1 items-center justify-end gap-0.5",
+                      "relative flex min-w-0 flex-1 items-center justify-end gap-1",
                       dictationTakesFooter && "hidden",
                     )}
                   >
@@ -3932,7 +3929,7 @@ export const ChatComposer = memo(function ChatComposer(props: ChatComposerProps)
                     aria-hidden={restingControlsVisible ? undefined : true}
                     inert={restingControlsVisible ? undefined : true}
                     className={cn(
-                      "relative flex w-max min-w-0 max-w-full items-center gap-1 text-muted-foreground/70 [&_button]:text-xs!",
+                      "relative flex w-max min-w-0 max-w-full items-center gap-1 text-muted-foreground [&_button]:text-xs!",
                       !restingControlsVisible && "invisible",
                     )}
                   >

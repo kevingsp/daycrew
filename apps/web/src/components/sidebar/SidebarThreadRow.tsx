@@ -306,7 +306,7 @@ function SidebarThreadTooltip({
         {projectDisplayName ? (
           <div className="flex min-w-0 items-center gap-2">
             {project ? <ProjectFavicon project={project} className="size-3 shrink-0" /> : null}
-            <div className="min-w-0 truncate text-foreground/75">{projectDisplayName}</div>
+            <div className="min-w-0 truncate text-muted-foreground">{projectDisplayName}</div>
           </div>
         ) : null}
         {environmentLabel ? (
@@ -315,7 +315,7 @@ function SidebarThreadTooltip({
               kind={environmentMachine}
               className="size-3 shrink-0 stroke-muted-foreground"
             />
-            <div className="min-w-0 truncate text-foreground/75">{environmentLabel}</div>
+            <div className="min-w-0 truncate text-muted-foreground">{environmentLabel}</div>
           </div>
         ) : null}
         {thread.branch ? (
@@ -347,7 +347,7 @@ function SidebarThreadTooltip({
               badgeClassName="h-2 min-w-2 px-0"
               iconClassName="size-3 shrink-0 opacity-60"
             />
-            <div className="min-w-0 truncate text-foreground/75">
+            <div className="min-w-0 truncate text-muted-foreground">
               {showInstanceBadge && providerEntry
                 ? `${modelLabel} · ${providerEntry.displayName}`
                 : modelLabel}
@@ -357,7 +357,7 @@ function SidebarThreadTooltip({
         {previousProviderNames.length > 0 ? (
           <div className="flex min-w-0 items-center gap-2">
             <ArrowRightLeftIcon className="size-3 shrink-0 stroke-muted-foreground" />
-            <div className="min-w-0 truncate text-foreground/75">
+            <div className="min-w-0 truncate text-muted-foreground">
               <T>
                 Handed off from <Var>{previousProviderNames.join(", ")}</Var>
               </T>
@@ -370,7 +370,7 @@ function SidebarThreadTooltip({
               aria-hidden
               className={cn("size-3 shrink-0", terminalStatus.colorClass)}
             />
-            <div className="min-w-0 truncate text-foreground/75">
+            <div className="min-w-0 truncate text-muted-foreground">
               {terminalProcessLabel(terminalProcessCount, m)}
             </div>
           </div>
@@ -421,7 +421,7 @@ function SnoozeMenuButton(props: {
                   aria-label={gt("Snooze thread")}
                   onClick={(event) => event.stopPropagation()}
                   onDoubleClick={(event) => event.stopPropagation()}
-                  className="inline-flex h-full cursor-pointer items-center gap-0.5 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                  className="inline-flex h-full cursor-pointer items-center gap-0.5 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 />
               }
             />
@@ -1008,7 +1008,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
   };
 
   const rowSurfaceClassName = cn(
-    "group/sidebar-row relative w-full cursor-pointer overflow-hidden rounded-md text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
+    "group/sidebar-row relative w-full cursor-pointer overflow-hidden rounded-lg text-left outline-none select-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring",
     variantAction === "unsettle" &&
       !props.isActive &&
       "[&:not(:hover):not(:focus-within)_*:not(.live-activity-focus_*)]:text-secondary-label",
@@ -1019,11 +1019,11 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
         : hasUnsentDraft
           ? cn(draftSurfaceClassName, "text-sidebar-foreground")
           : shouldRecede
-            ? "text-sidebar-muted-foreground/75 hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
+            ? "text-sidebar-muted-foreground hover:bg-sidebar-row-hover hover:text-sidebar-foreground"
             : "bg-transparent text-sidebar-foreground hover:bg-sidebar-row-hover",
     shouldRecede &&
       (status === "preparing" || status === "working") &&
-      "opacity-70 transition-opacity hover:opacity-100 focus-within:opacity-100 motion-reduce:transition-none",
+      "opacity-85 transition-opacity hover:opacity-100 focus-within:opacity-100 motion-reduce:transition-none",
     isFileDragOver && "ring-1 ring-inset ring-primary/70",
     isFileDragOver && !props.isActive && !isSelected && "bg-sidebar-row-hover",
     props.sortable?.isDragging &&
@@ -1087,7 +1087,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
             ? cn(
                 "truncate",
                 shouldRecede
-                  ? "text-foreground/75 group-hover/sidebar-row:text-foreground group-focus-visible/sidebar-row:text-foreground"
+                  ? "text-sidebar-muted-foreground group-hover/sidebar-row:text-foreground group-focus-visible/sidebar-row:text-foreground"
                   : status === "failed" && !isUnread && !isWoke
                     ? "text-foreground/95"
                     : "text-foreground",
@@ -1100,7 +1100,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                     ? "text-foreground"
                     : isUnread
                       ? "text-muted-foreground"
-                      : "text-secondary-label/70",
+                      : "text-secondary-label",
               ),
       )}
       dir={textDirection(thread.title)}
@@ -1230,7 +1230,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
               type="button"
               aria-label={gt("Unpin thread")}
               onClick={handleUnpinClick}
-              className="group/unpin inline-flex cursor-pointer items-center rounded-sm text-muted-foreground/65 outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className="group/unpin inline-flex cursor-pointer items-center rounded-sm text-muted-foreground outline-none transition-colors hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
             />
           }
         >
@@ -1251,14 +1251,14 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
       <PinIcon
         aria-label={gt("Pinned")}
         role="img"
-        className="size-3 shrink-0 text-muted-foreground/65"
+        className="size-3 shrink-0 text-muted-foreground"
       />
     )
   ) : null;
 
   const remoteMachineIcon =
     isRemote && !showsScratchMachine ? (
-      <span className="inline-flex shrink-0 items-center text-sidebar-muted-foreground/70">
+      <span className="inline-flex shrink-0 items-center text-sidebar-muted-foreground">
         <EnvironmentMachineIcon aria-hidden kind={props.environmentMachine} className="size-3.5" />
       </span>
     ) : null;
@@ -1353,8 +1353,8 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                 className={cn(
                   rowSurfaceClassName,
                   multiline
-                    ? "flex flex-col justify-center px-2.5 py-1.5"
-                    : "flex h-9 items-center gap-2.5 px-2.5",
+                    ? "flex flex-col justify-center px-(--sidebar-row-content-inset) py-1.5"
+                    : "flex h-9 items-center gap-2 px-(--sidebar-row-content-inset)",
                   // Lines titles up with the folder name, past its chevron and icon.
                   inFolder && "ps-9",
                 )}
@@ -1465,7 +1465,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                         onClick={handleUnsnoozeClick}
                         onPointerDown={handleActionPointerDown}
                         className={cn(
-                          "pointer-events-none absolute inset-y-0 right-0 -mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
+                          "pointer-events-none absolute inset-y-0 right-0 -mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100 motion-reduce:transition-none",
                           isWoke && "group-any-hover/sidebar-row:static",
                         )}
                       >
@@ -1482,7 +1482,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                             onClick={handleUnsettleClick}
                             onPointerDown={handleActionPointerDown}
                             className={cn(
-                              "pointer-events-none absolute inset-y-0 right-0 -mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
+                              "pointer-events-none absolute inset-y-0 right-0 -mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100 motion-reduce:transition-none",
                               isWoke && "group-any-hover/sidebar-row:static",
                             )}
                           />
@@ -1504,7 +1504,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                             onClick={handleSettleClick}
                             onPointerDown={handleActionPointerDown}
                             className={cn(
-                              "pointer-events-none absolute inset-y-0 right-0 -mr-2 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100",
+                              "pointer-events-none absolute inset-y-0 right-0 -mr-2 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-2 text-xs text-muted-foreground opacity-0 outline-none transition-opacity hover:text-foreground focus-visible:pointer-events-auto focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring group-any-hover/sidebar-row:pointer-events-auto group-any-hover/sidebar-row:opacity-100 motion-reduce:transition-none",
                               isWoke && "group-any-hover/sidebar-row:static",
                             )}
                           />
@@ -1538,7 +1538,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
       // The hints are the rendered heights inside py-0.5. Revealing the open thread measures rows
       // that have not rendered yet, so a hint off by a pixel lands it a pixel short per row above.
       className={cn(
-        "list-none py-0.5 [content-visibility:auto] [contain-intrinsic-size:auto_78px]",
+        "list-none py-0.5 [content-visibility:auto] [contain-intrinsic-size:auto_80px]",
         metaLineEmpty && "[contain-intrinsic-size:auto_60px]",
         sortable?.isDragging && "relative z-20",
       )}
@@ -1566,7 +1566,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
         >
           <div
             className={cn(
-              "relative z-10 h-[4.875rem] px-(--sidebar-row-content-inset) py-(--sidebar-content-inset)",
+              "relative z-10 h-20 px-(--sidebar-row-content-inset) py-(--sidebar-content-inset)",
               metaLineEmpty && "h-auto",
             )}
           >
@@ -1679,7 +1679,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                                 type="button"
                                 aria-label={gt("Discard draft")}
                                 onClick={handleDiscardDraftClick}
-                                className="inline-flex cursor-pointer items-center rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                                className="inline-flex cursor-pointer items-center rounded-md bg-transparent px-1.5 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                               />
                             }
                           >
@@ -1708,7 +1708,7 @@ const SidebarThreadRow = memo(function SidebarThreadRow(props: SidebarThreadRowP
                                 aria-label={gt("Settle thread")}
                                 onClick={handleSettleClick}
                                 onPointerDown={handleActionPointerDown}
-                                className="-mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground hover:text-foreground"
+                                className="-mr-1 inline-flex cursor-pointer items-center gap-1 rounded-md bg-transparent px-1.5 text-xs text-muted-foreground outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                               />
                             }
                           >
@@ -1894,10 +1894,10 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                 );
               }}
               className={cn(
-                "group/sidebar-row group/v2-row flex min-h-9 w-full cursor-pointer items-center gap-2.5 rounded-md px-2.5 py-1 text-left text-sm outline-none",
+                "group/sidebar-row group/v2-row flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-(--sidebar-row-content-inset) py-1.5 text-left text-sm outline-none",
                 props.isHighlighted || props.isRouteActive
                   ? "bg-sidebar-row-active text-sidebar-foreground"
-                  : "text-sidebar-muted-foreground/75 hover:bg-sidebar-row-hover hover:text-sidebar-foreground",
+                  : "text-sidebar-muted-foreground hover:bg-sidebar-row-hover hover:text-sidebar-foreground",
                 isFileDragOver && "ring-1 ring-inset ring-primary/70",
                 isFileDragOver && !props.isRouteActive && "bg-sidebar-row-hover",
               )}
@@ -1917,7 +1917,7 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
             />
           ) : null}
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="flex min-w-0 items-center gap-2.5">
+            <span className="flex min-w-0 items-center gap-2">
               <span
                 ref={isRegeneratingTitle ? observeVisibleAnimation : undefined}
                 className={cn(
@@ -1926,7 +1926,7 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                   isRegeneratingTitle
                     ? "relative text-muted-foreground"
                     : props.isSettled && !props.isHighlighted && !props.isRouteActive
-                      ? "text-secondary-label/70 group-hover/sidebar-row:text-foreground"
+                      ? "text-secondary-label group-hover/sidebar-row:text-foreground"
                       : "text-foreground",
                 )}
               >
@@ -1945,7 +1945,7 @@ export const SidebarSearchResultRow = memo(function SidebarSearchResultRow(props
                   settled={props.isSettled}
                 />
               </span>
-              <span className="w-8 shrink-0 text-right text-xs text-muted-foreground/55 tabular-nums">
+              <span className="w-8 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
                 <RelativeTimeLabel timestamp={resolveThreadActivityTimestamp(thread)} />
               </span>
             </span>

@@ -1,6 +1,7 @@
-import { useSyncExternalStore } from "react";
+import { createContext, use, useLayoutEffect, useSyncExternalStore, type RefObject } from "react";
 
 import { isElectron } from "~/env";
+import { useMediaQuery } from "~/hooks/useMediaQuery";
 
 import { isMacPlatform, isWindowsPlatform } from "./utils";
 
@@ -9,6 +10,8 @@ const ELECTRON_CLASS_NAME = "electron";
 const ELECTRON_WINDOWS_CLASS_NAME = "electron-windows";
 // macOS has no overlay API; traffic lights stay inside this topbar at every zoom level.
 const MACOS_TITLEBAR_HEIGHT = 52;
+
+export const WindowControlsBackdropContext = createContext<"light" | "dark" | null>(null);
 
 interface WindowControlsOverlayLike {
   readonly visible: boolean;
@@ -75,6 +78,34 @@ function getNativeTitlebarHeight(): number {
 
 export function useNativeTitlebarHeight(): number {
   return useSyncExternalStore(subscribeTitlebarArea, getNativeTitlebarHeight, () => 0);
+}
+
+export function useSkyWindowControls(headerRef: RefObject<HTMLElement | null>, enabled: boolean) {
+  const backdrop = use(WindowControlsBackdropContext);
+  const titlebarHeight = useNativeTitlebarHeight();
+  const forcedColors = useMediaQuery("(forced-colors: active)");
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- synchronizes the renderer's header with the native caption buttons through IPC
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    const bridge = window.desktopBridge;
+    const setAppearance = bridge?.setWindowControlsAppearance;
+    if (!header || !enabled || !backdrop || !titlebarHeight || forcedColors || !setAppearance)
+      return;
+    if (!isWindowsPlatform(navigator.platform)) return;
+
+    let current = true;
+    void setAppearance(backdrop).then(
+      (applied) => {
+        if (current && applied) header.setAttribute("data-caption-follows-sky", "");
+      },
+      () => {},
+    );
+    return () => {
+      current = false;
+      header.removeAttribute("data-caption-follows-sky");
+      void setAppearance(null).catch(() => {});
+    };
+  }, [backdrop, enabled, forcedColors, headerRef, titlebarHeight]);
 }
 
 function getElectronPlatformClassNames(

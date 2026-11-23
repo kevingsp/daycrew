@@ -105,6 +105,7 @@ function layerDesktopWindow(
     dispatchSnapShotEvent: () => Effect.void,
     zoomMain: () => Effect.void,
     runMainContentsCommand: () => Effect.void,
+    setWindowControlsAppearance: () => Effect.succeed(false),
     syncAppearance: Effect.void,
   });
 }

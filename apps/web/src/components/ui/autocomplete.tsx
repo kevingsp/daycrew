@@ -100,21 +100,17 @@ function AutocompletePopup({
         side={side}
         sideOffset={sideOffset}
       >
-        <span
+        <AutocompletePrimitive.Popup
+          // Electron drag hit-testing ignores z-index; items over a drag region would swallow clicks.
           className={cn(
-            "relative flex max-h-full min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) rounded-lg border bg-popover not-dark:bg-clip-padding shadow-lg/5 transition-[scale,opacity] before:pointer-events-none before:absolute before:inset-0 before:rounded-[calc(var(--radius-lg)-1px)] before:shadow-[0_1px_--theme(--color-black/4%)] dark:before:shadow-[0_-1px_--theme(--color-white/6%)]",
+            "dropdown-glass relative flex max-h-[min(var(--available-height),23rem)] min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) flex-col rounded-(--radius-popover) text-foreground outline-none transition-[scale,opacity] duration-[var(--duration-micro,160ms)] ease-[var(--ease-spring-snappy,cubic-bezier(0.2,0.9,0.3,1))] will-change-transform data-ending-style:scale-[0.96] data-starting-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none [-webkit-app-region:no-drag]",
             className,
           )}
+          data-slot="autocomplete-popup"
+          {...props}
         >
-          <AutocompletePrimitive.Popup
-            // Electron drag hit-testing ignores z-index; items over a drag region would swallow clicks.
-            className="flex max-h-[min(var(--available-height),23rem)] flex-1 flex-col text-foreground [-webkit-app-region:no-drag]"
-            data-slot="autocomplete-popup"
-            {...props}
-          >
-            {children}
-          </AutocompletePrimitive.Popup>
-        </span>
+          {children}
+        </AutocompletePrimitive.Popup>
       </AutocompletePrimitive.Positioner>
     </AutocompletePrimitive.Portal>
   );

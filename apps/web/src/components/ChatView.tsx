@@ -158,6 +158,7 @@ import {
 } from "@t3tools/client-runtime/state/runtime";
 import { AsyncResult } from "effect/reactivity";
 import { isElectron } from "../env";
+import { useSkyWindowControls } from "../lib/windowControlsOverlay";
 import { useActiveThreadRef } from "../hooks/useActiveThreadRef";
 import { composerRequiresModifier } from "../composer-logic";
 import {
@@ -1150,6 +1151,8 @@ export default function ChatView(props: ChatViewProps) {
   const rightPanelMaximized =
     !embedded && canMaximizeRightPanel && rightPanelState.maximized === true;
   const inlineRightPanelOwnsTitleBar = rightPanelOpen && !shouldUsePlanSidebarSheet;
+  const headerReservesNativeControls =
+    isElectron && reserveTitleBarControlInset && !inlineRightPanelOwnsTitleBar;
   const [threadPanelPopoverHandle] = useState(PopoverCreateHandle);
   const [chatCanvasStore] = useState(createChatCanvasStore);
 
@@ -1705,6 +1708,10 @@ export default function ChatView(props: ChatViewProps) {
   });
   const keybindings = useAtomValue(primaryServerKeybindingsAtom);
   const backgroundThread = use(BackgroundThreadContext);
+  useSkyWindowControls(
+    threadPanelPopoverAnchorRef,
+    headerReservesNativeControls && !embedded && !backgroundThread && !rightPanelMaximized,
+  );
   const scriptKeybindings =
     useAtomValue(serverEnvironment.configValueAtom(environmentId))?.keybindings ??
     DEFAULT_RESOLVED_KEYBINDINGS;
@@ -2011,7 +2018,8 @@ export default function ChatView(props: ChatViewProps) {
         detailsCardMeasurement: state.detailsCardMeasurement,
         threadRef: activeThreadRef,
         preview: canvasPreview,
-        detailsCardInlineOpen: threadPanelInlineOpen,
+        detailsCardInlineOpen: !embedded && threadPanelInlineOpen,
+        reserveDetailsSpace: !timelineEmpty,
       }).detailsCardMode,
   );
   const threadPanelOpen = useRightPanelStore((state) =>
@@ -3418,14 +3426,13 @@ export default function ChatView(props: ChatViewProps) {
           <header
             ref={threadPanelPopoverAnchorRef}
             data-chat-header
+            data-reserves-native-controls={headerReservesNativeControls ? "" : undefined}
             className={cn(
               "relative bg-background [[data-panel-animations=true]_&]:motion-safe:transition-[padding-left] [[data-panel-animations=true]_&]:motion-safe:duration-(--panel-animation-duration) [[data-panel-animations=true]_&]:motion-safe:ease-out",
               isElectron
                 ? cn(
                     "drag-region flex h-[var(--workspace-topbar-height)] min-h-[var(--workspace-topbar-height)] shrink-0 items-center px-3 sm:px-5",
-                    reserveTitleBarControlInset &&
-                      !inlineRightPanelOwnsTitleBar &&
-                      "wco:pr-(--workspace-native-controls-inset)",
+                    headerReservesNativeControls && "wco:pr-(--workspace-native-controls-inset)",
                   )
                 : "flex h-[var(--workspace-topbar-height)] min-h-[var(--workspace-topbar-height)] shrink-0 items-center pl-(--workspace-gutter-start) pr-(--workspace-gutter-end)",
               COLLAPSED_SIDEBAR_TITLEBAR_INSET_CLASS,
@@ -3467,9 +3474,10 @@ export default function ChatView(props: ChatViewProps) {
               enabled: threadFindEnabled,
             }}
             store={chatCanvasStore}
-            threadRef={activeThreadRef}
+            threadRef={embedded ? null : activeThreadRef}
             preview={canvasPreview}
             detailsCardTopInset={isThreadFindActive ? THREAD_FIND_BAR_RESERVED_HEIGHT : 0}
+            reserveDetailsSpace={!timelineEmpty}
             composerOverlayElement={isDraftHeroState ? null : composerOverlayElement}
             data-chat-workspace-drop-target="true"
             onDragEnter={workspaceFileDropHandlers.onDragEnter}
@@ -3498,6 +3506,7 @@ export default function ChatView(props: ChatViewProps) {
             />
             <div
               {...conversationArea}
+              data-sky-conversation={embedded ? undefined : ""}
               className="relative flex min-h-0 flex-1 flex-col bg-background"
             >
               <WorkspaceMutationIdContext value={workspaceMutationId}>

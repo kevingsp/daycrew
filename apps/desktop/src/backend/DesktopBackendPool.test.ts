@@ -219,6 +219,7 @@ function layerPool(
           zoomMain: () => Effect.die("unexpected zoom"),
           runMainContentsCommand:
             options.onMainContentsCommand ?? (() => Effect.die("unexpected main contents command")),
+          setWindowControlsAppearance: () => Effect.succeed(false),
           syncAppearance: Effect.void,
         } satisfies DesktopWindow.DesktopWindow["Service"]),
       ),

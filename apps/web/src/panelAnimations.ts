@@ -33,9 +33,12 @@ export function usePanelAnimationSettings(): {
   durationMs: PanelAnimationDurationMs;
 } {
   const durationMs = useClientSettings((settings) => settings.panelAnimationDurationMs);
-  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
+  const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const suppressed = useContext(PanelAnimationSuppressionContext);
-  return { active: durationMs > 0 && !prefersReducedMotion && !suppressed, durationMs };
+  return {
+    active: durationMs > 0 && !reducedMotion && !suppressed,
+    durationMs: reducedMotion ? 0 : durationMs,
+  };
 }
 
 export function usePanelPresence<T>(

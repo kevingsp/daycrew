@@ -19,7 +19,7 @@
 .feed-stream {
   max-width: 800px;
   margin: auto;
-  padding: clamp(18px, 3vw, 48px);
+  padding: clamp(16px, 3vw, 48px);
 }
 .feed-stream > header,
 .feed-byline,
@@ -37,35 +37,59 @@
   gap: 12px;
 }
 .feed-stream h1 svg {
-  color: var(--muted-foreground);
+  color: currentColor;
+  flex-shrink: 0;
 }
 .feed-filters {
-  margin: 20px 0;
+  margin: 16px 0 20px;
   flex-wrap: wrap;
   gap: 4px;
 }
-.feed-filters button,
-.feed-actions :is(button, a) {
+.feed-filters button {
   font-size: 13px;
-  padding: 6px 9px;
-  border-radius: 6px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control, 0.5rem);
   cursor: pointer;
+  transition:
+    background-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease),
+    border-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease),
+    color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease);
 }
-.feed-filters button[aria-pressed="true"],
-.feed-actions :is(button, a):hover,
-.feed-filters button:hover {
-  background: var(--accent);
+.feed-actions :is(button, a) {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-control, 0.5rem);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease),
+    border-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease),
+    color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease);
+}
+.feed-actions :is(button, a):hover {
+  color: var(--foreground);
+  background: var(--sky-accent-hover, color-mix(in oklab, var(--accent) 70%, transparent));
+  border-color: var(--sky-accent-border, transparent);
 }
 .feed-card {
-  padding: 18px 20px;
+  padding: 16px 20px;
   margin-bottom: 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: color-mix(in srgb, var(--card) 80%, transparent);
+  border: 1px solid var(--sky-hairline, var(--border));
+  border-radius: var(--radius-card, 1rem);
+  background: color-mix(in oklab, var(--card) var(--sky-glass-l1-opacity, 84%), transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
   box-shadow:
-    inset 0 1px rgb(255 255 255 / 18%),
-    0 1px 3px #00000008;
+    inset 0 1px 0 rgb(255 255 255 / 18%),
+    0 1px 3px rgb(0 0 0 / 5%);
   overflow-wrap: anywhere;
+  transition: border-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease);
 }
 .feed-byline,
 .feed-context,
@@ -87,20 +111,22 @@
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.025em;
-  margin: 12px 0 6px;
+  line-height: 1.35;
+  margin: 12px 0 8px;
 }
 .feed-state::before {
   content: "";
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
   border-radius: 50%;
-  background: #3584da;
+  background: var(--info-foreground, var(--info));
 }
 .feed-card[data-state="Needs you"] .feed-state::before {
-  background: #da941d;
+  background: var(--warning-foreground, var(--warning));
 }
 .feed-card[data-state="Ready to review"] .feed-state::before {
-  background: #2a986b;
+  background: var(--success-foreground, var(--success));
 }
 .feed-summary,
 .feed-message p {
@@ -114,23 +140,22 @@
 .feed-actions {
   margin-top: 12px;
   flex-wrap: wrap;
-  gap: 2px;
-}
-.feed-actions :is(a, button) {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 .feed-actions a:first-child {
   color: var(--foreground);
-  background: var(--muted);
+  background: var(--sky-accent-selected, color-mix(in oklab, var(--muted) 85%, transparent));
+  border-color: var(--sky-accent-border, var(--sky-hairline, var(--border)));
+}
+.feed-actions a:first-child:hover {
+  background: var(--sky-accent-hover, color-mix(in oklab, var(--accent) 75%, transparent));
 }
 .feed-replies {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows var(--feed-duration) ease,
+    grid-template-rows var(--feed-duration) var(--ease-spring-smooth, ease),
     opacity var(--feed-duration) ease;
 }
 .feed-replies[data-open="true"] {
@@ -142,30 +167,36 @@
   overflow: hidden;
 }
 .feed-reply-body {
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--sky-hairline, var(--border));
   margin-top: 12px;
   padding-top: 12px;
 }
 .feed-reply-body form {
-  background: color-mix(in srgb, var(--background) 96%, transparent);
+  background: color-mix(in oklab, var(--card) var(--sky-glass-l2-opacity, 92%), transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
   display: flex;
   gap: 8px;
   align-items: flex-end;
-  border: 1px solid var(--border);
-  border-radius: 9px;
+  border: 1px solid var(--sky-hairline, var(--border));
+  border-radius: var(--radius-popover, 0.75rem);
   padding: 8px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
 }
 .feed-reply-body textarea {
   flex: 1;
   min-width: 0;
   font-size: 14px;
+  padding: 4px 8px;
+  border-radius: var(--radius-control, 0.5rem);
   resize: vertical;
+  outline: none;
 }
 .feed-message p {
-  margin: 3px 0 12px;
+  margin: 4px 0 12px;
 }
 .feed-card[data-selected="true"] {
-  border-color: color-mix(in srgb, var(--foreground) 38%, var(--border));
+  border-color: var(--sky-accent-border, color-mix(in oklab, var(--foreground) 38%, var(--border)));
 }
 .feed-scroll {
   scrollbar-gutter: stable;
@@ -175,7 +206,8 @@
   inset: 0 0 0 auto;
   width: var(--feed-detail-width);
   transform: translateX(100%);
-  transition: transform var(--feed-duration) cubic-bezier(0.2, 0.75, 0.25, 1);
+  transition: transform var(--feed-duration)
+    var(--ease-spring-smooth, cubic-bezier(0.2, 0.75, 0.25, 1));
   overflow: hidden;
   min-width: 0;
 }
@@ -183,15 +215,18 @@
   transform: translateX(0);
 }
 .feed-detail-inner {
-  border-left: 1px solid var(--border);
+  border-left: 1px solid var(--sky-hairline, var(--border));
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--background) 97%, transparent);
+  background: color-mix(in oklab, var(--card) var(--sky-glass-l2-opacity, 92%), transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%);
 }
 .feed-detail-inner > header {
   justify-content: space-between;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--sky-hairline, var(--border));
   padding: 8px 16px;
   font-size: 13px;
 }
@@ -205,15 +240,34 @@
   min-height: 0;
 }
 .feed-empty {
+  width: fit-content;
+  margin-inline: auto;
   text-align: center;
-  padding: 50px 12px;
+  padding: 3rem 1rem;
+  border: 1px solid var(--sky-hairline, var(--border));
+  border-radius: var(--radius-card, 1rem);
+  background: color-mix(in oklab, var(--card) var(--sky-glass-l1-opacity, 84%), transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.25);
+  backdrop-filter: blur(16px) saturate(1.25);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 18%);
   color: var(--muted-foreground);
 }
 .feed-empty svg {
   margin: auto;
 }
 .feed-empty h2 {
-  margin: 10px;
+  margin: 12px 0 8px;
+  color: var(--foreground);
+}
+.feed-empty a {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-control-xs, 0.375rem);
+  padding: 4px 8px;
+  color: var(--foreground);
+}
+.feed-empty a:hover {
+  background: var(--sky-accent-hover, color-mix(in oklab, var(--accent) 70%, transparent));
 }
 @media (max-width: 820px) {
   .feed-layout,
@@ -240,7 +294,7 @@
 @keyframes t3-feed-arrive {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -260,9 +314,9 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
   padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--sky-hairline, var(--border));
 }
 .feed-review small {
   color: var(--muted-foreground);
@@ -273,17 +327,21 @@
   width: fit-content;
   max-width: 100%;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.45rem 0.7rem;
-  margin-top: 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 0.45rem;
-  font-size: 0.83rem;
-  background: var(--muted);
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-top: 0.75rem;
+  border: 1px solid var(--sky-hairline, var(--border));
+  border-radius: var(--radius-control, 0.5rem);
+  font-size: 0.875rem;
+  background: color-mix(in oklab, var(--muted) 72%, transparent);
   color: var(--foreground);
+  transition:
+    background-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease),
+    border-color var(--duration-micro, 150ms) var(--ease-spring-snappy, ease);
 }
 .feed-result:hover {
-  background: var(--accent);
+  background: var(--sky-accent-hover, color-mix(in oklab, var(--accent) 70%, transparent));
+  border-color: var(--sky-accent-border, var(--border));
 }
 .feed-result span {
   overflow: hidden;
@@ -295,31 +353,43 @@
   white-space: nowrap;
 }
 .feed-added {
-  color: var(--color-success, currentColor);
+  color: var(--diff-addition-foreground, var(--success-foreground));
 }
 .feed-removed {
-  color: var(--color-error, currentColor);
+  color: var(--diff-deletion-foreground, var(--error-foreground));
 }
 
 .feed-thumbnail {
   height: 48px;
-  width: 70px;
+  width: 72px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: var(--radius-control-xs, 0.375rem);
   background: var(--background);
 }
 .feed-pr {
-  padding: 20px;
+  padding: 16px 20px;
 }
 .feed-pr h2 {
   font-weight: 600;
 }
 .feed-pr p {
-  margin: 0.6rem 0;
+  margin: 0.5rem 0;
   color: var(--muted-foreground);
 }
 .feed-pr a {
+  border-radius: var(--radius-control-xs, 0.375rem);
   text-decoration: underline;
+}
+
+/* Accessible inset focus indicators across interactive feed controls. */
+.feed-filters button:focus-visible,
+.feed-actions :is(button, a):focus-visible,
+.feed-result:focus-visible,
+.feed-reply-body textarea:focus-visible,
+.feed-empty a:focus-visible,
+.feed-pr a:focus-visible {
+  outline: 2px solid var(--sky-focus-ring, var(--ring));
+  outline-offset: -2px;
 }
 
 /* Keep text readable as the sky moves behind the controls. */
@@ -328,20 +398,17 @@
   color: var(--sky-ink);
   text-shadow: 0 1px 3px var(--sky-text-shadow);
 }
-.feed-stream h1 svg {
-  color: currentColor;
-}
-.feed-filters button:is(:hover, [aria-pressed="true"]) {
+.feed-filters button:hover {
   color: var(--foreground);
-  background: var(--card);
+  background: var(--sky-accent-hover, color-mix(in oklab, var(--card) 75%, transparent));
+  border-color: var(--sky-accent-border, var(--sky-hairline, var(--border)));
   text-shadow: none;
 }
-.feed-empty {
-  width: fit-content;
-  margin-inline: auto;
-  padding-inline: 24px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--background) 82%, transparent);
+.feed-filters button[aria-pressed="true"] {
+  color: var(--foreground);
+  background: var(--sky-accent-selected, color-mix(in oklab, var(--card) 90%, transparent));
+  border-color: var(--sky-accent-border, var(--sky-hairline, var(--border)));
+  text-shadow: none;
 }
 @media (min-width: 821px) {
   .feed-detail {
@@ -352,9 +419,17 @@
     height: 100%;
   }
   .feed-detail-inner {
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    border: 1px solid var(--sky-hairline, var(--border));
+    border-radius: calc(var(--radius-card, 1rem) - 0.5rem);
     overflow: hidden;
+  }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .feed-card,
+  .feed-detail-inner,
+  .feed-reply-body form,
+  .feed-empty {
+    background: var(--card);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
@@ -363,5 +438,18 @@
   .feed-reply-body form,
   .feed-empty {
     background: var(--card);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .feed-replies,
+  .feed-detail,
+  .feed-filters button,
+  .feed-actions :is(button, a),
+  .feed-result,
+  .feed-card {
+    transition: none;
+    animation: none;
   }
 }

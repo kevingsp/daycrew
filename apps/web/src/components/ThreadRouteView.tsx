@@ -227,7 +227,7 @@ export function ThreadRouteView({
   return (
     <SidebarInset
       className="h-svh min-h-0 overflow-hidden overscroll-y-none md:h-dvh"
-      data-sky-surface={target.kind === "draft" ? "draft" : undefined}
+      data-sky-surface={target.kind === "draft" ? "draft" : "chat"}
       inert={background}
     >
       <BackgroundThreadContext value={background}>

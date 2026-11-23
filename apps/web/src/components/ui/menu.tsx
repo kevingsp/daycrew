@@ -55,7 +55,7 @@ function MenuPopup({
       >
         <MenuPrimitive.Popup
           className={cn(
-            "dropdown-glass relative flex origin-(--transform-origin) rounded-lg shadow-[0_16px_40px_-18px_rgb(0_0_0/55%)] outline-none focus:outline-none dark:shadow-[0_18px_44px_-18px_rgb(0_0_0/80%)]",
+            "dropdown-glass relative flex origin-(--transform-origin) rounded-(--radius-popover) outline-none transition-[scale,opacity] duration-[var(--duration-micro,160ms)] ease-[var(--ease-spring-snappy,cubic-bezier(0.2,0.9,0.3,1))] will-change-transform data-ending-style:scale-[0.96] data-starting-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:opacity-0 focus:outline-none motion-reduce:transition-none",
             // Electron drag hit-testing ignores z-index; opt portaled menus out to keep overlapping rows
             // hoverable.
             "[-webkit-app-region:no-drag]",
@@ -92,7 +92,7 @@ function MenuSearchInput({
         ) : (
           <SearchIcon
             aria-hidden="true"
-            className="pointer-events-none absolute top-1.5 left-0 size-4 shrink-0 text-muted-foreground/55"
+            className="pointer-events-none absolute top-1.5 left-0 size-4 shrink-0 text-muted-foreground"
           />
         )}
         <Input
