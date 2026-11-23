@@ -2545,6 +2545,17 @@ export const stageDesktopDmgBackground = Effect.fn("stageDesktopDmgBackground")(
   if (!(yield* fs.exists(sourcePath))) {
     return yield* new DesktopDmgBackgroundSourceMissingError({ channel, sourcePath });
   }
+  const iconPath = path.resolve(
+    import.meta.dirname,
+    "..",
+    BRAND_ASSET_PATHS[resolveWebAssetBrandForChannel(channel)].web["favicon-32x32.png"],
+  );
+  const icon = yield* fs.readFile(iconPath);
+  const source = yield* fs.readFileString(sourcePath);
+  yield* fs.writeFileString(
+    sourcePath,
+    source.replace("__DAYCREW_ICON__", Buffer.from(icon).toString("base64")),
+  );
 
   for (const output of [
     { suffix: "", width: 640, height: 432 },
@@ -2733,18 +2744,11 @@ export function resolveDesktopWebAssetBrand(version: string): WebAssetBrand {
 }
 
 export function resolveDesktopBuildIconAssets(version: string): DesktopBuildIconAssets {
-  if (resolveDesktopUpdateChannel(version) === "nightly") {
-    return {
-      macIconPng: BRAND_ASSET_PATHS.nightlyMacIconPng,
-      linuxIconPng: BRAND_ASSET_PATHS.nightlyLinuxIconPng,
-      windowsIconIco: "assets/daycrew/daycrew.ico",
-    };
-  }
-
+  const assets = BRAND_ASSET_PATHS[resolveDesktopWebAssetBrand(version)];
   return {
-    macIconPng: BRAND_ASSET_PATHS.productionMacIconPng,
-    linuxIconPng: BRAND_ASSET_PATHS.productionLinuxIconPng,
-    windowsIconIco: "assets/daycrew/daycrew.ico",
+    macIconPng: assets.mac,
+    linuxIconPng: assets.universal,
+    windowsIconIco: assets.windows,
   };
 }
 

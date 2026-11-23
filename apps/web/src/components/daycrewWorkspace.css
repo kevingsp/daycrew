@@ -124,9 +124,9 @@
   background:
     linear-gradient(
         145deg,
-        color-mix(in srgb, var(--sky-light) 30%, #292b40),
-        color-mix(in srgb, var(--sky-top) 28%, #303046) 66%,
-        color-mix(in srgb, var(--sky-base) 32%, #292a40)
+        color-mix(in srgb, var(--sky-light) 30%, #28204e),
+        color-mix(in srgb, var(--sky-top) 28%, #231936) 66%,
+        color-mix(in srgb, var(--sky-base) 32%, #19132e)
       )
       padding-box,
     conic-gradient(

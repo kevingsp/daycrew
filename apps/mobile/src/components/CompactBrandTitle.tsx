@@ -1,17 +1,17 @@
 import { NATIVE_WORKSPACE_COLUMNS_SUPPORTED } from "../native/NativeWorkspaceColumns";
 import Constants from "expo-constants";
+import { Image } from "expo-image";
 import { useGT } from "gt-react-native";
 import { useState } from "react";
 import { Platform, View } from "react-native";
 
 import { AppText as Text } from "./ui/AppText";
-import { T3Wordmark } from "./T3Wordmark";
+import { DAYCREW_BRAND_MARK_SOURCE, DAYCREW_NAME } from "./brandAssets";
 import { IPAD_HOME_TITLE_OFFSET } from "../lib/layoutMetrics";
 import { resolveMobileStageLabel } from "../lib/mobileBranding";
 import { useAndroidControlSizing } from "./ui/useAndroidControlSizing";
 
 const BRAND_MAX_FONT_SCALE = 1.4;
-const WORDMARK_SUFFIX = "Code";
 
 export function brandTitleOffset(): number {
   if (Platform.OS !== "ios") return 0;
@@ -42,7 +42,7 @@ export function CompactBrandTitle(
         props.fit && showStage ? (event) => setFullWidth(event.nativeEvent.layout.width) : undefined
       }
       aria-level={1}
-      accessibilityLabel={props.accessibilityLabel ?? gt("T3 Code, Threads")}
+      accessibilityLabel={props.accessibilityLabel ?? gt("Threads")}
       accessible
       role="heading"
       className="flex-row items-center gap-1.5"
@@ -52,7 +52,11 @@ export function CompactBrandTitle(
         props.fit && { flexShrink: 0 },
       ]}
     >
-      <T3Wordmark colorClassName="accent-icon" height={Math.round(15 * scale)} />
+      <Image
+        source={DAYCREW_BRAND_MARK_SOURCE}
+        accessibilityIgnoresInvertColors
+        style={{ width: 19 * scale, height: 19 * scale }}
+      />
       {/* A logo beside a fixed-size wordmark: it may grow with Dynamic Type, not crowd the bar. */}
       <Text
         allowFontScaling={props.allowFontScaling}
@@ -60,7 +64,7 @@ export function CompactBrandTitle(
         className="font-t3-medium text-foreground-muted"
         style={{ fontSize: 21 * scale, letterSpacing: -0.5 * scale }}
       >
-        {WORDMARK_SUFFIX}
+        {DAYCREW_NAME}
       </Text>
       {showStage ? (
         <View
