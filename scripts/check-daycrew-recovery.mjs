@@ -295,6 +295,7 @@ async function check() {
       "SELECT count(*) AS n FROM orchestration_v2_projection_runs WHERE thread_id=?",
     );
     const before = runs.get(target).n;
+    await send.click({ trial: true });
     withholdResponses = true;
     await send.click();
     await waitForRun(runs, target, before + 1);
