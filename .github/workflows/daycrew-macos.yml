@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 env:
-  DAYCREW_VERSION: 0.1.11-daycrew.5
+  DAYCREW_VERSION: 0.1.11-daycrew.6
   T3CODE_TELEMETRY_ENABLED: "false"
   T3CODE_OTEL_SDK_DISABLED: "true"
   T3CODE_DISABLE_AUTO_UPDATE: "true"
