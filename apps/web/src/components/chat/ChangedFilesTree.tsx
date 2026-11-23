@@ -233,7 +233,7 @@ const ChangedFilesTree = memo(function ChangedFilesTree(props: {
           ) : (
             <FolderClosedIcon className="size-3.5 shrink-0 text-muted-foreground/75" />
           )}
-          <span className="truncate font-mono text-2xs text-muted-foreground/90 group-hover:text-foreground/90">
+          <span className="truncate font-mono text-2xs text-muted-foreground group-hover:text-foreground">
             {node.name}
           </span>
           {hasNonZeroStat(node.stat) && (
@@ -270,7 +270,7 @@ const ChangedFilesTree = memo(function ChangedFilesTree(props: {
           theme={resolvedTheme}
           className="size-3.5 text-muted-foreground/70"
         />
-        <span className="flex min-w-0 font-mono text-xs text-foreground/85 group-hover:text-foreground">
+        <span className="flex min-w-0 font-mono text-xs text-foreground">
           <MiddleTruncate value={node.name} />
         </span>
         {node.stat && (

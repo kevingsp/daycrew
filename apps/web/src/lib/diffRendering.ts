@@ -4,12 +4,11 @@ import type { FileDiffMetadata } from "@pierre/diffs/types";
 import { msg } from "gt-react";
 
 import { m, type MessageResolver } from "../i18n/messages";
-import { READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
+import { READABLE_DARK_THEME_NAME, READABLE_LIGHT_THEME_NAME } from "./readableSyntaxTheme";
 
-// Light mode uses a darker pierre-light so syntax stays readable on every code surface.
 export const DIFF_THEME_NAMES = {
   light: READABLE_LIGHT_THEME_NAME,
-  dark: "pierre-dark",
+  dark: READABLE_DARK_THEME_NAME,
 } as const;
 
 export type DiffThemeName = (typeof DIFF_THEME_NAMES)[keyof typeof DIFF_THEME_NAMES];

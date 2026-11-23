@@ -1,6 +1,12 @@
+import { getResolvedOrResolveTheme } from "@pierre/diffs";
 import { describe, expect, it } from "vite-plus/test";
 
-import { readableOnLightCode, readableSyntaxColor } from "./readableSyntaxTheme";
+import {
+  READABLE_DARK_THEME_NAME,
+  readableOnLightCode,
+  readableSyntaxColor,
+} from "./readableSyntaxTheme";
+import { skyContrastRatio } from "./daycrewSky";
 
 function luminance(hex: string): number {
   const [r, g, b] = [1, 3, 5].map((start) => {
@@ -50,4 +56,15 @@ describe("readableOnLightCode", () => {
     expect(readableOnLightCode("#d5a91080")).toMatch(/80$/);
     expect(readableOnLightCode("var(--x)")).toBe("var(--x)");
   });
+});
+
+it("keeps dark syntax readable over the brightest code glass", async () => {
+  const theme = await getResolvedOrResolveTheme(READABLE_DARK_THEME_NAME, "highlights");
+  const syntax = theme.zed?.style.syntax;
+  expect(syntax).toBeDefined();
+  for (const [scope, style] of Object.entries(syntax ?? {})) {
+    const color = typeof style === "string" ? style : style.color;
+    if (color) expect(skyContrastRatio(color, "#3d3c44"), scope).toBeGreaterThanOrEqual(4.5);
+  }
+  expect(syntax?.comment).not.toEqual(syntax?.punctuation);
 });
