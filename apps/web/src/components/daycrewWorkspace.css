@@ -83,6 +83,11 @@
     position: absolute;
   }
 
+  [data-slot="daycrew-workspace"] .feed-detail-inner > header {
+    min-height: var(--workspace-topbar-height);
+    padding-left: var(--workspace-titlebar-content-left);
+  }
+
   [data-slot="daycrew-workspace"] .feed-stream > header [data-slot="sidebar-trigger"] {
     visibility: hidden;
   }

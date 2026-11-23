@@ -1,4 +1,4 @@
-const OFFLINE_CACHE = "daycrew-offline-v1";
+const OFFLINE_CACHE = "daycrew-offline-v2";
 const OFFLINE_URL = "/offline.html";
 const RETRY_URL = "/offline-retry.js";
 

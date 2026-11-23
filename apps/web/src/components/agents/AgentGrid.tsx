@@ -244,12 +244,12 @@ export default function AgentGrid() {
             data-workspace-glass=""
             role="group"
             aria-label={gt("Filter by status")}
-            className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto rounded-xl p-1 sm:my-5 sm:flex-wrap"
+            className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl p-2 sm:my-5 sm:flex-wrap sm:p-1"
           >
             {(["all", "attention", "running", "review"] as const).map((status) => (
               <Button
                 key={status}
-                size="sm"
+                size={mobile ? "xs" : "sm"}
                 variant={filter === status ? "secondary" : "ghost-muted"}
                 aria-pressed={filter === status}
                 onClick={() => {

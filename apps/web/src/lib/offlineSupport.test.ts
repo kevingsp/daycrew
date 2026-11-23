@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vite-plus/test";
 const workerSource = NodeFS.readFileSync(new URL("../../public/sw.js", import.meta.url), "utf8");
 
 function worker() {
+  let currentCache = "";
   const handlers = new Map<string, (event: unknown) => void>();
   const files = new Map<string, Response>();
   const addAll = vi.fn(async (urls: string[]) => {
@@ -23,9 +24,12 @@ function worker() {
       clients: { claim },
     },
     caches: {
-      open: async () => ({ addAll }),
+      open: async (name: string) => {
+        currentCache = name;
+        return { addAll };
+      },
       match: async (url: string) => files.get(url)?.clone(),
-      keys: async () => ["another-app-cache", "daycrew-offline-v0", "daycrew-offline-v1"],
+      keys: async () => ["another-app-cache", "daycrew-offline-old", currentCache],
       delete: remove,
     },
     fetch,
@@ -67,7 +71,7 @@ describe("Home Screen offline support", () => {
     const retry = await app.request("/offline-retry.js", "same-origin");
     expect(await retry?.text()).toBe("/offline-retry.js");
     await app.lifecycle("activate");
-    expect(app.remove).toHaveBeenCalledExactlyOnceWith("daycrew-offline-v0");
+    expect(app.remove).toHaveBeenCalledExactlyOnceWith("daycrew-offline-old");
     expect(app.claim).toHaveBeenCalledOnce();
   });
 
