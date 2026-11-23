@@ -3,7 +3,7 @@ import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environ
 import { threadKey } from "@t3tools/client-runtime/state/entities";
 import { Link, useRouterState } from "@tanstack/react-router";
 import { useGT, useMessages } from "gt-react";
-import { Bot, Pause, Rss, Settings } from "lucide-react";
+import { Bot, Pause, Settings } from "lucide-react";
 import {
   useDelegatedUnderParent,
   useHiddenThreadKeys,
@@ -19,6 +19,7 @@ import { resolveBackgroundThreadRequest } from "../backgroundThreadAnnouncement"
 import { useSidebar } from "../ui/sidebar";
 import { Tooltip, TooltipTrigger, TooltipPopup } from "../ui/tooltip";
 import { sidebarProviderEntriesAtom } from "./providerEntries";
+import { SidebarSubagents } from "./SidebarSubagents";
 
 function AgentRailContents() {
   const gt = useGT();
@@ -37,12 +38,13 @@ function AgentRailContents() {
     <nav data-slot="agent-rail" {...workspaceAreaProps("sidebar", 0)} aria-label={gt("Threads")}>
       <Link
         to="/feed"
-
-        title={gt("Agent feed")}
-        aria-label={gt("Agent feed")}
+        title={gt("Agents")}
+        aria-label={gt("Agents")}
+        aria-current={inFeed ? "page" : undefined}
       >
-        <Rss size={17} />
+        <Bot size={17} />
       </Link>
+      <SidebarSubagents compact />
       <div data-slot="active-agents">
         {filterSidebarV2VisibleThreads(threads, null, delegated).map((thread) => {
           const ref = scopeThreadRef(thread.environmentId, thread.id);

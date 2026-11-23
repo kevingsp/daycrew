@@ -1,7 +1,6 @@
 import { Outlet, createFileRoute, redirect, useRouterState } from "@tanstack/react-router";
 
 import { lazy, Suspense } from "react";
-const AgentFeed = lazy(() => import("../components/AgentFeed"));
 
 import { ThreadRouteView } from "../components/ThreadRouteView";
 import { GlobalVoiceInputIndicator } from "../components/chat/GlobalVoiceInputIndicator";
@@ -12,6 +11,8 @@ import { retainThreadFindForRoute } from "../components/chat/threadFindStore";
 import { ThreadLinkPrompt } from "../components/promptLinks/ThreadLinkPrompt";
 import { useShownThreadRouteTarget } from "../hooks/useShownThreadRouteTarget";
 
+const AgentsPage = lazy(() => import("../components/agents/AgentsPage"));
+
 function ChatRouteLayout() {
   // Render both routes here so draft promotion keeps the same ChatView mounted.
   const { shownTarget, modalOpen } = useShownThreadRouteTarget();
@@ -20,7 +21,7 @@ function ChatRouteLayout() {
   if (feed)
     return (
       <Suspense fallback={null}>
-        <AgentFeed />
+        <AgentsPage />
       </Suspense>
     );
   return (

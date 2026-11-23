@@ -264,8 +264,8 @@ try {
       NodeFS.readFileSync(NodePath.join(userdata, "server-runtime.json"), "utf8"),
     );
     const backendPid = backend.pid as number;
-    await page.getByRole("link", { name: "Agent feed", exact: true }).click();
-    await page.getByRole("heading", { name: "Agent feed", exact: true }).waitFor();
+    await page.getByRole("link", { name: "Agents", exact: true }).click();
+    await page.getByRole("heading", { name: "Agents", exact: true }).waitFor();
     if (pass === "first-launch") {
       const reopened = NodeChildProcess.spawn(executable, [], { env, stdio: "ignore" });
       await new Promise<void>((resolve, reject) => {
@@ -316,7 +316,7 @@ try {
       );
       await page.getByRole("button", { name: "Close details", exact: true }).click();
       checks.push("reduced motion disables feed transitions");
-      await page.getByRole("button", { name: "Replies", exact: true }).first().click();
+      await page.getByRole("button", { name: "Reply", exact: true }).first().click();
       const composer = page.getByRole("textbox", { name: "Reply to Release launch check" });
       await composer.fill("Daycrew installer verification message");
       await page.getByRole("button", { name: "Send reply", exact: true }).click();

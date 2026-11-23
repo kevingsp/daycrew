@@ -1,38 +1,26 @@
 import { useAtomValue } from "@effect/atom-react";
 import { scopeThreadRef } from "@t3tools/client-runtime/environment";
-import { threadKey } from "@t3tools/client-runtime/state/entities";
 import { Link } from "@tanstack/react-router";
 import { T, useGT } from "gt-react";
-import { BotIcon, GitBranchIcon, LayoutGridIcon, PlusIcon, SearchIcon } from "lucide-react";
+import { BotIcon, GitBranchIcon, PlusIcon, SearchIcon } from "lucide-react";
 import { useState } from "react";
 
-import { isElectron } from "../../env";
 import { useNowMinute } from "../../hooks/useNowMinute";
 import { useMediaQuery } from "../../hooks/useMediaQuery";
 import { cn } from "../../lib/utils";
-import { workspaceAreaProps } from "../../lib/workspaceFocus";
-import {
-  useAllEnvironmentShellsBootstrapped,
-  useDelegatedUnderParent,
-  useHiddenThreadKeys,
-  useProjects,
-  useQuietThreadShells,
-} from "../../state/entities";
+import { useAllEnvironmentShellsBootstrapped } from "../../state/entities";
 import { liveShellEnvironmentIdsAtom } from "../../state/shell";
 import { buildThreadRouteParams } from "../../threadRoutes";
 import { ProviderInstanceIcon } from "../chat/ProviderInstanceIcon";
 import { sidebarProviderEntriesAtom } from "../sidebar/providerEntries";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { SidebarInset } from "../ui/sidebar";
-import { WorkspacePageHeader } from "../WorkspacePageHeader";
-import { InstallDaycrew } from "../mobile/InstallDaycrew";
 import {
-  buildWorkspaceRows,
   filterWorkspaceRows,
   type WorkspaceRow,
   type WorkspaceStatus,
 } from "../workspaces/workspaceOverview.logic";
+import { useAgentRows } from "./useAgentRows";
 
 const statusColors: Record<WorkspaceStatus, string> = {
   attention: "bg-warning",
@@ -163,19 +151,12 @@ function AgentCard({ row, compact }: { readonly row: WorkspaceRow; readonly comp
 
 export default function AgentGrid() {
   const gt = useGT();
-  const threads = useQuietThreadShells();
-  const projects = useProjects();
-  const hidden = useHiddenThreadKeys();
-  const delegated = useDelegatedUnderParent();
+  const allRows = useAgentRows().filter((row) => row.status !== "done");
   const bootstrapped = useAllEnvironmentShellsBootstrapped();
   const [filter, setFilter] = useState<"all" | "attention" | "running" | "review">("all");
   const [query, setQuery] = useState("");
   const [limit, setLimit] = useState(12);
   const mobile = useMediaQuery("max-md");
-  const allRows = buildWorkspaceRows(threads, projects).filter((row) => {
-    const key = threadKey(scopeThreadRef(row.thread.environmentId, row.thread.id));
-    return row.status !== "done" && !hidden.has(key) && !delegated.has(key);
-  });
   const rows = filterWorkspaceRows(allRows, "", filter, query);
   const labels = {
     all: gt("All"),
@@ -184,130 +165,97 @@ export default function AgentGrid() {
     review: gt("Ready to review"),
   };
   return (
-    <SidebarInset
-      {...workspaceAreaProps("home", 1, gt("Agents"))}
-      data-sky-surface="agents"
-      className="h-full min-h-0 overflow-hidden"
-    >
-      <WorkspacePageHeader
-        electron={isElectron}
-        data-workspace-topbar=""
-        className="border-b border-border/40"
+    <div className="scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
+      <div
+        data-workspace-content=""
+        className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-8 sm:py-10"
       >
-        <LayoutGridIcon aria-hidden="true" className="hidden size-4 sm:block" />
-        <span className="text-sm font-medium">
-          <T>Agents</T>
-        </span>
-        <div className="ml-auto flex items-center gap-1">
-          <InstallDaycrew />
-          <Button
-            size={mobile ? "icon" : "sm"}
-            variant="ghost"
-            aria-label={gt("New prompt")}
-            render={<Link to="/" />}
-          >
-            <PlusIcon />
-            <span className="hidden sm:inline">
-              <T>New prompt</T>
-            </span>
-          </Button>
-        </div>
-      </WorkspacePageHeader>
-      <div className="scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-        <div
-          data-workspace-content=""
-          className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-8 sm:py-10"
-        >
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h1 data-workspace-title="">
-                <T>Your crew</T>
-              </h1>
-              <p data-sky-caption="" className="mt-2 hidden text-sm sm:block">
-                <T>A little space for every agent.</T>
-              </p>
-            </div>
-            <div className="w-full sm:w-64">
-              <Input
-                type="search"
-                aria-label={gt("Search agents")}
-                placeholder={gt("Search agents")}
-                value={query}
-                onChange={(event) => {
-                  setQuery(event.target.value);
-                  setLimit(12);
-                }}
-              />
-            </div>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 data-workspace-title="">
+              <T>Your crew</T>
+            </h1>
           </div>
+          <div className="w-full sm:w-64">
+            <Input
+              type="search"
+              aria-label={gt("Search agents")}
+              placeholder={gt("Search agents")}
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setLimit(12);
+              }}
+            />
+          </div>
+        </div>
+        <div
+          data-workspace-glass=""
+          role="group"
+          aria-label={gt("Filter by status")}
+          className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl p-2 sm:my-5 sm:flex-wrap sm:p-1"
+        >
+          {(["all", "attention", "running", "review"] as const).map((status) => (
+            <Button
+              key={status}
+              size={mobile ? "xs" : "sm"}
+              variant={filter === status ? "secondary" : "ghost-muted"}
+              aria-pressed={filter === status}
+              onClick={() => {
+                setFilter(status);
+                setLimit(12);
+              }}
+            >
+              {mobile && status === "review" ? gt("Review") : labels[status]}{" "}
+              <span className="tabular-nums opacity-70">
+                {status === "all"
+                  ? allRows.length
+                  : allRows.filter((row) => row.status === status).length}
+              </span>
+            </Button>
+          ))}
+        </div>
+        {rows.length > 0 ? (
+          <ul
+            aria-label={gt("Agents")}
+            className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
+          >
+            {rows.slice(0, limit).map((row) => (
+              <li key={row.key} className="min-w-0">
+                <AgentCard row={row} compact={mobile} />
+              </li>
+            ))}
+          </ul>
+        ) : (
           <div
             data-workspace-glass=""
-            role="group"
-            aria-label={gt("Filter by status")}
-            className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl p-2 sm:my-5 sm:flex-wrap sm:p-1"
+            className="rounded-2xl border border-border/60 px-5 py-12 text-center"
           >
-            {(["all", "attention", "running", "review"] as const).map((status) => (
-              <Button
-                key={status}
-                size={mobile ? "xs" : "sm"}
-                variant={filter === status ? "secondary" : "ghost-muted"}
-                aria-pressed={filter === status}
-                onClick={() => {
-                  setFilter(status);
-                  setLimit(12);
-                }}
-              >
-                {mobile && status === "review" ? gt("Review") : labels[status]}{" "}
-                <span className="tabular-nums opacity-70">
-                  {status === "all"
-                    ? allRows.length
-                    : allRows.filter((row) => row.status === status).length}
-                </span>
+            <SearchIcon aria-hidden="true" className="mx-auto size-5 text-muted-foreground" />
+            <h2 className="mt-3 text-sm font-medium">
+              {!bootstrapped ? gt("Connecting") : gt("No agents to show")}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {query || filter !== "all"
+                ? gt("Try another project, status, or search.")
+                : gt("Start a prompt to put your crew to work.")}
+            </p>
+            <div className="mt-5">
+              <Button render={<Link to="/" />}>
+                <PlusIcon />
+                <T>New prompt</T>
               </Button>
-            ))}
+            </div>
           </div>
-          {rows.length > 0 ? (
-            <ul
-              aria-label={gt("Agents")}
-              className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
-            >
-              {rows.slice(0, limit).map((row) => (
-                <li key={row.key} className="min-w-0">
-                  <AgentCard row={row} compact={mobile} />
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div
-              data-workspace-glass=""
-              className="rounded-2xl border border-border/60 px-5 py-12 text-center"
-            >
-              <SearchIcon aria-hidden="true" className="mx-auto size-5 text-muted-foreground" />
-              <h2 className="mt-3 text-sm font-medium">
-                {!bootstrapped ? gt("Connecting") : gt("No agents to show")}
-              </h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {query || filter !== "all"
-                  ? gt("Try another project, status, or search.")
-                  : gt("Start a prompt to put your crew to work.")}
-              </p>
-              <div className="mt-5">
-                <Button render={<Link to="/" />}>
-                  <PlusIcon />
-                  <T>New prompt</T>
-                </Button>
-              </div>
-            </div>
-          )}
-          {rows.length > limit ? (
-            <div className="mt-5 flex justify-center">
-              <Button variant="outline" onClick={() => setLimit(limit + (mobile ? 12 : 24))}>
-                <T>Show more</T>
-              </Button>
-            </div>
-          ) : null}
-        </div>
+        )}
+        {rows.length > limit ? (
+          <div className="mt-5 flex justify-center">
+            <Button variant="outline" onClick={() => setLimit(limit + (mobile ? 12 : 24))}>
+              <T>Show more</T>
+            </Button>
+          </div>
+        ) : null}
       </div>
-    </SidebarInset>
+    </div>
   );
 }

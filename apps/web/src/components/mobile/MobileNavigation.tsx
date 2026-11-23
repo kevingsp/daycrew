@@ -1,6 +1,6 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { T, useGT } from "gt-react";
-import { LayoutGridIcon, MenuIcon, PlusIcon, RssIcon } from "lucide-react";
+import { BotIcon, MenuIcon, PlusIcon } from "lucide-react";
 import { useEffect } from "react";
 import * as Schema from "effect/Schema";
 
@@ -63,7 +63,6 @@ function NavigationContents({
   }, [currentDraftId, savedDraftId, setSavedDraftId]);
   const keyboardOpen = useSoftwareKeyboardOpen();
   const feed = pathname === "/feed" || pathname.startsWith("/feed/");
-  const agents = pathname === "/agents";
   const prompt = pathname === "/" || pathname.startsWith("/draft/");
   const itemClass =
     "relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-2xs font-medium outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
@@ -80,15 +79,7 @@ function NavigationContents({
           className={cn(itemClass, feed && "bg-accent/70 text-foreground")}
           aria-current={feed ? "page" : undefined}
         >
-          <RssIcon aria-hidden="true" className="size-5" />
-          <T>Feed</T>
-        </Link>
-        <Link
-          to="/agents"
-          className={cn(itemClass, agents && "bg-accent/70 text-foreground")}
-          aria-current={agents ? "page" : undefined}
-        >
-          <LayoutGridIcon aria-hidden="true" className="size-5" />
+          <BotIcon aria-hidden="true" className="size-5" />
           <T>Agents</T>
         </Link>
         <Link

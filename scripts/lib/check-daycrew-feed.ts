@@ -41,7 +41,7 @@ export async function checkDaycrewFeed(
     .locator(".feed-card")
     .filter({ has: page.getByRole("heading", { name: title, exact: true }) });
   await card.waitFor();
-  const replies = card.getByRole("button", { name: "Replies", exact: true });
+  const replies = card.getByRole("button", { name: "Reply", exact: true });
   const composer = card.getByRole("textbox", { name: "Reply to " + title });
   const review = card.getByRole("link", { name: "Review diff", exact: true });
   const close = page.getByRole("button", { name: "Close details", exact: true });

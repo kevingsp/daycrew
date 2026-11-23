@@ -88,10 +88,6 @@
     padding-left: var(--workspace-titlebar-content-left);
   }
 
-  [data-slot="daycrew-workspace"] .feed-stream > header [data-slot="sidebar-trigger"] {
-    visibility: hidden;
-  }
-
   [data-sky-surface] :is(input, textarea, [contenteditable="true"]) {
     font-size: max(1rem, 1em);
   }

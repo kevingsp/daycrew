@@ -297,7 +297,9 @@ const configuredAllowedHosts = (process.env.T3CODE_DEV_ALLOWED_HOSTS ?? "")
   .filter((entry) => entry.length > 0);
 const allowedHosts = [".ts.net", ...configuredAllowedHosts];
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, mode }) => {
+  // Browser fixtures serve the test origin, even when launched inside Daycrew.
+  const isTest = mode === "test";
   // `vp dev` and `--built` dev pair this client with a server run from source, which reports the
   // manifest version. Only a production build is paired with a packed server.
   const configuredAppVersion =
@@ -351,9 +353,10 @@ export default defineConfig(({ command }) => {
       ],
     },
     define: {
-      "import.meta.env.VITE_WS_URL": JSON.stringify(configuredWsUrl ?? ""),
+      "import.meta.env.VITE_WS_URL": JSON.stringify(isTest ? "" : (configuredWsUrl ?? "")),
       // Override .env URLs with empty values in single-origin dev so clients use window.location.origin.
-      "import.meta.env.VITE_HTTP_URL": JSON.stringify(configuredHttpUrl ?? ""),
+      "import.meta.env.VITE_HTTP_URL": JSON.stringify(isTest ? "" : (configuredHttpUrl ?? "")),
+      ...(isTest ? { "import.meta.env.VITE_DEV_SERVER_URL": JSON.stringify("") } : {}),
       "import.meta.env.VITE_T3CODE_RELAY_URL": JSON.stringify(configuredRelayUrl),
       "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(configuredClerkPublishableKey),
       "import.meta.env.VITE_CLERK_JWT_TEMPLATE": JSON.stringify(configuredClerkJwtTemplate),

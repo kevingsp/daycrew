@@ -19,6 +19,8 @@ const database = NodePath.join(userdata, "statev2.sqlite");
 const historySize = 300;
 const reply = "Count this recovered reply once.";
 const env = { ...process.env, T3CODE_TELEMETRY_ENABLED: "false", T3CODE_OTEL_SDK_DISABLED: "true" };
+// The disposable server must serve its own bundle even when run from a Daycrew dev session.
+delete env.VITE_DEV_SERVER_URL;
 let server;
 let exited;
 let browser;
@@ -125,7 +127,18 @@ function seed() {
 async function start(port) {
   server = NodeChildProcess.spawn(
     process.execPath,
-    [cli, "--base-dir", home, "--host", "127.0.0.1", "--port", String(port), "--no-browser"],
+    [
+      cli,
+      "--mode",
+      "web",
+      "--base-dir",
+      home,
+      "--host",
+      "127.0.0.1",
+      "--port",
+      String(port),
+      "--no-browser",
+    ],
     { env, stdio: ["ignore", "pipe", "pipe"] },
   );
   exited = NodeEvents.once(server, "exit");
@@ -209,7 +222,7 @@ async function check() {
     });
   });
   await page.goto(url);
-  await page.getByRole("link", { name: "Agent feed", exact: true }).click();
+  await page.getByRole("link", { name: "Agents", exact: true }).click();
   await page.getByRole("button", { name: "Toggle main sidebar" }).click();
   const rail = page.locator('[data-slot="agent-rail"]');
   const waiting = rail.locator('[data-attention="true"]');
@@ -220,7 +233,7 @@ async function check() {
   NodeAssert.equal(await cards.count(), 20);
   await page.getByRole("button", { name: "Show more" }).click();
   const deepCard = cards.nth(34);
-  await deepCard.getByRole("button", { name: "Replies" }).click();
+  await deepCard.getByRole("button", { name: "Reply", exact: true }).click();
   const editor = deepCard.getByRole("textbox");
   await editor.fill("Return to this draft");
   const settleFeed = () =>
@@ -253,18 +266,25 @@ async function check() {
   const card = cards.filter({
     has: page.getByRole("heading", { name: "Recovery target", exact: true }),
   });
-  const replies = card.getByRole("button", { name: "Replies" });
+  const replies = card.getByRole("button", { name: "Reply", exact: true });
   const composer = card.getByRole("textbox");
   const send = card.getByRole("button", { name: "Send reply" });
   await replies.click();
   await composer.fill("Count this");
+  const view = page.getByRole("group", { name: "Agent view" });
+  await view.getByRole("button", { name: "Grid", exact: true, pressed: false }).click();
+  await page.locator("[data-agent-card]").first().waitFor();
+  NodeAssert.equal(await cards.count(), 0);
+  await view.getByRole("button", { name: "List", exact: true, pressed: false }).click();
+  await composer.waitFor();
+  NodeAssert.equal(await composer.inputValue(), "Count this");
   await stop();
   await card.getByText("Reconnecting. Your draft is saved.").waitFor();
   NodeAssert.ok(await send.isDisabled());
   await composer.fill(reply);
   await start(port);
   await page.reload();
-  await replies.click();
+  await composer.waitFor();
   NodeAssert.equal(await composer.inputValue(), reply);
 
   // Withhold the acknowledgement until the backend has committed. Reload the client
@@ -281,7 +301,7 @@ async function check() {
     await page.goto("about:blank");
     withholdResponses = false;
     await page.goto(new URL("/feed", url).href);
-    await replies.click();
+    await composer.waitFor();
     NodeAssert.equal(await composer.inputValue(), reply);
     await send.click();
     await card.getByText("Reply sent", { exact: true }).waitFor();

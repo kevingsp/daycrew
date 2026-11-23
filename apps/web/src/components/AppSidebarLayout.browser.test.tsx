@@ -120,4 +120,61 @@ describe("sidebar toggle shortcut", () => {
     await userEvent.click(toggle);
     await expect.element(link).not.toBeInTheDocument();
   });
+
+  it("shows running children and provider-managed work while the parent waits", async () => {
+    await page.viewport(1366, 768);
+    const environmentId = EnvironmentId.make("local");
+    const parentId = ThreadId.make("parent");
+    const childId = ThreadId.make("review");
+    const parent = makeThreadFixture({
+      environmentId,
+      id: parentId,
+      title: "Ship settings",
+      blockedOnThreadWait: true,
+      pendingBackgroundTasks: [
+        { taskId: "review", kind: "subagent", childThreadId: childId },
+        { taskId: "native", kind: "subagent", description: "Provider checks" },
+      ],
+    });
+    const child = makeThreadFixture({
+      environmentId,
+      id: childId,
+      title: "Schema review",
+      lineage: {
+        rootThreadId: parentId,
+        parentThreadId: parentId,
+        relationshipToParent: "subagent",
+      },
+      runtime: {
+        status: "running",
+        activeRunId: null,
+        providerInstanceId: parent.providerInstanceId,
+        providerName: "Codex",
+        lastError: null,
+        updatedAt: parent.updatedAt,
+      },
+    });
+    const completed = {
+      ...child,
+      id: ThreadId.make("completed"),
+      title: "Completed",
+      runtime: null,
+    };
+    vi.mocked(useQuietThreadShells).mockReturnValue([parent, child, completed]);
+    await using screen = await render(
+      <AppSidebarLayout>
+        <div />
+      </AppSidebarLayout>,
+    );
+    const toggle = screen.getByRole("button", { name: "Toggle main sidebar" });
+    if (toggle.element().getAttribute("aria-pressed") === "true") await userEvent.click(toggle);
+    await userEvent.click(screen.getByRole("button", { name: "Subagents" }));
+    await expect
+      .element(page.getByRole("link", { name: /Schema review.*Ship settings.*Running/ }))
+      .toHaveAttribute("href", "/local/review");
+    await expect
+      .element(page.getByRole("link", { name: /Provider checks.*Running/ }))
+      .toHaveAttribute("href", "/local/parent");
+    await expect.element(page.getByRole("link", { name: /Completed/ })).not.toBeInTheDocument();
+  });
 });

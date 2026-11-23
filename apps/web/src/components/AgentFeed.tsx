@@ -1,3 +1,4 @@
+/* oxlint-disable shadcn/no-unknown-classes -- Feed classes are defined in the imported agentFeed.css. */
 import { scopeThreadRef, scopedThreadKey } from "@t3tools/client-runtime/environment";
 import type { EnvironmentThreadShell } from "@t3tools/client-runtime/state/models";
 import { derivePendingThreadRequests } from "@t3tools/client-runtime/state/thread-requests";
@@ -11,13 +12,11 @@ import {
   GitBranch,
   GitCompareArrows,
   MessageSquare,
-  Rss,
   X,
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useEnvironmentThread, threadEnvironment } from "../state/threads";
 import { useOrchestrationCommand } from "../state/use-orchestration-command";
-import { useProjects, useQuietThreadShells } from "../state/entities";
 import { newMessageId } from "../lib/utils";
 import {
   buildThreadRouteParams,
@@ -26,7 +25,6 @@ import {
 } from "../threadRoutes";
 import { usePanelAnimationSettings, usePanelPresence } from "../panelAnimations";
 import { ThreadRouteView } from "./ThreadRouteView";
-import { SidebarInset, SidebarTrigger } from "./ui/sidebar";
 import { resolveSidebarThreadStatus } from "./Sidebar.logic";
 import { Button } from "./ui/button";
 import { useEnvironmentScope } from "../state/session";
@@ -34,7 +32,7 @@ import { useEnvironmentShellStatus } from "../state/shell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { AuthOrchestrationOperateScope, MessageId, CommandId } from "@t3tools/contracts";
 import { useAtomValue } from "@effect/atom-react";
-import { T } from "gt-react";
+import { msg, T, useGT, useMessages } from "gt-react";
 import { serverEnvironment } from "../state/server";
 import { useQuietThreadShell } from "../state/entities";
 import {
@@ -51,6 +49,7 @@ import { useClientSettings } from "../hooks/useSettings";
 import { useDiffPanelStore, selectThreadBranchBaseRef } from "../diffPanelStore";
 import { resolveThreadCurrentPullRequestLink } from "@t3tools/client-runtime/thread-pull-requests";
 import { useAssetUrlState } from "../assets/assetUrls";
+import { useAgentRows } from "./agents/useAgentRows";
 import "./agentFeed.css";
 
 const DiffPanel = lazy(() => import("./DiffPanel"));
@@ -64,6 +63,15 @@ const FeedReplyDraft = Schema.NullOr(
     createdAt: Schema.String,
   }),
 );
+
+const feedFilters = {
+  all: msg("All"),
+  attention: msg("Needs you"),
+  review: msg("Ready to review"),
+  progress: msg("In progress"),
+};
+
+type FeedFilter = keyof typeof feedFilters;
 function ReviewAction({
   threadRef,
   patch,
@@ -88,7 +96,7 @@ function ReviewAction({
   const send = useOrchestrationCommand(threadEnvironment.startTurn);
   const lock = useRef(false);
   const [busy, setBusy] = useState(false);
-  const [receipt, setReceipt] = useState("");
+  const [receipt, setReceipt] = useState<"sent" | "failed" | null>(null);
   async function submit() {
     if (lock.current || !allowed || !thread || !patch || !model || !reviewer) return;
     lock.current = true;
@@ -114,9 +122,9 @@ function ReviewAction({
           createdAt: new Date().toISOString(),
         },
       });
-      setReceipt(result._tag === "Success" ? "Review sent to Claude" : "Review could not be sent");
+      setReceipt(result._tag === "Success" ? "sent" : "failed");
     } catch {
-      setReceipt("Review could not be sent");
+      setReceipt("failed");
     }
     lock.current = false;
     setBusy(false);
@@ -129,25 +137,30 @@ function ReviewAction({
         disabled={!allowed || !patch || !model || busy}
         onClick={() => void submit()}
       >
-        Review with Claude
+        <T>Review with Claude</T>
       </Button>
       <small role="status">
-        {receipt ||
-          (!model
-            ? "Connect Claude Code to request a review."
-            : !patch
-              ? "Select a complete diff to review."
-              : prompt)}
+        {receipt === "sent" ? (
+          <T>Review sent to Claude</T>
+        ) : receipt === "failed" ? (
+          <T>Review could not be sent</T>
+        ) : !model ? (
+          <T>Connect Claude Code to request a review.</T>
+        ) : !patch ? (
+          <T>Select a complete diff to review.</T>
+        ) : (
+          prompt
+        )}
       </small>
     </div>
   );
 }
-function category(thread: Shell) {
+function category(thread: Shell): Exclude<FeedFilter, "all"> {
   const status = resolveSidebarThreadStatus(thread);
-  if (["approval", "input", "request", "failed", "limited"].includes(status)) return "Needs you";
+  if (["approval", "input", "request", "failed", "limited"].includes(status)) return "attention";
   if (thread.latestRun?.status === "completed" && !["working", "preparing"].includes(status))
-    return "Ready to review";
-  return "In progress";
+    return "review";
+  return "progress";
 }
 
 function ResultThumbnail({
@@ -170,9 +183,15 @@ function ResultThumbnail({
 }
 
 function FeedPullRequest({ threadRef }: { threadRef: Target["threadRef"] }) {
+  const gt = useGT();
   const shell = useQuietThreadShell(threadRef);
   const pr = resolveThreadCurrentPullRequestLink(shell?.pullRequests ?? []);
-  if (!pr) return <p className="feed-pr">This task has no linked pull request.</p>;
+  if (!pr)
+    return (
+      <p className="feed-pr">
+        <T>This task has no linked pull request.</T>
+      </p>
+    );
   const snap = pr.snapshot;
   return (
     <section className="feed-pr">
@@ -182,12 +201,15 @@ function FeedPullRequest({ threadRef }: { threadRef: Target["threadRef"] }) {
       {snap && (
         <>
           <p>
-            {snap.isDraft ? "Draft · " : ""}
+            {snap.isDraft && <>{gt("Draft", { $context: "pull request state" })} · </>}
             {snap.state} · {snap.headBranch} → {snap.baseBranch}
           </p>
           {snap.changedFiles != null && (
             <p>
-              {snap.changedFiles} files changed{snap.additions != null && " · +" + snap.additions}
+              {gt("{count, plural, one {{count} file changed} other {{count} files changed}}", {
+                count: snap.changedFiles,
+              })}
+              {snap.additions != null && " · +" + snap.additions}
               {snap.deletions != null && " −" + snap.deletions}
             </p>
           )}
@@ -195,7 +217,7 @@ function FeedPullRequest({ threadRef }: { threadRef: Target["threadRef"] }) {
       )}
       {/^https?:\/\//i.test(pr.url) && (
         <a href={pr.url} target="_blank" rel="noreferrer">
-          Open pull request ↗
+          <T>Open pull request</T> ↗
         </a>
       )}
     </section>
@@ -215,19 +237,30 @@ function TaskCard({
   onInspect: (el: HTMLElement) => void;
   onReview: (thread: Shell, text: string) => void;
 }) {
+  const gt = useGT();
+  const messagesForLocale = useMessages();
   const ref = scopeThreadRef(thread.environmentId, thread.id);
   const params = buildThreadRouteParams(ref);
-  const [expanded, setExpanded] = useState(false);
   const [busy, setBusy] = useState(false);
   const draftKey = scopedThreadKey(ref);
   const [draft, setDraft] = useLocalStorage("daycrew:feed-reply:" + draftKey, null, FeedReplyDraft);
+  const [expanded, setExpanded] = useState(() => Boolean(draft?.text));
   const reply = draft?.text ?? "";
   const connected = useEnvironmentShellStatus(thread.environmentId) === "live";
-  const [receipt, setReceipt] = useState("");
+  const [receipt, setReceipt] = useState<"sent" | "failed" | null>(null);
   const inFlight = useRef(false);
   const composer = useRef<HTMLTextAreaElement>(null);
+  const focusReplyOnOpen = useRef(false);
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- The textarea can receive focus only after the reply panel stops being inert.
+  useLayoutEffect(() => {
+    if (expanded && focusReplyOnOpen.current) {
+      focusReplyOnOpen.current = false;
+      composer.current?.focus({ preventScroll: true });
+    }
+  }, [expanded]);
   const [visible, setVisible] = useState(false);
   const card = useRef<HTMLElement>(null);
+  // oxlint-disable-next-line t3code/no-unreasoned-state-sync -- Track the card's viewport intersection so distant cards can release their live subscriptions.
   useEffect(() => {
     if (!card.current) return;
     const observer = new IntersectionObserver(
@@ -304,7 +337,7 @@ function TaskCard({
     inFlight.current = true;
     composer.current?.focus({ preventScroll: true });
     setBusy(true);
-    setReceipt("");
+    setReceipt(null);
     try {
       const result = await send({
         environmentId: ref.environmentId,
@@ -320,10 +353,10 @@ function TaskCard({
       });
       if (result._tag === "Success") {
         setDraft((current) => (current?.messageId === draft.messageId ? null : current));
-        setReceipt("Reply sent");
-      } else setReceipt("Send failed. Retry with the send button.");
+        setReceipt("sent");
+      } else setReceipt("failed");
     } catch {
-      setReceipt("Send failed. Retry with the send button.");
+      setReceipt("failed");
     }
     inFlight.current = false;
     setBusy(false);
@@ -345,7 +378,7 @@ function TaskCard({
       </div>
       <h2>{thread.title}</h2>
       <div className="feed-context">
-        <span className="feed-state">{state}</span>
+        <span className="feed-state">{messagesForLocale(feedFilters[state])}</span>
         {thread.branch && (
           <span>
             <GitBranch size={12} /> {thread.branch}
@@ -367,7 +400,7 @@ function TaskCard({
           }}
           aria-controls="feed-task-details"
           aria-expanded={selected}
-          title="Open workspace changes"
+          title={gt("Open workspace changes")}
         >
           {thumbnail && (
             <ResultThumbnail
@@ -377,18 +410,40 @@ function TaskCard({
             />
           )}
           <GitCompareArrows size={16} />
-          <span>{files.length === 1 ? files[0]?.path : files.length + " files changed"}</span>
+          <span>
+            {files.length === 1
+              ? files[0]?.path
+              : gt("{count, plural, one {{count} file changed} other {{count} files changed}}", {
+                  count: files.length,
+                })}
+          </span>
           {(lineStats.added > 0 || lineStats.removed > 0) && (
             <>
-              <small aria-label={lineStats.added + " additions"} className="feed-added">
+              <small
+                aria-label={gt(
+                  "{count, plural, one {{count} addition} other {{count} additions}}",
+                  { count: lineStats.added },
+                )}
+                className="feed-added"
+              >
                 +{lineStats.added}
               </small>
-              <small aria-label={lineStats.removed + " deletions"} className="feed-removed">
+              <small
+                aria-label={gt(
+                  "{count, plural, one {{count} deletion} other {{count} deletions}}",
+                  { count: lineStats.removed },
+                )}
+                className="feed-removed"
+              >
                 −{lineStats.removed}
               </small>
             </>
           )}
-          {preview.data?.incomplete && <small>Tracked so far</small>}
+          {preview.data?.incomplete && (
+            <small>
+              <T>Tracked so far</T>
+            </small>
+          )}
         </Link>
       )}
       {pr && /^https?:\/\//i.test(pr.url) && (
@@ -401,12 +456,12 @@ function TaskCard({
             if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) onInspect(e.currentTarget);
           }}
         >
-          PR #{pr.number}
+          {gt("PR #{number}", { number: pr.number })}
           {pr.snapshot?.title && " · " + pr.snapshot.title}
         </Link>
       )}
       <div className="feed-actions">
-        {(files.length === 0 || state === "Needs you") && (
+        {(files.length === 0 || state === "attention") && (
           <Link
             to="/feed/$environmentId/$threadId"
             params={params}
@@ -415,10 +470,17 @@ function TaskCard({
             onClick={(e) => {
               if (!e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey) onInspect(e.currentTarget);
             }}
-            search={{ panel: state === "Needs you" ? "conversation" : "changes" }}
+            search={{ panel: state === "attention" ? "conversation" : "changes" }}
           >
-            {state === "Needs you" ? <MessageSquare size={14} /> : <GitCompareArrows size={14} />}{" "}
-            {state === "Needs you" ? "Review request" : "Review diff"}
+            {state === "attention" ? (
+              <>
+                <MessageSquare size={14} /> <T>Review request</T>
+              </>
+            ) : (
+              <>
+                <GitCompareArrows size={14} /> <T>Review diff</T>
+              </>
+            )}
           </Link>
         )}
         {thread.runtime?.status === "failed" && (
@@ -429,11 +491,17 @@ function TaskCard({
             <T>Provider settings</T>
           </Link>
         )}
-        <button aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>
-          <MessageSquare size={14} /> Replies
+        <button
+          aria-expanded={expanded}
+          onClick={() => {
+            focusReplyOnOpen.current = !expanded;
+            setExpanded(!expanded);
+          }}
+        >
+          <MessageSquare size={14} /> <T>Reply</T>
         </button>
         <Link to="/$environmentId/$threadId" params={params}>
-          Open thread ↗
+          <T>Open thread</T> ↗
         </Link>
       </div>
       <div className="feed-replies" data-open={expanded} inert={!expanded}>
@@ -441,7 +509,7 @@ function TaskCard({
           <div className="feed-reply-body">
             {messages.slice(-4).map((item) => (
               <div className="feed-message" key={item.id}>
-                <strong>{item.type === "user_message" ? "You" : "Agent"}</strong>
+                <strong>{item.type === "user_message" ? <T>You</T> : <T>Agent</T>}</strong>
                 <p>{item.text}</p>
               </div>
             ))}
@@ -454,10 +522,10 @@ function TaskCard({
               <textarea
                 ref={composer}
                 rows={2}
-                aria-label={"Reply to " + thread.title}
+                aria-label={gt("Reply to {title}", { title: thread.title })}
                 readOnly={connected && !canSend}
                 aria-busy={busy}
-                placeholder="Reply to this task…"
+                placeholder={gt("Reply to this task…")}
                 value={reply}
                 onChange={(e) => {
                   const text = e.target.value;
@@ -466,7 +534,7 @@ function TaskCard({
                       ? { text, messageId: newMessageId(), createdAt: new Date().toISOString() }
                       : null,
                   );
-                  setReceipt("");
+                  setReceipt(null);
                 }}
                 onKeyDown={(e) => {
                   if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
@@ -478,7 +546,7 @@ function TaskCard({
               <Button
                 type="submit"
                 size="icon-sm"
-                aria-label="Send reply"
+                aria-label={gt("Send reply")}
                 disabled={!connected || !canSend || busy || !reply.trim()}
               >
                 <ArrowUp size={16} />
@@ -487,8 +555,14 @@ function TaskCard({
             <small role="status">
               {!connected ? (
                 <T>Reconnecting. Your draft is saved.</T>
+              ) : receipt === "sent" ? (
+                <T>Reply sent</T>
+              ) : receipt === "failed" ? (
+                <T>Send failed. Retry with the send button.</T>
+              ) : busy ? (
+                <T>Sending…</T>
               ) : (
-                receipt || (busy ? <T>Sending…</T> : "\u00a0")
+                "\u00a0"
               )}
             </small>
           </div>
@@ -499,10 +573,11 @@ function TaskCard({
 }
 
 export default function AgentFeed() {
+  const gt = useGT();
+  const messagesForLocale = useMessages();
   const [review, setReview] = useState<{ key: string; text: string } | null>(null);
-  const threads = useQuietThreadShells();
-  const projects = useProjects();
-  const [filter, setFilter] = useState("All");
+  const agents = useAgentRows();
+  const [filter, setFilter] = useState<FeedFilter>("all");
   const [limit, setLimit] = useState(20);
   const navigate = useNavigate();
   // During navigation the URL can advance before the route commits. Keep the
@@ -517,6 +592,7 @@ export default function AgentFeed() {
       panel: search.panel,
     }),
   });
+  // oxlint-disable-next-line t3code/no-manual-memo -- Panel presence tracks this selection by reference while retaining closing content.
   const selection = useMemo(() => {
     if (!panelRoute) return null;
     const target = resolveThreadRouteTarget(panelRoute);
@@ -525,23 +601,16 @@ export default function AgentFeed() {
   const target = selection?.target;
   const { active, durationMs } = usePanelAnimationSettings();
   const { present, value } = usePanelPresence(!!target, selection, active, "feed", durationMs);
-  const rows = threads
+  const rows = agents
     .filter(
-      (t) =>
-        !t.archivedAt &&
-        !t.deletedAt &&
-        !t.lineage.sideChat &&
-        (t.latestRun || t.hasPendingApprovals || t.hasPendingUserInput) &&
-        projects.some(
-          (p) => !p.archivedAt && p.id === t.projectId && p.environmentId === t.environmentId,
-        ),
+      ({ thread }) => thread.latestRun || thread.hasPendingApprovals || thread.hasPendingUserInput,
     )
     .sort(
       (a, b) =>
-        Number(category(b) === "Needs you") - Number(category(a) === "Needs you") ||
-        b.updatedAt.localeCompare(a.updatedAt),
+        Number(category(b.thread) === "attention") - Number(category(a.thread) === "attention") ||
+        b.thread.updatedAt.localeCompare(a.thread.updatedAt),
     );
-  const filtered = rows.filter((t) => filter === "All" || category(t) === filter);
+  const filtered = rows.filter(({ thread }) => filter === "all" || category(thread) === filter);
   const closeButton = useRef<HTMLButtonElement>(null);
   const trigger = useRef<HTMLElement | null>(null);
   const open = !!target;
@@ -585,18 +654,17 @@ export default function AgentFeed() {
     }
     wasOpen.current = open;
     return () => anim?.cancel();
-  }, [open, selectedKey, active, durationMs]);
+  }, [open, selectedKey, active, durationMs, anchor, closeButton, scroller, trigger, wasOpen]);
   return (
-    <SidebarInset
+    <div
       className="feed-layout"
-      data-sky-surface="feed"
       data-open={open}
       style={{ "--feed-duration": (active ? durationMs : 0) + "ms" } as React.CSSProperties}
     >
       <section
         ref={scroller}
         className="feed-scroll"
-        aria-label="Task feed"
+        aria-label={gt("Task feed")}
         onBlurCapture={(event) => {
           if (
             event.relatedTarget instanceof Element &&
@@ -607,14 +675,8 @@ export default function AgentFeed() {
         }}
       >
         <div data-workspace-content="" className="feed-stream">
-          <header>
-            <SidebarTrigger className="md:hidden" />
-            <h1 data-workspace-title="">
-              <Rss size={22} /> Agent feed
-            </h1>
-          </header>
-          <nav className="feed-filters" aria-label="Filter activity">
-            {["All", "Needs you", "Ready to review", "In progress"].map((name) => (
+          <nav className="feed-filters" aria-label={gt("Filter activity")}>
+            {(["all", "attention", "review", "progress"] as const).map((name) => (
               <button
                 key={name}
                 aria-pressed={filter === name}
@@ -623,15 +685,15 @@ export default function AgentFeed() {
                   setLimit(20);
                 }}
               >
-                {name}
+                {messagesForLocale(feedFilters[name])}
               </button>
             ))}
           </nav>
-          {filtered.slice(0, limit).map((t) => (
+          {filtered.slice(0, limit).map(({ key, thread, project }) => (
             <TaskCard
-              key={scopedThreadKey(scopeThreadRef(t.environmentId, t.id))}
-              thread={t}
-              selected={selectedKey === scopedThreadKey(scopeThreadRef(t.environmentId, t.id))}
+              key={key}
+              thread={thread}
+              selected={selectedKey === key}
               onInspect={remember}
               onReview={(thread, text) => {
                 const ref = scopeThreadRef(thread.environmentId, thread.id);
@@ -645,22 +707,23 @@ export default function AgentFeed() {
                   search: { panel: "changes" },
                 });
               }}
-              project={
-                projects.find((p) => p.id === t.projectId && p.environmentId === t.environmentId)
-                  ?.title ?? ""
-              }
+              project={project.title}
             />
           ))}
           {!filtered.length && (
             <div className="feed-empty">
               <CheckCheck />
-              <h2>{filter === "Needs you" ? "You’re caught up" : "No activity here yet"}</h2>
-              <Link to="/workspaces">Open workspaces ↗</Link>
+              <h2>
+                {filter === "attention" ? <T>You’re caught up</T> : <T>No activity here yet</T>}
+              </h2>
+              <Link to="/workspaces">
+                <T>Open workspaces</T> ↗
+              </Link>
             </div>
           )}
           {filtered.length > limit && (
             <Button variant="outline" onClick={() => setLimit(limit + 20)}>
-              Show more
+              <T>Show more</T>
             </Button>
           )}
         </div>
@@ -669,7 +732,7 @@ export default function AgentFeed() {
         className="feed-detail"
         id="feed-task-details"
         inert={!open}
-        aria-label="Task details"
+        aria-label={gt("Task details")}
         onKeyDown={(e) => {
           if (e.key === "Escape" && !e.defaultPrevented) {
             closeDetails();
@@ -680,17 +743,19 @@ export default function AgentFeed() {
           <div className="feed-detail-inner">
             <header>
               <strong>
-                {value.mode === "pull-request"
-                  ? "Pull request"
-                  : value.mode === "changes"
-                    ? "Changes"
-                    : "Conversation"}
+                {value.mode === "pull-request" ? (
+                  <T>Pull request</T>
+                ) : value.mode === "changes" ? (
+                  <T>Changes</T>
+                ) : (
+                  <T>Conversation</T>
+                )}
               </strong>
               <Button
                 ref={closeButton}
                 size="icon-sm"
                 variant="ghost"
-                aria-label="Close details"
+                aria-label={gt("Close details")}
                 onClick={closeDetails}
               >
                 <X size={16} />
@@ -703,7 +768,13 @@ export default function AgentFeed() {
               {value.mode === "pull-request" ? (
                 <FeedPullRequest threadRef={value.target.threadRef} />
               ) : value.mode === "changes" ? (
-                <Suspense fallback={<p>Loading changes…</p>}>
+                <Suspense
+                  fallback={
+                    <p>
+                      <T>Loading changes…</T>
+                    </p>
+                  }
+                >
                   <DiffPanel
                     renderReview={(patch) => (
                       <ReviewAction
@@ -730,6 +801,6 @@ export default function AgentFeed() {
           </div>
         )}
       </aside>
-    </SidebarInset>
+    </div>
   );
 }

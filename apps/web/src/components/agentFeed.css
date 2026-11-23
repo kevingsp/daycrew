@@ -2,7 +2,8 @@
   --feed-detail-width: min(55%, 1440px);
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) minmax(0, 0fr);
-  height: 100dvh;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
@@ -21,23 +22,15 @@
   margin: auto;
   padding: clamp(18px, 3vw, 48px);
 }
-.feed-stream > header,
 .feed-byline,
 .feed-actions,
 .feed-context,
 .feed-context span,
 .feed-detail-inner > header,
-.feed-stream h1,
 .feed-filters {
   display: flex;
   align-items: center;
   gap: 8px;
-}
-.feed-stream h1 {
-  gap: 12px;
-}
-.feed-stream h1 svg {
-  color: var(--muted-foreground);
 }
 .feed-filters {
   margin: 20px 0;
@@ -96,10 +89,10 @@
   border-radius: 50%;
   background: #3584da;
 }
-.feed-card[data-state="Needs you"] .feed-state::before {
+.feed-card[data-state="attention"] .feed-state::before {
   background: #da941d;
 }
-.feed-card[data-state="Ready to review"] .feed-state::before {
+.feed-card[data-state="review"] .feed-state::before {
   background: #2a986b;
 }
 .feed-summary,
@@ -323,13 +316,9 @@
 }
 
 /* Keep text readable as the sky moves behind the controls. */
-.feed-stream > header,
 .feed-filters {
   color: var(--sky-ink);
   text-shadow: 0 1px 3px var(--sky-text-shadow);
-}
-.feed-stream h1 svg {
-  color: currentColor;
 }
 .feed-filters button:is(:hover, [aria-pressed="true"]) {
   color: var(--foreground);
