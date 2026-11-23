@@ -87,6 +87,7 @@ export function resolveChatCanvasModel({
   threadRef,
   preview,
   detailsCardInlineOpen,
+  reserveDetailsSpace = true,
 }: {
   measurements: ChatCanvasMeasurements;
   detailsCardMeasurement: DetailsCardMeasurement | null;
@@ -94,6 +95,7 @@ export function resolveChatCanvasModel({
   threadRef: ScopedThreadRef | null;
   preview: ChatCanvasPreview | null;
   detailsCardInlineOpen: boolean;
+  reserveDetailsSpace?: boolean;
 }) {
   const container = { width: measurements.width, height: measurements.height };
   const { findBar } = measurements;
@@ -118,16 +120,18 @@ export function resolveChatCanvasModel({
       ? detailsCardMeasurement
       : null;
   const detailsCard =
-    detailsCardInlineOpen &&
-    preferredDetailsCard &&
-    detailsCardMeasured?.width === preferredDetailsCard.width &&
-    detailsCardMeasured.fullContentHeight > 0
+    detailsCardInlineOpen && preferredDetailsCard
       ? {
           left: preferredDetailsCard.x,
           right: preferredDetailsCard.x + preferredDetailsCard.width,
           bottom:
             preferredDetailsCard.y +
-            Math.min(detailsCardMeasured.fullContentHeight, preferredDetailsCard.height),
+            Math.min(
+              detailsCardMeasured?.width === preferredDetailsCard.width
+                ? detailsCardMeasured.fullContentHeight
+                : 0,
+              preferredDetailsCard.height,
+            ),
         }
       : null;
   const layout = resolveChatCanvasLayout({
@@ -138,6 +142,7 @@ export function resolveChatCanvasModel({
     minChatWidth: measurements.minChatWidth,
     composerHeight: measurements.composerHeight,
     detailsCard,
+    reserveDetailsSpace,
     findBar,
   });
   const detailsCardPlacement = resolveThreadDetailsCardLayout({

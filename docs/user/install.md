@@ -167,6 +167,25 @@ sidebar. Each one opens as a project on this computer, the same as `t3 app`.
 Files dropped on a thread still attach to that thread. Browsers do not share
 folder paths, so in the web app use **Add project** instead.
 
+## Home Screen web app
+
+You can use Daycrew on your phone without installing a native app. Set up
+[remote access](./remote-access.md) on your computer and open its pairing link
+in your phone's browser. Use an HTTPS route for offline launch support.
+
+On iPhone, open the link in Safari, tap **Share → Add to Home Screen**, enable
+**Open as Web App** if shown, and tap **Add**. On Android, use **Install app**
+or **Add to Home screen** in the browser menu.
+
+The Home Screen app opens the agent grid. **Feed** follows task activity,
+**Agents** shows compact cards, and **Prompt** returns to your current unsent
+draft. You can also open a new prompt from the grid. Drafts stay on this
+device; sending a prompt requires a connection to your computer.
+
+Keep the computer awake and Daycrew running while agents work. Offline launch
+shows a reconnect screen. This web app does not currently send background
+push notifications.
+
 ## Mobile app
 
 Install T3 Code from the

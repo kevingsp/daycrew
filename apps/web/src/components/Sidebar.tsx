@@ -2962,6 +2962,17 @@ export default function Sidebar({ routeReveal }: { routeReveal: SidebarRouteReve
               <RssIcon aria-hidden="true" className="size-4" /> <T>Agent feed</T>
             </Link>
             <Link
+              to="/agents"
+              className="mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-sidebar-foreground outline-none hover:bg-sidebar-row-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              activeProps={{ "aria-current": "page", className: "bg-sidebar-row-selected" }}
+              onClick={() => {
+                if (isMobile) setOpenMobile(false);
+              }}
+            >
+              <LayoutGridIcon aria-hidden="true" className="size-4 shrink-0" />
+              <T>Agents</T>
+            </Link>
+            <Link
               to="/workspaces"
               activeProps={{
                 "aria-current": "page",

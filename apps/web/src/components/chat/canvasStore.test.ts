@@ -70,6 +70,34 @@ describe("chat canvas model", () => {
     expect(model.detailsCardMode).toBe("inline");
   });
 
+  it("reserves details space for a conversation before the card is measured, while drafts stay centered", () => {
+    const input = {
+      measurements: measurements(1108),
+      detailsCardMeasurement: null,
+      threadRef,
+      preview: null,
+      detailsCardInlineOpen: true,
+    };
+    expect(resolveChatCanvasModel(input).layout.chat).toEqual({
+      left: 48,
+      width: 736,
+      insetStart: 0,
+      insetEnd: 276,
+    });
+    expect(resolveChatCanvasModel({ ...input, reserveDetailsSpace: false }).layout.chat).toEqual({
+      left: 170,
+      width: 768,
+      insetStart: 0,
+      insetEnd: 0,
+    });
+    expect(resolveChatCanvasModel({ ...input, detailsCardInlineOpen: false }).layout.chat).toEqual({
+      left: 170,
+      width: 768,
+      insetStart: 0,
+      insetEnd: 0,
+    });
+  });
+
   it("keeps state identity when a measurement repeats", () => {
     const store = createChatCanvasStore();
     store.getState().setMeasurements(measurements(1400));

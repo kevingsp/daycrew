@@ -367,6 +367,28 @@ it("lists the ignored inputs that main's pathspecs list, without entering node_m
   assert.deepStrictEqual(await inFixture(ignoredCheckInputs(project.root)), old);
 });
 
+it.live("handles an ignored build directory larger than JavaScript's argument limit", () =>
+  Effect.gen(function* () {
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+    const result = yield* ignoredCheckInputs(".").pipe(
+      Effect.provideService(
+        ChildProcessSpawner.ChildProcessSpawner,
+        ChildProcessSpawner.make((command) => {
+          const batch = command._tag === "StandardCommand" && command.args.includes("--");
+          const ignored = command._tag === "StandardCommand" && command.args.includes("--others");
+          const script = batch
+            ? "for(let i=0;i<200000;i++)process.stdout.write('dist/'+i+'.txt\\0');process.stdout.write('dist/index.d.ts\\0')"
+            : ignored
+              ? "process.stdout.write('dist/\\0')"
+              : "";
+          return spawner.spawn(ChildProcess.make(process.execPath, ["-e", script]));
+        }),
+      ),
+    );
+    assert.deepStrictEqual(result, ["dist/index.d.ts"]);
+  }).pipe(Effect.provide(NodeServices.layer)),
+);
+
 function launcherFixture() {
   const root = NodeFS.realpathSync(
     NodeFS.mkdtempSync(NodePath.join(NodeOS.tmpdir(), "t3 checks & (fixture) ")),

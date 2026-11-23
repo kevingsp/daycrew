@@ -3,6 +3,21 @@ import * as NodeAssert from "node:assert/strict";
 import * as NodePath from "node:path";
 import type { Page } from "playwright-core";
 
+// These callbacks run in the browser; local declarations keep DOM types out of the Node server.
+declare const window: { readonly innerWidth: number };
+declare const requestAnimationFrame: (callback: (now: number) => void) => number;
+declare const cancelAnimationFrame: (handle: number) => void;
+declare const document: {
+  readonly activeElement: unknown;
+  readonly documentElement: { readonly scrollWidth: number };
+  addEventListener(type: string, listener: () => void): void;
+  removeEventListener(type: string, listener: () => void): void;
+  getAnimations(): Array<{
+    readonly effect: { getTiming(): { readonly iterations: number } } | null;
+    readonly finished: Promise<unknown>;
+  }>;
+};
+
 function summarize(frames: number[], keys: number[]) {
   function p95(values: number[]) {
     return [...values].sort((a, b) => a - b)[Math.ceil(values.length * 0.95) - 1] ?? null;

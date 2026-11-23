@@ -1,19 +1,20 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useNowMinute } from "../hooks/useNowMinute";
 import "./daycrewWorkspace.css";
+import { MobileNavigation } from "./mobile/MobileNavigation";
 
 // At dusk and dawn both bodies pass below the horizon before the new one rises.
 const skyStops = [
-  { hour: 0, top: "#111944", base: "#575b9d", light: "#bec9ee", x: 58, y: 46 },
-  { hour: 4, top: "#26305c", base: "#7a76a5", light: "#b6bedb", x: 22, y: 104 },
-  { hour: 5, top: "#7779aa", base: "#c8a1bd", light: "#e4bfcb", x: 25, y: 185 },
-  { hour: 7, top: "#a6aae0", base: "#f6b8be", light: "#ffdb9c", x: 31, y: 107 },
-  { hour: 12, top: "#85bcea", base: "#ceeeeb", light: "#fff0bc", x: 48, y: -5 },
-  { hour: 16, top: "#a3bfdf", base: "#f4d4bb", light: "#ffe5af", x: 54, y: 54 },
-  { hour: 18, top: "#b0a6c4", base: "#f6b6a0", light: "#ffdb92", x: 51, y: 107 },
-  { hour: 19, top: "#544e82", base: "#bd92a6", light: "#f4bdad", x: 52, y: 185 },
-  { hour: 20, top: "#252657", base: "#67659b", light: "#a4b4dd", x: 82, y: 185 },
-  { hour: 22, top: "#172153", base: "#585b9a", light: "#bec9ee", x: 76, y: 105 },
+  { hour: 0, top: "#161b3b", base: "#363656", light: "#9798c7", x: 89, y: 39, reach: 44 },
+  { hour: 4, top: "#2b3255", base: "#555674", light: "#a9a9cf", x: 14, y: 106, reach: 48 },
+  { hour: 5, top: "#8885ab", base: "#ba9fb1", light: "#edbdad", x: 12, y: 166, reach: 62 },
+  { hour: 7, top: "#acaadc", base: "#edc3c3", light: "#ffdaa6", x: 14, y: 91, reach: 67 },
+  { hour: 12, top: "#91bde2", base: "#cde5e4", light: "#fff2c8", x: 48, y: -6, reach: 79 },
+  { hour: 16, top: "#a7bed9", base: "#dfc9be", light: "#ffe1ae", x: 71, y: 53, reach: 68 },
+  { hour: 18, top: "#b0a5c6", base: "#d8a6a5", light: "#ffc79b", x: 77, y: 99, reach: 63 },
+  { hour: 19, top: "#262541", base: "#443b57", light: "#eca78e", x: 72, y: 109, reach: 66 },
+  { hour: 20, top: "#252545", base: "#4c405e", light: "#c1a5c3", x: 90, y: 165, reach: 55 },
+  { hour: 22, top: "#1a2043", base: "#383757", light: "#a29dc9", x: 97, y: 97, reach: 47 },
 ];
 const midnight = { ...skyStops[0]!, hour: 24 };
 
@@ -24,7 +25,7 @@ function skyStyle(minute: number): CSSProperties {
   const to = skyStops[index + 1] ?? midnight;
   const fraction = (hour - from.hour) / (to.hour - from.hour);
   const mix = (a: string, b: string) => `color-mix(in srgb, ${a} ${100 - fraction * 100}%, ${b})`;
-  const night = hour < 5 || hour >= 19;
+  const night = minute < 4 * 60 + 45 || minute >= 18 * 60 + 30;
   return {
     "--sky-ink": night ? "#faf9ff" : "#17192b",
     "--sky-text-shadow": night ? "#111735" : "#ffffff80",
@@ -33,6 +34,7 @@ function skyStyle(minute: number): CSSProperties {
     "--sky-light": mix(from.light, to.light),
     "--sky-x": `${from.x + (to.x - from.x) * fraction}%`,
     "--sky-y": `${from.y + (to.y - from.y) * fraction}%`,
+    "--sky-reach": `${from.reach + (to.reach - from.reach) * fraction}%`,
   } as CSSProperties;
 }
 
@@ -43,6 +45,7 @@ export function DaycrewWorkspace({ children }: { children: ReactNode }) {
   return (
     <div data-slot="daycrew-workspace" style={skyStyle(minute)}>
       {children}
+      <MobileNavigation />
     </div>
   );
 }

@@ -15,8 +15,15 @@ vi.mock(import("../state/server"), async (original) => {
   ]);
   return { ...actual, primaryServerKeybindingsAtom: Atom.make(keybindings) };
 });
-// The thread list needs live environments; the shortcut lives in the shell around it.
-vi.mock(import("./Sidebar"), () => ({ default: (() => null) as never }));
+// The thread list needs live environments; keep only the expanded header control.
+vi.mock(import("./Sidebar"), async () => {
+  const { SidebarTrigger, useSidebar } = await import("./ui/sidebar");
+  function SidebarHeaderFixture() {
+    const { open } = useSidebar();
+    return open ? <SidebarTrigger aria-label="Toggle main sidebar" /> : null;
+  }
+  return { default: SidebarHeaderFixture as never };
+});
 
 vi.mock("../state/entities", { spy: true });
 vi.mock(import("../state/shell"), async (original) => {

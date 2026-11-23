@@ -10,6 +10,7 @@ import { startAppServices } from "./appInit";
 import { AppRoot } from "./AppRoot";
 import { whenLocaleReady } from "./i18n/runtime";
 import { reloadOnceForChunkLoadError } from "./lib/chunkReloadGuard";
+import { registerOfflineSupport } from "./lib/offlineSupport";
 
 const router = startAppServices();
 
@@ -50,6 +51,7 @@ export const startup = Promise.all([
         )}
       </React.StrictMode>,
     );
+    registerOfflineSupport();
   })
   .catch((error: unknown) => {
     if (reloadScheduled) return;

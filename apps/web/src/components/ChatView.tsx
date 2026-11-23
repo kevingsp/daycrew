@@ -2011,7 +2011,8 @@ export default function ChatView(props: ChatViewProps) {
         detailsCardMeasurement: state.detailsCardMeasurement,
         threadRef: activeThreadRef,
         preview: canvasPreview,
-        detailsCardInlineOpen: threadPanelInlineOpen,
+        detailsCardInlineOpen: !embedded && threadPanelInlineOpen,
+        reserveDetailsSpace: !timelineEmpty,
       }).detailsCardMode,
   );
   const threadPanelOpen = useRightPanelStore((state) =>
@@ -3467,9 +3468,10 @@ export default function ChatView(props: ChatViewProps) {
               enabled: threadFindEnabled,
             }}
             store={chatCanvasStore}
-            threadRef={activeThreadRef}
+            threadRef={embedded ? null : activeThreadRef}
             preview={canvasPreview}
             detailsCardTopInset={isThreadFindActive ? THREAD_FIND_BAR_RESERVED_HEIGHT : 0}
+            reserveDetailsSpace={!timelineEmpty}
             composerOverlayElement={isDraftHeroState ? null : composerOverlayElement}
             data-chat-workspace-drop-target="true"
             onDragEnter={workspaceFileDropHandlers.onDragEnter}
@@ -3498,6 +3500,7 @@ export default function ChatView(props: ChatViewProps) {
             />
             <div
               {...conversationArea}
+              data-sky-conversation={embedded ? undefined : ""}
               className="relative flex min-h-0 flex-1 flex-col bg-background"
             >
               <WorkspaceMutationIdContext value={workspaceMutationId}>

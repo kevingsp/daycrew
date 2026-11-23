@@ -1,9 +1,16 @@
 [data-daycrew-shell] {
+  position: relative;
+  isolation: isolate;
   background: var(--sidebar);
   --daycrew-rail-width: max(3.25rem, var(--workspace-titlebar-content-left));
 }
 
+[data-daycrew-shell] > .sidebar-stage-backdrop {
+  display: none;
+}
+
 [data-slot="daycrew-workspace"] {
+  --daycrew-workspace-inset: 0px;
   position: relative;
   display: flex;
   flex: 1;
@@ -14,12 +21,11 @@
   background-image:
     url("./sky-dither.png"),
     radial-gradient(
-      circle clamp(16rem, 39vw, 59rem) at var(--sky-x) var(--sky-y),
-      var(--sky-light) 0%,
-      color-mix(in srgb, var(--sky-light) 95%, transparent) 55%,
-      color-mix(in srgb, var(--sky-light) 83%, transparent) 78%,
-      color-mix(in srgb, var(--sky-light) 30%, transparent) 95%,
-      transparent 113%
+      ellipse var(--sky-reach) calc(var(--sky-reach) * 1.3) at var(--sky-x) var(--sky-y),
+      color-mix(in srgb, var(--sky-light) 66%, transparent),
+      color-mix(in srgb, var(--sky-light) 39%, transparent) 33%,
+      color-mix(in srgb, var(--sky-light) 12%, transparent) 68%,
+      transparent
     ),
     linear-gradient(167deg, var(--sky-top) 8%, var(--sky-base) 94%);
   box-shadow: inset 0 -1px rgb(44 43 77 / 18%);
@@ -35,9 +41,110 @@
   background: transparent;
 }
 
+@media (max-width: 767px) {
+  [data-daycrew-shell] {
+    height: var(--daycrew-viewport-height, 100dvh) !important;
+  }
+
+  [data-slot="daycrew-workspace"] {
+    flex-direction: column;
+  }
+
+  [data-slot="daycrew-workspace"] > [data-slot="sidebar-inset"] {
+    height: auto;
+    flex: 1;
+    min-height: 0;
+  }
+
+  [data-slot="mobile-navigation"][hidden] {
+    display: none;
+  }
+
+  [data-slot="mobile-navigation"] {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+
+  [data-slot="daycrew-workspace"] .feed-detail {
+    position: absolute;
+  }
+
+  [data-slot="daycrew-workspace"] .feed-stream > header [data-slot="sidebar-trigger"] {
+    visibility: hidden;
+  }
+
+  [data-sky-surface] :is(input, textarea, [contenteditable="true"]) {
+    font-size: max(1rem, 1em);
+  }
+}
+
+[data-sky-surface] [data-sky-send] [data-stage-art] {
+  display: none;
+}
+
+[data-sky-surface] [data-sky-send] {
+  --send-rim: var(--sky-light);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(
+        145deg,
+        color-mix(in srgb, var(--sky-light) 30%, #292b40),
+        color-mix(in srgb, var(--sky-top) 28%, #303046) 66%,
+        color-mix(in srgb, var(--sky-base) 32%, #292a40)
+      )
+      padding-box,
+    conic-gradient(
+        from 210deg,
+        var(--sky-base),
+        #53546c 20%,
+        var(--send-rim) 34%,
+        var(--send-rim) 43%,
+        #5e5d73 60%,
+        var(--sky-base)
+      )
+      border-box;
+  color: #fff;
+  box-shadow:
+    inset 0 1px 1px rgb(255 255 255 / 13%),
+    0 1px 2px rgb(18 19 31 / 22%);
+  scale: none;
+  filter: none;
+  transition: none;
+}
+
+[data-sky-surface] [data-sky-send]:enabled:hover {
+  --send-rim: color-mix(in srgb, var(--sky-light) 70%, white);
+}
+
+[data-sky-surface] [data-sky-send]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+[data-sky-surface] [data-sky-send]:disabled {
+  border-color: transparent;
+  background: color-mix(in srgb, var(--sky-base) 14%, var(--muted));
+  color: var(--muted-foreground);
+  box-shadow: none;
+  opacity: 0.72;
+}
+
+@media (forced-colors: active) {
+  [data-sky-surface] [data-sky-send] {
+    background: ButtonFace;
+    border-color: ButtonText;
+    color: ButtonText;
+  }
+
+  [data-sky-surface] [data-sky-send]:disabled {
+    color: GrayText;
+    border-color: GrayText;
+    opacity: 1;
+  }
+}
+
 [data-slot="daycrew-workspace"] > [data-slot="sidebar-inset"] [data-chat-layout],
 [data-chat-layout] [data-workspace-area="conversation"],
-[data-sky-surface="draft"] [data-timeline-loading] {
+[data-sky-surface] [data-timeline-loading] {
   background-color: transparent;
 }
 
@@ -66,6 +173,31 @@
 
 [data-workspace-glass] {
   background-color: color-mix(in srgb, var(--card) 88%, transparent);
+}
+
+[data-sky-surface="draft"] [data-slot="composer-context-strip"] {
+  background: transparent;
+  backdrop-filter: none;
+  color: var(--sky-ink);
+}
+
+[data-sky-surface="draft"]
+  [data-slot="composer-context-strip"]
+  :is(button, [role="combobox"], [data-composer-context-control], svg) {
+  --control-icon-color: currentColor;
+  color: inherit;
+}
+
+[data-sky-surface="chat"] [data-sky-conversation] {
+  color: var(--sky-ink);
+}
+
+[data-sky-surface="chat"]
+  [data-sky-conversation]
+  [data-assistant-citation-source]
+  > .chat-markdown {
+  color: var(--sky-ink);
+  text-shadow: 0 1px 3px var(--sky-text-shadow);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -102,6 +234,20 @@
 }
 
 @media (min-width: 768px) {
+  [data-daycrew-shell][data-sidebar-state="expanded"] > .sidebar-stage-backdrop {
+    display: block;
+    right: auto;
+    width: calc(var(--sidebar-width) + 2rem);
+    mask-image:
+      linear-gradient(to bottom, black 0%, black 55%, transparent 92%),
+      linear-gradient(to right, black calc(100% - 2rem), transparent);
+    mask-composite: intersect;
+  }
+
+  [data-app-sidebar] [data-slot="sidebar-inner"] {
+    background: transparent;
+  }
+
   [data-daycrew-shell] [data-side="left"][data-state="expanded"] > [data-app-sidebar] {
     border-right-width: 0;
   }
@@ -111,8 +257,16 @@
   }
 
   [data-slot="daycrew-workspace"] {
-    margin: 4px 4px 4px 0;
+    --daycrew-workspace-inset: 4px;
+    margin: var(--daycrew-workspace-inset) var(--daycrew-workspace-inset)
+      var(--daycrew-workspace-inset) 0;
     border-radius: 15px;
+  }
+
+  html.electron-windows.wco
+    [data-slot="daycrew-workspace"]
+    :is([data-workspace-topbar], [data-chat-header]) {
+    margin-top: calc(-1 * var(--daycrew-workspace-inset));
   }
 
   [data-daycrew-shell] > [data-state="collapsed"] > [data-slot="sidebar-gap"] {
