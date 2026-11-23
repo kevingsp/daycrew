@@ -65,7 +65,7 @@ jobs:
           app="$mount/Daycrew.app"
           name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
           executable="$app/Contents/MacOS/$name"
-          lipo -verify_arch "$(uname -m)" "$executable"
+          lipo "$executable" -verify_arch "$(uname -m)"
           node scripts/smoke-desktop-app.ts \
             --executable "$executable" --artifacts-dir "$RUNNER_TEMP/daycrew-launch-check"
       - name: Generate installer checksum
