@@ -12301,5 +12301,12 @@
   "2b50c38c8242551b": "Open workspaces",
   "ecb840de2fc249ba": "Pull request",
   "2a30fc2634766ea1": "Conversation",
-  "5a708c8019a8ea99": "Loading changes…"
+  "5a708c8019a8ea99": "Loading changes…",
+  "006515c2ac7b8065": "Failed to change project folder",
+  "10ea77d0072ce29d": "Change folder for {path}",
+  "373e02f7d2ce7a58": "Change folder",
+  "605eca74c2ded999": "Project folder",
+  "45dea778d18d6331": "This folder already belongs to another project.",
+  "292a824a8a835b6b": "Changes the folder used by chats without a worktree. Chat history, existing worktrees and files are kept. Running tasks keep their current folder until their next turn.",
+  "0275e0f0d098aa99": "Save folder"
 }

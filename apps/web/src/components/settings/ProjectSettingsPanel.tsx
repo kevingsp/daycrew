@@ -5,7 +5,11 @@ import { useOrchestrationCommand } from "../../state/use-orchestration-command";
 import { AuthOrchestrationOperateScope } from "@t3tools/contracts";
 import { useEnvironmentsWithScope } from "../../state/session";
 import { mapAtomCommandResult, settlePromise } from "@t3tools/client-runtime/state/runtime";
-import { scopeProjectRef, scopeThreadRef } from "@t3tools/client-runtime/environment";
+import {
+  scopedProjectKey,
+  scopeProjectRef,
+  scopeThreadRef,
+} from "@t3tools/client-runtime/environment";
 import { planProjectRemoval } from "@t3tools/client-runtime/state/projects";
 import { type EnvironmentId, type SidebarProjectGroupingMode } from "@t3tools/contracts";
 import {
@@ -54,6 +58,7 @@ import {
 } from "./ProjectFaviconPickerDialog";
 import { ProjectActionsSettings } from "./ProjectActionsSettings";
 import { ProjectDefaultsSettings } from "./ProjectDefaultsSettings";
+import { ProjectFolderSettings } from "./ProjectFolderSettings";
 import {
   defaultProjectIcon,
   hasDefaultProjectIcon,
@@ -199,7 +204,9 @@ export function ProjectSettingsPanel({
       key: selected.projectKey,
       environmentId,
       checkoutKey,
-      memberKeys: members.map((member) => member.physicalProjectKey),
+      memberKeys: members.map((member) =>
+        scopedProjectKey(scopeProjectRef(member.environmentId, member.id)),
+      ),
     };
     if (!sameProjectSelection(lastSelection, current)) setLastSelection(current);
   }
@@ -211,7 +218,9 @@ export function ProjectSettingsPanel({
     lastSelection.checkoutKey === checkoutKey
       ? groups.find((group) =>
           group.memberProjects.some((member) =>
-            lastSelection.memberKeys.includes(member.physicalProjectKey),
+            lastSelection.memberKeys.includes(
+              scopedProjectKey(scopeProjectRef(member.environmentId, member.id)),
+            ),
           ),
         )
       : undefined;
@@ -222,7 +231,14 @@ export function ProjectSettingsPanel({
         search={{
           project: successor.projectKey,
           machine: environmentId ?? undefined,
-          checkout: checkoutKey ?? undefined,
+          checkout:
+            checkoutKey === null
+              ? undefined
+              : successor.memberProjects.find((member) =>
+                  lastSelection!.memberKeys.includes(
+                    scopedProjectKey(scopeProjectRef(member.environmentId, member.id)),
+                  ),
+                )?.physicalProjectKey,
         }}
         replace
         hashScrollIntoView={false}
@@ -439,10 +455,13 @@ function ProjectDetail({
   // A lone checkout is removed from the Danger section, but it still needs its grouping
   // rule here so "Keep separate" can be undone.
   const checkoutControls = (member: SidebarProjectGroupMember) => (
-    <div className="flex w-full min-w-0 items-center gap-2 @min-[32rem]/settings-row:w-auto">
-      <div className="min-w-0 flex-1 @min-[32rem]/settings-row:w-72 @min-[32rem]/settings-row:flex-none">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 @min-[32rem]/settings-row:w-80">
+      <div className="w-full min-w-0">
         <CheckoutGroupingSelect member={member} />
       </div>
+      {!member.isScratch ? (
+        <ProjectFolderSettings member={member} disabled={!editableIds.has(member.environmentId)} />
+      ) : null}
       {hasMultipleCheckouts ? (
         <Button
           size="sm"

@@ -12299,5 +12299,12 @@
   "2b50c38c8242551b": "Öppna arbetsytor",
   "ecb840de2fc249ba": "Pull request",
   "2a30fc2634766ea1": "Konversation",
-  "5a708c8019a8ea99": "Läser in ändringar…"
+  "5a708c8019a8ea99": "Läser in ändringar…",
+  "006515c2ac7b8065": "Kunde inte ändra projektmapp",
+  "10ea77d0072ce29d": "Ändra mapp för {path}",
+  "373e02f7d2ce7a58": "Ändra mapp",
+  "605eca74c2ded999": "Projektmapp",
+  "45dea778d18d6331": "Den här mappen tillhör redan ett annat projekt.",
+  "292a824a8a835b6b": "Ändrar mappen för chattar utan worktree. Chatthistorik, befintliga worktrees och filer behålls. Pågående uppgifter använder sin nuvarande mapp fram till nästa tur.",
+  "0275e0f0d098aa99": "Spara mapp"
 }
