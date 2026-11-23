@@ -110,7 +110,7 @@ function ComboboxSearchInput(props: React.ComponentProps<typeof ComboboxInput>) 
       <div className="relative -translate-y-px border-b border-border/70 pb-1.5 transition-colors focus-within:border-ring">
         <SearchIcon
           aria-hidden="true"
-          className="pointer-events-none absolute top-1.5 left-0 size-4 shrink-0 text-muted-foreground/55"
+          className="pointer-events-none absolute top-1.5 left-0 size-4 shrink-0 text-muted-foreground"
         />
         <ComboboxInput
           {...props}
@@ -165,21 +165,17 @@ function ComboboxPopup({
         side={side}
         sideOffset={sideOffset}
       >
-        <span
+        <ComboboxPrimitive.Popup
+          // Electron drag hit-testing ignores z-index; items over a drag region would swallow clicks.
           className={cn(
-            "dropdown-glass relative flex max-h-full min-w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) rounded-lg shadow-[0_16px_40px_-18px_rgb(0_0_0/55%)] transition-[scale,opacity] dark:shadow-[0_18px_44px_-18px_rgb(0_0_0/80%)]",
+            "dropdown-glass relative flex min-w-(--anchor-width) max-w-(--available-width) max-h-[min(var(--available-height),23rem)] origin-(--transform-origin) flex-col overflow-hidden rounded-(--radius-popover) text-foreground outline-none transition-[scale,opacity] duration-[var(--duration-micro,160ms)] ease-[var(--ease-spring-snappy,cubic-bezier(0.2,0.9,0.3,1))] will-change-transform data-ending-style:scale-[0.96] data-starting-style:scale-[0.96] data-ending-style:opacity-0 data-starting-style:opacity-0 motion-reduce:transition-none [-webkit-app-region:no-drag]",
             className,
           )}
+          data-slot="combobox-popup"
+          {...props}
         >
-          <ComboboxPrimitive.Popup
-            // Electron drag hit-testing ignores z-index; items over a drag region would swallow clicks.
-            className="flex min-w-0 max-h-[min(var(--available-height),23rem)] flex-1 flex-col overflow-hidden text-foreground [-webkit-app-region:no-drag]"
-            data-slot="combobox-popup"
-            {...props}
-          >
-            {children}
-          </ComboboxPrimitive.Popup>
-        </span>
+          {children}
+        </ComboboxPrimitive.Popup>
       </ComboboxPrimitive.Positioner>
     </ComboboxPrimitive.Portal>
   );

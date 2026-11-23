@@ -1,5 +1,6 @@
 import { useStableCallback } from "../../hooks/useStableCallback";
 import { useLayoutEffect, useRef } from "react";
+import { prefersReducedMotion } from "../../motion";
 import {
   DRAFT_HERO_TRANSITION_ANIMATION_ID,
   DRAFT_HERO_TRANSITION_EASING,
@@ -34,6 +35,8 @@ export function useDraftHeroLayoutTransition(
     if (
       stateChanged &&
       animationsActive &&
+      animationDurationMs > 0 &&
+      !prefersReducedMotion() &&
       !mobileComposerTransitionActive &&
       transitionGroup &&
       previousComposerRect &&

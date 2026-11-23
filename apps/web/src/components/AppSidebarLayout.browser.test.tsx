@@ -2,9 +2,17 @@ import { EnvironmentId, ThreadId } from "@t3tools/contracts";
 import { page, userEvent } from "vite-plus/test/browser";
 import { describe, expect, it, vi } from "vite-plus/test";
 
+import "~/index.css";
+
+import { getThemeSnapshot, setAppearanceMode } from "../hooks/useTheme";
+import { compositeSkyColor, resolveDaycrewSky, skyContrastRatio } from "../lib/daycrewSky";
 import { makeThreadFixture } from "../test-fixtures";
 import { useQuietThreadShells } from "../state/entities";
-import { render } from "../../test/render";
+import { render, stubGlobal } from "../../test/render";
+import { ComposerBanner } from "./chat/ComposerBanner";
+import { ComposerControl } from "./chat/ComposerControl";
+import { ComposerSurface } from "./chat/ComposerSurface";
+import { SidebarInset } from "./ui/sidebar";
 
 vi.mock(import("../state/server"), async (original) => {
   const actual = await original();
@@ -35,6 +43,109 @@ vi.mock(import("../state/shell"), async (original) => {
 });
 
 import { AppSidebarLayout } from "./AppSidebarLayout";
+
+it("keeps composer text and controls readable over a bright sky in dark mode", async () => {
+  await page.viewport(1280, 800);
+  using _minute = stubGlobal("__DAYCREW_SKY_MINUTE__", 720);
+  const { appearanceMode } = getThemeSnapshot();
+  using _appearance = { [Symbol.dispose]: () => setAppearanceMode(appearanceMode) };
+  setAppearanceMode("dark");
+  const surfaces = ["plain", "context row", "attached banner"] as const;
+  const layout = (surface: (typeof surfaces)[number]) => (
+    <AppSidebarLayout showSidebar={false}>
+      <SidebarInset data-sky-surface={surface === "context row" ? "draft" : "chat"}>
+        <ComposerSurface.Shell contextRow={surface === "context row"}>
+          <ComposerSurface.Host>
+            {surface === "attached banner" ? (
+              <ComposerBanner.Root>Review required</ComposerBanner.Root>
+            ) : null}
+            <ComposerSurface.Main>
+              <div className="composer-tiptap">Prompt text</div>
+              <ComposerControl>Choose model</ComposerControl>
+            </ComposerSurface.Main>
+          </ComposerSurface.Host>
+          {surface === "context row" ? <ComposerSurface.ContextStrip /> : null}
+        </ComposerSurface.Shell>
+      </SidebarInset>
+    </AppSidebarLayout>
+  );
+  const skySamples = Object.values(resolveDaycrewSky(720, "dark").compositedSamples);
+  await using screen = await render(layout("plain"));
+  for (const surface of surfaces) {
+    await screen.rerender(layout(surface));
+    const selector =
+      surface === "plain"
+        ? '[data-slot="composer-shell"]'
+        : surface === "context row"
+          ? '[data-slot="composer-host"]'
+          : "[data-chat-composer-main-surface]";
+    const fill = getComputedStyle(screen.container.querySelector(selector)!, "::before");
+    expect(fill.backgroundImage).toContain("linear-gradient");
+    const promptInk = getComputedStyle(screen.getByText("Prompt text").element()).color;
+    const controlInk = getComputedStyle(
+      screen.getByRole("button", { name: "Choose model" }).element(),
+    ).color;
+    for (const sky of skySamples) {
+      const backing = compositeSkyColor(fill.backgroundColor, sky);
+      expect(skyContrastRatio(promptInk, backing), surface).toBeGreaterThanOrEqual(4.5);
+      expect(skyContrastRatio(controlInk, backing), surface).toBeGreaterThanOrEqual(4.5);
+    }
+    if (surface === "attached banner") {
+      const banner = screen.getByText("Review required").element();
+      const bannerBacking = getComputedStyle(banner, "::before");
+      expect(bannerBacking.backgroundImage).toContain("linear-gradient");
+      for (const sky of skySamples) {
+        expect(
+          skyContrastRatio(
+            getComputedStyle(banner).color,
+            compositeSkyColor(bannerBacking.backgroundColor, sky),
+          ),
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+});
+
+it("uses separate focus colors for the sky and glass during the draft", async () => {
+  await page.viewport(1280, 800);
+  using _minute = stubGlobal("__DAYCREW_SKY_MINUTE__", 0);
+  await using screen = await render(
+    <AppSidebarLayout showSidebar={false}>
+      <SidebarInset data-sky-surface="draft">
+        <ComposerSurface.Shell contextRow>
+          <ComposerSurface.Host>
+            <button type="button" className="focus-visible:outline-2">
+              On glass
+            </button>
+          </ComposerSurface.Host>
+          <ComposerSurface.ContextStrip>
+            <button type="button">On sky</button>
+          </ComposerSurface.ContextStrip>
+        </ComposerSurface.Shell>
+      </SidebarInset>
+    </AppSidebarLayout>,
+  );
+  const glass = screen.getByRole("button", { name: "On glass" }).element();
+  const sky = screen.getByRole("button", { name: "On sky" }).element();
+  await userEvent.keyboard("{Tab}");
+  expect(glass).toHaveFocus();
+  const glassStyle = getComputedStyle(glass);
+  expect(glassStyle.outlineWidth).toBe("2px");
+  await userEvent.keyboard("{Tab}");
+  expect(sky).toHaveFocus();
+  const skyStyle = getComputedStyle(sky);
+  expect(skyStyle.outlineWidth).toBe("2px");
+  expect(skyStyle.outlineColor).not.toBe(glassStyle.outlineColor);
+  const restingInk = skyStyle.color;
+  await userEvent.hover(page.elementLocator(sky));
+  const hoverStyle = getComputedStyle(sky);
+  expect(hoverStyle.backgroundColor).not.toBe("rgba(0, 0, 0, 0)");
+  for (const sample of Object.values(resolveDaycrewSky(0).compositedSamples)) {
+    const tintedSky = compositeSkyColor(hoverStyle.backgroundColor, sample);
+    expect(skyContrastRatio(hoverStyle.color, tintedSky)).toBeGreaterThanOrEqual(4.5);
+  }
+  expect(hoverStyle.color).not.toBe(restingInk);
+});
 
 describe("sidebar toggle shortcut", () => {
   it("leaves the key to a focused terminal when its rule excludes terminalFocus", async () => {

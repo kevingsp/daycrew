@@ -42,7 +42,7 @@ function AgentRailContents() {
         aria-label={gt("Agents")}
         aria-current={inFeed ? "page" : undefined}
       >
-        <Bot size={17} />
+        <Bot size={16} strokeWidth={2} aria-hidden="true" />
       </Link>
       <SidebarSubagents compact />
       <div data-slot="active-agents">
@@ -77,7 +77,7 @@ function AgentRailContents() {
                 {provider ? (
                   <ProviderInstanceIcon {...provider} size="compact" />
                 ) : (
-                  <Bot size={16} />
+                  <Bot size={16} strokeWidth={2} aria-hidden="true" />
                 )}
                 {waiting && <Pause data-slot="agent-pause" aria-hidden />}
               </TooltipTrigger>
@@ -86,13 +86,8 @@ function AgentRailContents() {
           );
         })}
       </div>
-      <Link
-        to="/settings"
-
-        title={gt("Settings")}
-        aria-label={gt("Settings")}
-      >
-        <Settings size={17} />
+      <Link to="/settings" title={gt("Settings")} aria-label={gt("Settings")}>
+        <Settings size={16} strokeWidth={2} aria-hidden="true" />
       </Link>
     </nav>
   );

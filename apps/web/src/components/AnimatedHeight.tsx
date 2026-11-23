@@ -1,7 +1,8 @@
 import { type ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { observeResize } from "../lib/observeResize";
+import { MOTION_PANEL_DURATION_MS, prefersReducedMotion } from "../motion";
 
-const HEIGHT_TRANSITION_FALLBACK_MS = 250;
+const HEIGHT_TRANSITION_FALLBACK_MS = MOTION_PANEL_DURATION_MS + 20;
 
 export function AnimatedHeight({
   children,
@@ -45,7 +46,7 @@ export function AnimatedHeight({
         if (currentState.height === nextHeight) return currentState;
         return {
           height: nextHeight,
-          isClipping: currentState.height !== null,
+          isClipping: currentState.height !== null && !prefersReducedMotion(),
         };
       });
     };
@@ -83,7 +84,7 @@ export function AnimatedHeight({
   return (
     <div
       data-slot="animated-height"
-      className="transition-[height] duration-200 ease-out motion-reduce:transition-none [overflow-clip-margin:2px]"
+      className="transition-[height] duration-(--duration-view) ease-(--ease-drawer) motion-reduce:transition-none [overflow-clip-margin:2px]"
       style={
         heightState.height === null
           ? undefined

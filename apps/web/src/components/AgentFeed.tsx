@@ -365,7 +365,7 @@ function TaskCard({
   return (
     <article ref={card} className="feed-card" data-state={state} data-selected={selected}>
       <div className="feed-byline">
-        <Bot size={16} />
+        <Bot size={16} aria-hidden="true" />
         <strong>{thread.providerInstanceId}</strong>
         <span>·</span>
         <span>{project}</span>
@@ -492,13 +492,14 @@ function TaskCard({
           </Link>
         )}
         <button
+          type="button"
           aria-expanded={expanded}
           onClick={() => {
             focusReplyOnOpen.current = !expanded;
             setExpanded(!expanded);
           }}
         >
-          <MessageSquare size={14} /> <T>Reply</T>
+          <MessageSquare size={14} aria-hidden="true" /> <T>Reply</T>
         </button>
         <Link to="/$environmentId/$threadId" params={params}>
           <T>Open thread</T> ↗
@@ -678,6 +679,7 @@ export default function AgentFeed() {
           <nav className="feed-filters" aria-label={gt("Filter activity")}>
             {(["all", "attention", "review", "progress"] as const).map((name) => (
               <button
+                type="button"
                 key={name}
                 aria-pressed={filter === name}
                 onClick={() => {

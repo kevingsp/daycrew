@@ -2,9 +2,14 @@ import { EnvironmentId, IssueTrackerKind, ProjectId, RunId, ThreadId } from "@t3
 import { describe, expect, it, vi } from "vite-plus/test";
 import { page, userEvent } from "vite-plus/test/browser";
 
-import { render } from "../../../test/render";
+import "~/index.css";
+
+import { render, stubGlobal } from "../../../test/render";
+import { getThemeSnapshot, setAppearanceMode } from "../../hooks/useTheme";
+import { compositeSkyColor, resolveDaycrewSky, skyContrastRatio } from "../../lib/daycrewSky";
 import { makeThreadFixture } from "../../test-fixtures";
 import type { Project } from "../../types";
+import { DaycrewWorkspace } from "../DaycrewWorkspace";
 import { SidebarProvider } from "../ui/sidebar";
 import { WorkspaceOverview } from "./WorkspaceOverview";
 
@@ -97,6 +102,38 @@ const threads = [
 ];
 
 describe("Workspaces overview controls", () => {
+  it("keeps filter controls readable over a bright sky in dark mode", async () => {
+    await page.viewport(1280, 900);
+    using _minute = stubGlobal("__DAYCREW_SKY_MINUTE__", 720);
+    const { appearanceMode } = getThemeSnapshot();
+    using _appearance = { [Symbol.dispose]: () => setAppearanceMode(appearanceMode) };
+    setAppearanceMode("dark");
+    await using screen = await render(
+      <SidebarProvider data-daycrew-shell="">
+        <DaycrewWorkspace mobileNavigation={false}>
+          <WorkspaceOverview />
+        </DaycrewWorkspace>
+      </SidebarProvider>,
+    );
+    const project = screen.getByRole("combobox", { name: "Project" }).element();
+    const search = screen.getByRole("searchbox", { name: "Search sessions" }).element();
+    const searchSurface = search.closest('[data-slot="input-control"]')!;
+    const projectStyle = getComputedStyle(project);
+    const searchStyle = getComputedStyle(searchSurface);
+    const placeholder = getComputedStyle(search, "::placeholder").color;
+    for (const sample of Object.values(resolveDaycrewSky(720, "dark").compositedSamples)) {
+      expect(
+        skyContrastRatio(
+          projectStyle.color,
+          compositeSkyColor(projectStyle.backgroundColor, sample),
+        ),
+      ).toBeGreaterThanOrEqual(4.5);
+      expect(
+        skyContrastRatio(placeholder, compositeSkyColor(searchStyle.backgroundColor, sample)),
+      ).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
   it("filters across projects, searches linked context and opens the selected project draft", async () => {
     await page.viewport(1280, 900);
     await using screen = await render(

@@ -1,0 +1,89 @@
+name: Daycrew macOS
+
+on:
+  push:
+    branches: [codex/daycrew-macos, "codex/daycrew-pilot-*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  DAYCREW_VERSION: 0.1.11-daycrew.5
+  T3CODE_TELEMETRY_ENABLED: "false"
+  T3CODE_OTEL_SDK_DISABLED: "true"
+  T3CODE_DISABLE_AUTO_UPDATE: "true"
+
+jobs:
+  installer:
+    name: Build and verify macOS ${{ matrix.arch }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            runner: macos-15
+            rust-target: aarch64-apple-darwin
+          - arch: x64
+            runner: macos-15-intel
+            rust-target: x86_64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 40
+    env:
+      DAYCREW_ARCH: ${{ matrix.arch }}
+    steps:
+      # The imported .repos tree contains gitlinks without .gitmodules entries.
+      - name: Check out the source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git init -q
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          git sparse-checkout set --no-cone '/*' '!/.repos/'
+          git -c credential.helper='!gh auth git-credential' fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout --detach FETCH_HEAD
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: package.json
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8
+        with:
+          toolchain: stable
+          targets: ${{ matrix.rust-target }}
+      - name: Install dependencies
+        run: |
+          npm install --global pnpm@12.14.0
+          pnpm install --frozen-lockfile
+      - name: Build Daycrew disk image
+        run: pnpm run dist:desktop:dmg --arch "$DAYCREW_ARCH" --build-version "$DAYCREW_VERSION"
+      - name: Launch Daycrew from the disk image
+        run: |
+          set -euo pipefail
+          image="release/Daycrew-${DAYCREW_VERSION}-${DAYCREW_ARCH}.dmg"
+          mount="$(mktemp -d "$RUNNER_TEMP/daycrew-dmg.XXXXXX")"
+          hdiutil attach -nobrowse -readonly -mountpoint "$mount" "$image"
+          trap 'hdiutil detach "$mount" -force >/dev/null' EXIT
+          app="$mount/Daycrew.app"
+          name=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$app/Contents/Info.plist")
+          executable="$app/Contents/MacOS/$name"
+          lipo "$executable" -verify_arch "$(uname -m)"
+          node scripts/smoke-desktop-app.ts \
+            --executable "$executable" --artifacts-dir "$RUNNER_TEMP/daycrew-launch-check"
+      - name: Generate installer checksum
+        working-directory: release
+        run: |
+          image="Daycrew-${DAYCREW_VERSION}-${DAYCREW_ARCH}.dmg"
+          shasum -a 256 "$image" > "$image.sha256"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: Daycrew-macOS-${{ matrix.arch }}
+          path: |
+            release/Daycrew-${{ env.DAYCREW_VERSION }}-${{ matrix.arch }}.dmg
+            release/Daycrew-${{ env.DAYCREW_VERSION }}-${{ matrix.arch }}.dmg.sha256
+          if-no-files-found: error
+          compression-level: 0
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: failure()
+        with:
+          name: Daycrew-macOS-launch-check-${{ matrix.arch }}
+          path: ${{ runner.temp }}/daycrew-launch-check/
+          if-no-files-found: ignore

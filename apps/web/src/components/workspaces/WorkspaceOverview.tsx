@@ -64,22 +64,22 @@ function WorkspaceSessionRow({
   const threadRef = scopeThreadRef(thread.environmentId, thread.id);
   const params = buildThreadRouteParams(threadRef);
   const chip =
-    "inline-flex max-w-48 min-w-0 items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground outline-none hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
+    "inline-flex max-w-48 min-w-0 items-center gap-1 rounded-md border border-border/60 px-2 py-1 text-xs text-muted-foreground outline-none transition-colors duration-150 hover:bg-accent/60 hover:text-foreground focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none";
   return (
-    <li className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 sm:flex-nowrap">
+    <li className="flex min-w-0 flex-wrap items-start gap-x-3 gap-y-2 px-4 py-3 sm:flex-nowrap">
       <span
         aria-hidden="true"
-        className={cn("size-1.5 shrink-0 rounded-full", statusColors[status])}
+        className={cn("mt-2 size-1.5 shrink-0 rounded-full", statusColors[status])}
       />
       <div className="min-w-0 flex-1">
         <Link
           to="/$environmentId/$threadId"
           params={params}
-          className="block truncate rounded text-sm font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+          className="block truncate rounded-sm text-sm font-medium outline-none hover:underline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
         >
           {thread.title}
         </Link>
-        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-1.5">
+        <div className="mt-2 flex min-w-0 flex-wrap items-center gap-2">
           <button type="button" className={chip} onClick={() => onProject(row.projectKey)}>
             <span className="truncate">{project.title}</span>
           </button>
@@ -129,26 +129,28 @@ function WorkspaceSessionRow({
           )}
         </div>
       </div>
-      <Button
-        size="sm"
-        variant="ghost-muted"
-        render={<Link to="/$environmentId/$threadId" params={params} />}
-        aria-label={gt("View changes for {thread}", { thread: thread.title })}
-        onClick={(event) => {
-          if (
-            !event.defaultPrevented &&
-            event.button === 0 &&
-            !event.metaKey &&
-            !event.ctrlKey &&
-            !event.shiftKey &&
-            !event.altKey
-          )
-            useRightPanelStore.getState().open(threadRef, "diff");
-        }}
-      >
-        <GitCompareArrowsIcon aria-hidden="true" />
-        <T>Changes</T>
-      </Button>
+      <div className="shrink-0 sm:self-center">
+        <Button
+          size="sm"
+          variant="ghost-muted"
+          render={<Link to="/$environmentId/$threadId" params={params} />}
+          aria-label={gt("View changes for {thread}", { thread: thread.title })}
+          onClick={(event) => {
+            if (
+              !event.defaultPrevented &&
+              event.button === 0 &&
+              !event.metaKey &&
+              !event.ctrlKey &&
+              !event.shiftKey &&
+              !event.altKey
+            )
+              useRightPanelStore.getState().open(threadRef, "diff");
+          }}
+        >
+          <GitCompareArrowsIcon aria-hidden="true" />
+          <T>Changes</T>
+        </Button>
+      </div>
     </li>
   );
 }
@@ -240,10 +242,10 @@ export function WorkspaceOverview() {
       <WorkspacePageHeader
         electron={isElectron}
         data-workspace-topbar=""
-        className="border-b border-border/60"
+        className="border-b border-border/50"
       >
         <SidebarTrigger className="shrink-0 md:hidden" />
-        <LayoutGridIcon aria-hidden="true" className="size-4 text-muted-foreground" />
+        <LayoutGridIcon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
         <span className="text-sm font-medium">
           <T>Workspaces</T>
         </span>
@@ -251,7 +253,7 @@ export function WorkspaceOverview() {
       <div className="scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto">
         <div
           data-workspace-content=""
-          className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8 sm:py-10"
+          className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8"
         >
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
@@ -303,11 +305,11 @@ export function WorkspaceOverview() {
             )}
           </div>
           <WorkspaceResources />
-          <section className="mt-7" aria-label={gt("Sessions")}>
+          <section className="mt-6" aria-label={gt("Sessions")}>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <select
                 aria-label={gt("Project")}
-                className="max-w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-ring"
+                className="h-9 max-w-full rounded-lg border border-input bg-background px-3 text-base text-foreground shadow-xs/5 outline-none transition-colors duration-150 hover:border-border focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:h-8 sm:text-sm"
                 value={selectedProjectKey}
                 onChange={(event) => setProjectKey(event.target.value)}
               >
@@ -322,8 +324,8 @@ export function WorkspaceOverview() {
               </select>
               <div className="w-full sm:w-64">
                 <Input
-                  size="sm"
                   type="search"
+                  surface="solid"
                   aria-label={gt("Search sessions")}
                   placeholder={gt("Search sessions")}
                   value={query}
@@ -333,7 +335,7 @@ export function WorkspaceOverview() {
             </div>
             <div
               data-workspace-glass=""
-              className="mb-4 flex w-fit max-w-full flex-wrap gap-1 rounded-lg p-1"
+              className="mb-4 flex w-fit max-w-full flex-wrap gap-1 rounded-xl p-1"
               role="group"
               aria-label={gt("Filter by status")}
             >
@@ -345,7 +347,7 @@ export function WorkspaceOverview() {
                   aria-pressed={filter === status}
                   onClick={() => selectStatus(status)}
                 >
-                  {labels[status]} <span className="tabular-nums opacity-70">{counts[status]}</span>
+                  {labels[status]} <span className="tabular-nums">{counts[status]}</span>
                 </Button>
               ))}
             </div>
@@ -365,14 +367,14 @@ export function WorkspaceOverview() {
                     <section
                       key={status}
                       data-workspace-glass=""
-                      className="overflow-hidden rounded-xl border border-border/60"
+                      className="overflow-hidden rounded-2xl border border-border/60"
                       aria-label={labels[status]}
                     >
                       <button
                         type="button"
                         aria-expanded={expanded}
                         aria-controls={`workspace-group-${status}`}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-left text-xs font-medium outline-none hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                        className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-xs font-medium outline-none transition-colors duration-150 hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
                         onClick={() =>
                           setCollapsed((current) => {
                             const next = new Set(current);
@@ -385,7 +387,7 @@ export function WorkspaceOverview() {
                         <ChevronDownIcon
                           aria-hidden="true"
                           className={cn(
-                            "size-3.5 text-muted-foreground",
+                            "size-3.5 shrink-0 text-muted-foreground transition-transform duration-150 ease-out motion-reduce:transition-none",
                             !expanded && "-rotate-90",
                           )}
                         />
@@ -434,7 +436,7 @@ export function WorkspaceOverview() {
             ) : (
               <div
                 data-workspace-glass=""
-                className="rounded-xl border border-border/60 px-6 py-10 text-center"
+                className="rounded-2xl border border-border/60 px-6 py-12 text-center"
               >
                 <CircleDotIcon
                   aria-hidden="true"

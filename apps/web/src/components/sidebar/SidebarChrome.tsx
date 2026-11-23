@@ -192,7 +192,7 @@ function SidebarBrand({ onBackdrop }: { onBackdrop: boolean }) {
     <Link
       aria-label={gt("Daycrew home")}
       className={cn(
-        "relative z-10 ml-[max(calc(var(--sidebar-content-inset)+var(--sidebar-row-content-inset)),var(--workspace-controls-left))] hidden h-7 w-fit min-w-0 shrink-0 items-center overflow-hidden rounded-md outline-hidden ring-ring focus-visible:ring-2 focus-visible:ring-inset md:flex",
+        "relative z-10 ml-[max(calc(var(--sidebar-content-inset)+var(--sidebar-row-content-inset)),var(--workspace-controls-left))] hidden h-7 w-fit min-w-0 shrink-0 items-center overflow-hidden rounded-lg outline-hidden ring-ring focus-visible:ring-2 focus-visible:ring-inset md:flex",
         onBackdrop ? "text-white" : "text-foreground",
       )}
       to="/"

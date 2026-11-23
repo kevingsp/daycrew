@@ -300,7 +300,7 @@ function Sidebar({
     (settings) => settings.panelAnimationDurationMs,
   );
   const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
-  const panelAnimationsActive = panelAnimationDurationMs > 0 && !prefersReducedMotion;
+  const sheetTransitionDurationMs = prefersReducedMotion ? 0 : panelAnimationDurationMs;
   const offcanvasCollapsed = !isMobile && collapsible === "offcanvas" && state === "collapsed";
 
   const resolvedResizable = resolveSidebarResizable({ collapsible, isMobile, resizable });
@@ -336,7 +336,7 @@ function Sidebar({
           {/* Children stay mounted while closed so their window shortcuts, like thread jumps, keep working. */}
           <SheetPopup
             keepMounted
-            {...(panelAnimationsActive ? {} : { transitionDurationMs: 0 })}
+            transitionDurationMs={sheetTransitionDurationMs}
             className={cn(
               "w-(--sidebar-width) max-w-none bg-sidebar surface-grain p-0 text-sidebar-foreground",
               className,
@@ -389,7 +389,7 @@ function Sidebar({
         <div
           className={cn(
             "relative w-(--sidebar-width) bg-transparent",
-            "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+            "[[data-panel-animations=true]_&]:transition-[width] [[data-panel-animations=true]_&]:[transition-duration:var(--duration-panel)] [[data-panel-animations=true]_&]:ease-(--ease-drawer) motion-reduce:transition-none",
             "group-data-[collapsible=offcanvas]:w-0",
             "group-data-[side=right]:rotate-180",
             variant === "floating" || variant === "inset"
@@ -401,10 +401,10 @@ function Sidebar({
         <div
           className={cn(
             "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) md:flex",
-            "[[data-panel-animations=true]_&]:transition-[left,right,width] [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+            "[[data-panel-animations=true]_&]:transition-[transform,width] [[data-panel-animations=true]_&]:[transition-duration:var(--duration-panel)] [[data-panel-animations=true]_&]:ease-(--ease-drawer) motion-reduce:transition-none",
             side === "left"
-              ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
-              : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
+              ? "left-0 [transform:translateX(0)] group-data-[collapsible=offcanvas]:[transform:translateX(-100%)]"
+              : "right-0 [transform:translateX(0)] group-data-[collapsible=offcanvas]:[transform:translateX(100%)]",
             variant === "floating" || variant === "inset"
               ? "p-2 group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+(--spacing(4))+2px)]"
               : "group-data-[collapsible=icon]:w-(--sidebar-width-icon) group-data-[side=left]:border-r group-data-[side=right]:border-l",
@@ -585,7 +585,7 @@ function SidebarRail({
             className={cn(
               /* A collapsed offcanvas rail overlaps the native scrollbar on Windows and Linux. */
               "-translate-x-1/2 group-data-[side=left]:-right-4 absolute inset-y-0 z-20 hidden w-4 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] hover:after:bg-sidebar-border group-data-[side=right]:left-0 sm:flex [[data-collapsible=offcanvas][data-state=collapsed]_&]:pointer-events-none",
-              "[[data-panel-animations=true]_&]:transition-all [[data-panel-animations=true]_&]:[transition-duration:var(--panel-animation-duration)] [[data-panel-animations=true]_&]:ease-out",
+              "[[data-panel-animations=true]_&]:transition-[transform,background-color] [[data-panel-animations=true]_&]:[transition-duration:var(--duration-panel)] [[data-panel-animations=true]_&]:ease-(--ease-drawer) motion-reduce:transition-none",
               "touch-none",
               canResize
                 ? "cursor-col-resize"
@@ -753,7 +753,7 @@ function SidebarMenuItem({ className, ...props }: React.ComponentProps<"li">) {
 }
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full cursor-pointer items-center gap-[var(--sidebar-control-gap)] overflow-hidden text-left outline-hidden ring-ring transition-[width,height,padding] hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset active:bg-sidebar-row-active active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-64 aria-disabled:pointer-events-none aria-disabled:opacity-64 data-[active=true]:bg-sidebar-row-selected data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[state=open]:hover:bg-sidebar-row-hover data-[state=open]:hover:text-sidebar-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-[var(--sidebar-content-inset)]! [&>span:last-child]:truncate [&>svg:not([class*='size-'])]:size-4 [&>svg]:shrink-0 [&>svg]:text-[var(--sidebar-icon-color)] hover:[&>svg]:text-sidebar-foreground active:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-sidebar-foreground",
+  "peer/menu-button flex w-full cursor-pointer items-center gap-[var(--sidebar-control-gap)] overflow-hidden text-left outline-hidden ring-(--sky-focus-ring,var(--ring)) transition-[width,height,padding,color,background-color,box-shadow] duration-(--duration-micro) ease-(--ease-spring-snappy) motion-reduce:transition-none hover:bg-(--sky-accent-hover,var(--sidebar-row-hover)) hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset active:bg-(--sky-accent-active,var(--sidebar-row-active)) active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-64 aria-disabled:pointer-events-none aria-disabled:opacity-64 data-[active=true]:bg-(--sky-accent-selected,var(--sidebar-row-selected)) data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground data-[state=open]:hover:bg-(--sky-accent-hover,var(--sidebar-row-hover)) data-[state=open]:hover:text-sidebar-foreground group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-[var(--sidebar-content-inset)]! [&>span:last-child]:truncate [&>svg:not([class*='size-'])]:size-4 [&>svg]:shrink-0 [&>svg]:text-[var(--sidebar-icon-color)] hover:[&>svg]:text-sidebar-foreground active:[&>svg]:text-sidebar-foreground data-[active=true]:[&>svg]:text-sidebar-foreground",
   {
     defaultVariants: {
       size: "default",
@@ -768,7 +768,7 @@ const sidebarMenuButtonVariants = cva(
         sm: "h-7 rounded-[var(--control-radius)] px-[var(--sidebar-row-content-inset)] py-2 text-xs",
       },
       variant: {
-        default: "font-medium text-sidebar-muted-foreground/80",
+        default: "font-medium text-sidebar-muted-foreground",
         outline: "bg-sidebar-control-surface ring-1 ring-sidebar-border",
       },
     },
@@ -866,8 +866,8 @@ function SidebarMenuSubButton({
 }) {
   const defaultProps = {
     className: cn(
-      "-translate-x-px flex h-7 min-w-0 cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 text-sidebar-foreground outline-hidden ring-ring hover:bg-sidebar-row-hover hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset active:bg-sidebar-row-active active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-64 aria-disabled:pointer-events-none aria-disabled:opacity-64 [&>span:last-child]:truncate [&>svg:not([class*='size-'])]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-muted-foreground",
-      "data-[active=true]:bg-sidebar-row-selected data-[active=true]:text-sidebar-foreground",
+      "-translate-x-px flex h-7 min-w-0 cursor-pointer items-center gap-2 overflow-hidden rounded-lg px-2 text-sidebar-foreground outline-hidden ring-(--sky-focus-ring,var(--ring)) transition-[color,background-color,box-shadow] duration-(--duration-micro) ease-(--ease-spring-snappy) motion-reduce:transition-none hover:bg-(--sky-accent-hover,var(--sidebar-row-hover)) hover:text-sidebar-foreground focus-visible:ring-2 focus-visible:ring-inset active:bg-(--sky-accent-active,var(--sidebar-row-active)) active:text-sidebar-foreground disabled:pointer-events-none disabled:opacity-64 aria-disabled:pointer-events-none aria-disabled:opacity-64 [&>span:last-child]:truncate [&>svg:not([class*='size-'])]:size-4 [&>svg]:shrink-0 [&>svg]:text-sidebar-muted-foreground",
+      "data-[active=true]:bg-(--sky-accent-selected,var(--sidebar-row-selected)) data-[active=true]:text-sidebar-foreground",
       size === "sm" && "text-xs",
       size === "md" && "text-sm",
       "group-data-[collapsible=icon]:hidden",

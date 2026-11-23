@@ -65,18 +65,20 @@ function NavigationContents({
   const feed = pathname === "/feed" || pathname.startsWith("/feed/");
   const prompt = pathname === "/" || pathname.startsWith("/draft/");
   const itemClass =
-    "relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-2xs font-medium outline-none transition-colors hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
+    "relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-2xs font-medium outline-none motion-reduce:transition-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring";
   return (
     <nav
       data-slot="mobile-navigation"
       aria-label={gt("Main navigation")}
       hidden={keyboardOpen || sidebarOpen}
-      className="shrink-0 border-t border-border/50 bg-background/90 px-3 pt-1 text-muted-foreground"
+      className="surface-glass shrink-0 border-t border-border/50 px-3 pt-1 text-muted-foreground"
     >
       <div className="mx-auto flex max-w-lg items-center gap-1">
         <Link
           to="/feed"
-          className={cn(itemClass, feed && "bg-accent/70 text-foreground")}
+          data-mobile-nav-item=""
+          data-active={feed ? "true" : undefined}
+          className={cn(itemClass, feed && "font-semibold text-foreground")}
           aria-current={feed ? "page" : undefined}
         >
           <BotIcon aria-hidden="true" className="size-5" />
@@ -86,7 +88,9 @@ function NavigationContents({
           {...(promptDraftId
             ? { to: "/draft/$draftId" as const, params: { draftId: promptDraftId } }
             : { to: "/" as const })}
-          className={cn(itemClass, prompt && "bg-accent/70 text-foreground")}
+          data-mobile-nav-item=""
+          data-active={prompt ? "true" : undefined}
+          className={cn(itemClass, prompt && "font-semibold text-foreground")}
           aria-current={prompt ? "page" : undefined}
         >
           <PlusIcon aria-hidden="true" className="size-5" />
@@ -94,6 +98,7 @@ function NavigationContents({
         </Link>
         <button
           type="button"
+          data-mobile-nav-item=""
           className={itemClass}
           onClick={openSidebar}
           aria-label={gt("Open menu")}

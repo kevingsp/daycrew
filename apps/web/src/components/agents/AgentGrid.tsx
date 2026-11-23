@@ -71,9 +71,9 @@ function AgentCard({ row, compact }: { readonly row: WorkspaceRow; readonly comp
         data-density="compact"
         data-workspace-glass=""
         aria-label={`${thread.title} · ${project.title} · ${provider?.displayName ?? instanceId} · ${connected ? labels[status] : gt("Reconnecting")}`}
-        className="flex min-h-17 min-w-0 flex-col justify-between gap-0.5 rounded-xl border border-border/60 p-2 text-foreground shadow-xs outline-none transition-colors hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+        className="flex min-h-16 min-w-0 flex-col justify-between gap-1 rounded-2xl border border-border/60 p-3 text-foreground shadow-xs outline-none transition-colors duration-150 hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
       >
-        <div className="flex min-w-0 items-start gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="flex size-5 shrink-0 items-center justify-center">
             {provider ? (
               <ProviderInstanceIcon {...provider} size="compact" />
@@ -81,7 +81,7 @@ function AgentCard({ row, compact }: { readonly row: WorkspaceRow; readonly comp
               <BotIcon className="size-4" />
             )}
           </span>
-          <h2 className="line-clamp-2 min-w-0 text-sm font-medium leading-4 tracking-tight">
+          <h2 className="line-clamp-2 min-w-0 text-sm font-medium leading-5 tracking-tight">
             {thread.title}
           </h2>
         </div>
@@ -108,7 +108,7 @@ function AgentCard({ row, compact }: { readonly row: WorkspaceRow; readonly comp
       data-agent-card=""
       data-status={status}
       data-workspace-glass=""
-      className="group flex min-h-44 min-w-0 flex-col rounded-2xl border border-border/60 p-3.5 text-foreground shadow-xs outline-none transition-colors hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring sm:min-h-48 sm:p-5"
+      className="group flex min-h-44 min-w-0 flex-col rounded-2xl border border-border/60 p-4 text-foreground shadow-xs outline-none transition-colors duration-150 hover:border-border hover:bg-card focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none sm:min-h-48 sm:p-5"
     >
       <div className="flex min-w-0 items-center gap-2">
         <span className="flex size-7 shrink-0 items-center justify-center rounded-lg border border-border/60 bg-background/70">
@@ -166,10 +166,7 @@ export default function AgentGrid() {
   };
   return (
     <div className="scrollbar-gutter-both min-h-0 flex-1 overflow-y-auto overscroll-y-contain">
-      <div
-        data-workspace-content=""
-        className="mx-auto w-full max-w-6xl px-4 py-4 sm:px-8 sm:py-10"
-      >
+      <div data-workspace-content="" className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-8 sm:py-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 data-workspace-title="">
@@ -179,6 +176,7 @@ export default function AgentGrid() {
           <div className="w-full sm:w-64">
             <Input
               type="search"
+              surface="solid"
               aria-label={gt("Search agents")}
               placeholder={gt("Search agents")}
               value={query}
@@ -193,7 +191,7 @@ export default function AgentGrid() {
           data-workspace-glass=""
           role="group"
           aria-label={gt("Filter by status")}
-          className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl p-2 sm:my-5 sm:flex-wrap sm:p-1"
+          className="my-4 flex w-fit max-w-full gap-1 overflow-x-auto overflow-y-hidden rounded-xl p-1 sm:my-6 sm:flex-wrap"
         >
           {(["all", "attention", "running", "review"] as const).map((status) => (
             <Button
@@ -207,7 +205,7 @@ export default function AgentGrid() {
               }}
             >
               {mobile && status === "review" ? gt("Review") : labels[status]}{" "}
-              <span className="tabular-nums opacity-70">
+              <span className="tabular-nums">
                 {status === "all"
                   ? allRows.length
                   : allRows.filter((row) => row.status === status).length}
@@ -218,7 +216,7 @@ export default function AgentGrid() {
         {rows.length > 0 ? (
           <ul
             aria-label={gt("Agents")}
-            className="grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-4"
+            className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4"
           >
             {rows.slice(0, limit).map((row) => (
               <li key={row.key} className="min-w-0">
@@ -229,7 +227,7 @@ export default function AgentGrid() {
         ) : (
           <div
             data-workspace-glass=""
-            className="rounded-2xl border border-border/60 px-5 py-12 text-center"
+            className="rounded-2xl border border-border/60 px-6 py-12 text-center"
           >
             <SearchIcon aria-hidden="true" className="mx-auto size-5 text-muted-foreground" />
             <h2 className="mt-3 text-sm font-medium">
@@ -240,7 +238,7 @@ export default function AgentGrid() {
                 ? gt("Try another project, status, or search.")
                 : gt("Start a prompt to put your crew to work.")}
             </p>
-            <div className="mt-5">
+            <div className="mt-6">
               <Button render={<Link to="/" />}>
                 <PlusIcon />
                 <T>New prompt</T>
@@ -249,7 +247,7 @@ export default function AgentGrid() {
           </div>
         )}
         {rows.length > limit ? (
-          <div className="mt-5 flex justify-center">
+          <div className="mt-6 flex justify-center">
             <Button variant="outline" onClick={() => setLimit(limit + (mobile ? 12 : 24))}>
               <T>Show more</T>
             </Button>

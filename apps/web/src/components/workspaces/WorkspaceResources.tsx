@@ -118,7 +118,7 @@ export function WorkspaceResources() {
     <div className="mt-6 grid gap-4 lg:grid-cols-2" data-workspace-resources="">
       <section
         data-workspace-glass=""
-        className="min-w-0 rounded-xl border border-border/60 p-4"
+        className="min-w-0 rounded-2xl border border-border/60 p-4"
         aria-label={gt("Provider headroom")}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -128,7 +128,7 @@ export function WorkspaceResources() {
           </h2>
           <Link
             to="/usage"
-            className="rounded text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            className="rounded-sm text-xs text-muted-foreground underline-offset-4 outline-none transition-colors duration-150 hover:text-foreground hover:underline focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring motion-reduce:transition-none"
           >
             <T>View usage</T>
           </Link>
@@ -207,7 +207,7 @@ export function WorkspaceResources() {
       </section>
       <section
         data-workspace-glass=""
-        className="min-w-0 rounded-xl border border-border/60 p-4"
+        className="min-w-0 rounded-2xl border border-border/60 p-4"
         aria-label={gt("Machines")}
       >
         <div className="mb-4 flex items-center justify-between gap-3">

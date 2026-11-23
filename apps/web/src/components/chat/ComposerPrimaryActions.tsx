@@ -160,8 +160,8 @@ function StopGenerationButton({
           <button
             type="button"
             className={cn(
-              "flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-destructive/90 text-white shadow-xs shadow-destructive/24 inset-shadow-control-highlight transition-colors duration-150 hover:bg-destructive active:inset-shadow-control-pressed active:shadow-none disabled:cursor-default disabled:opacity-64 disabled:hover:bg-destructive/90 [&_svg]:pointer-events-none",
-              insidePendingAction ? "size-8 sm:size-7" : "size-8 sm:h-8 sm:w-8",
+              "flex shrink-0 cursor-pointer items-center justify-center rounded-full bg-destructive/90 text-white shadow-xs shadow-destructive/24 inset-shadow-control-highlight outline-none transition-colors duration-150 hover:bg-destructive focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring active:inset-shadow-control-pressed active:shadow-none disabled:cursor-default disabled:opacity-64 disabled:hover:bg-destructive/90 motion-reduce:transition-none [&_svg]:pointer-events-none",
+              insidePendingAction ? "size-8 sm:size-7" : "size-8",
             )}
             onPointerDown={preserveComposerFocusOnPointerDown ? preventPointerFocus : undefined}
             disabled={!canOperateThread || isStopDisabled}
@@ -435,9 +435,9 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
       type={showResume ? "button" : "submit"}
       data-sky-send={!showResume && !isEditingQueuedMessage ? "" : undefined}
       className={cn(
-        "relative isolate flex h-9 w-9 items-center justify-center overflow-hidden rounded-full shadow-xs transition-all duration-150 enabled:cursor-pointer enabled:inset-shadow-control-highlight hover:scale-105 active:inset-shadow-control-pressed active:shadow-none disabled:pointer-events-none disabled:shadow-none disabled:hover:scale-100 sm:h-8 sm:w-8 [&_svg]:pointer-events-none",
+        "relative isolate flex size-8 items-center justify-center overflow-hidden rounded-full shadow-xs outline-none transition-[scale,opacity,background-color,color,border-color] duration-150 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring enabled:cursor-pointer enabled:inset-shadow-control-highlight motion-safe:enabled:active:scale-95 active:inset-shadow-control-pressed active:shadow-none disabled:pointer-events-none disabled:shadow-none motion-reduce:transition-none [&_svg]:pointer-events-none",
         stageBackdropVariant
-          ? "bg-transparent text-white enabled:shadow-black/24 enabled:hover:brightness-110 disabled:opacity-64"
+          ? "bg-transparent text-white enabled:shadow-black/24 enabled:hover:opacity-90 disabled:opacity-64"
           : "bg-message-action text-message-action-foreground enabled:shadow-message-action/24 hover:bg-message-action-hover disabled:bg-foreground/12 disabled:text-muted-foreground",
       )}
       {...pointerFocusProps}
@@ -473,9 +473,9 @@ export const ComposerPrimaryActions = memo(function ComposerPrimaryActions({
       ) : isRunning ? (
         <CornerUpRightIcon className="size-4" aria-hidden="true" />
       ) : (
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
           <path
-            d="M7 11.5V2.5M7 2.5L3 6.5M7 2.5L11 6.5"
+            d="M8 12.5V3.5M8 3.5L4 7.5M8 3.5L12 7.5"
             stroke="currentColor"
             strokeWidth="1.8"
             strokeLinecap="round"
