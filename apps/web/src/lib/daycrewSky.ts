@@ -108,7 +108,7 @@ declare global {
 }
 
 // At dusk and dawn both bodies pass below the horizon before the new one rises.
-export const DAYCREW_SKY_STOPS: readonly DaycrewSkyStop[] = [
+const DAYCREW_SKY_STOPS: readonly DaycrewSkyStop[] = [
   { hour: 0, top: "#161b3b", base: "#363656", light: "#9798c7", x: 89, y: 39, reach: 44 },
   { hour: 4, top: "#2b3255", base: "#555674", light: "#a9a9cf", x: 14, y: 106, reach: 48 },
   { hour: 5, top: "#8885ab", base: "#ba9fb1", light: "#edbdad", x: 12, y: 166, reach: 62 },
