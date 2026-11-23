@@ -41,6 +41,8 @@ function seed() {
     enabled: true,
     config: {
       source: "local",
+      // The CLI can reach the test server before its first ACP model probe completes.
+      customModels: ["command-output", "approval"],
       commandPath: process.execPath,
       commandArgs: [NodePath.join(repo, "apps/server/scripts/dev-replay-agent.ts")],
     },
