@@ -34,6 +34,7 @@ type SessionResult = AsyncResult.AsyncResult<AuthSessionState, Error>;
 const state = vi.hoisted(() => ({
   sessions: new Map<EnvironmentId, Atom.Writable<SessionResult>>(),
   projects: [] as Project[],
+  projectListeners: new Set<() => void>(),
   update:
     vi.fn<
       (request: {
@@ -74,16 +75,26 @@ vi.mock(import("~/state/environments"), async (original) => ({
     environments.find((environment) => environment.environmentId === id) ?? null) as never,
   usePrimaryEnvironmentId: () => primaryId,
 }));
-vi.mock(import("~/state/entities"), async (original) => ({
-  ...(await original()),
-  useProjects: (() => state.projects) as never,
-  useThreadShells: () => [],
-  useServerConfigs: (() =>
-    new Map(
-      environments.map((environment) => [environment.environmentId, environment.serverConfig]),
-    )) as never,
-  waitForProjectRemoval: async () => true,
-}));
+vi.mock(import("~/state/entities"), async (original) => {
+  const { useSyncExternalStore } = await import("react");
+  return {
+    ...(await original()),
+    useProjects: (() =>
+      useSyncExternalStore(
+        (listener) => {
+          state.projectListeners.add(listener);
+          return () => state.projectListeners.delete(listener);
+        },
+        () => state.projects,
+      )) as never,
+    useThreadShells: () => [],
+    useServerConfigs: (() =>
+      new Map(
+        environments.map((environment) => [environment.environmentId, environment.serverConfig]),
+      )) as never,
+    waitForProjectRemoval: async () => true,
+  };
+});
 vi.mock(import("~/state/projects"), async (original) => {
   const actual = await original();
   return {
@@ -211,6 +222,7 @@ function setup() {
         ? { ...project, ...patch }
         : project,
     );
+    for (const listener of state.projectListeners) listener();
     return AsyncResult.success(undefined);
   });
   state.delete.mockResolvedValue(AsyncResult.success(undefined));
@@ -335,6 +347,90 @@ async function expectProjectAccessDeniedToast(title: string) {
   expect(state.toast).toHaveBeenCalledOnce();
 }
 
+describe("project folder reassignment", () => {
+  it("changes only the selected checkout's folder and keeps its project and settings selection", async () => {
+    setup();
+    state.projects = [{ ...state.projects[0]!, repositoryIdentity: null }];
+    const original = state.projects[0]!;
+    await using screen = await mountSettings({
+      project: projectKey(),
+      machine: primaryId,
+      checkout: "primary:/work/primary",
+    });
+
+    await userEvent.click(page.getByRole("button", { name: "Change folder for /work/primary" }));
+    await userEvent.fill(
+      page.getByRole("textbox", { name: "Project folder", exact: true }),
+      " /work/real-repo ",
+    );
+    await userEvent.click(page.getByRole("button", { name: "Save folder", exact: true }));
+
+    await vi.waitFor(() => expect(state.update).toHaveBeenCalledOnce());
+    expect(state.update).toHaveBeenCalledWith({
+      environmentId: primaryId,
+      input: { projectId: original.id, workspaceRoot: "/work/real-repo" },
+    });
+    expect(state.projects[0]).toEqual({ ...original, workspaceRoot: "/work/real-repo" });
+    await vi.waitFor(() =>
+      expect(screen.router.state.location.search).toMatchObject({
+        machine: primaryId,
+        checkout: "primary:/work/real-repo",
+      }),
+    );
+    await expect
+      .element(page.getByRole("textbox", { name: "Project name", exact: true }))
+      .toBeVisible();
+    expect(state.delete).not.toHaveBeenCalled();
+    expect(state.clearDraft).not.toHaveBeenCalled();
+  });
+
+  it("keeps blank, unchanged and already assigned folders from being submitted", async () => {
+    setup();
+    state.projects.push({
+      ...state.projects[0]!,
+      id: ProjectId.make("other-project"),
+      workspaceRoot: "/work/taken",
+    });
+    await using _screen = await mountPanel();
+    await userEvent.click(page.getByRole("button", { name: "Change folder for /work/primary" }));
+    const input = page.getByRole("textbox", { name: "Project folder", exact: true });
+    const save = page.getByRole("button", { name: "Save folder", exact: true });
+    await expect.element(save).toBeDisabled();
+    await userEvent.fill(input, "  ");
+    await expect.element(save).toBeDisabled();
+    await userEvent.fill(input, "/work/taken/");
+    await expect
+      .element(page.getByText("This folder already belongs to another project."))
+      .toBeVisible();
+    await expect.element(save).toBeDisabled();
+    await userEvent.click(page.getByRole("button", { name: "Cancel", exact: true }));
+    expect(state.update).not.toHaveBeenCalled();
+  });
+
+  it("keeps the entered folder available when the server rejects the change", async () => {
+    setup();
+    state.update.mockResolvedValueOnce(
+      AsyncResult.failure(Cause.fail(new Error("Folder is missing"))),
+    );
+    await using _screen = await mountPanel();
+    await userEvent.click(page.getByRole("button", { name: "Change folder for /work/primary" }));
+    await userEvent.fill(
+      page.getByRole("textbox", { name: "Project folder", exact: true }),
+      "/missing",
+    );
+    await userEvent.click(page.getByRole("button", { name: "Save folder", exact: true }));
+    await vi.waitFor(() =>
+      expect(state.toast).toHaveBeenCalledWith(
+        expect.objectContaining({ title: "Failed to change project folder" }),
+      ),
+    );
+    await expect
+      .element(page.getByRole("textbox", { name: "Project folder", exact: true }))
+      .toHaveValue("/missing");
+    expect(state.projects[0]!.workspaceRoot).toBe("/work/primary");
+  });
+});
+
 describe("project organization", () => {
   it("archives the checkout on every machine while one machine is picked", async () => {
     setup();
@@ -399,6 +495,12 @@ describe("project settings permissions", () => {
     await using screen = await mountPanel();
     expect(removeCheckout(screen, "/work/remote").disabled).toBe(true);
     expect(removeCheckout(screen, "/work/primary").disabled).toBe(false);
+    await expect
+      .element(page.getByRole("button", { name: "Change folder for /work/remote" }))
+      .toBeDisabled();
+    await expect
+      .element(page.getByRole("button", { name: "Change folder for /work/primary" }))
+      .not.toBeDisabled();
   });
 
   it("removes a writable checkout while removal of the mixed group stays denied", async () => {

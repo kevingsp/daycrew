@@ -12292,5 +12292,12 @@
   "2b50c38c8242551b": "Arbeitsbereiche öffnen",
   "ecb840de2fc249ba": "Pull Request",
   "2a30fc2634766ea1": "Unterhaltung",
-  "5a708c8019a8ea99": "Änderungen werden geladen…"
+  "5a708c8019a8ea99": "Änderungen werden geladen…",
+  "006515c2ac7b8065": "Projektordner konnte nicht geändert werden",
+  "10ea77d0072ce29d": "Ordner für {path} ändern",
+  "373e02f7d2ce7a58": "Ordner ändern",
+  "605eca74c2ded999": "Projektordner",
+  "45dea778d18d6331": "Dieser Ordner gehört bereits zu einem anderen Projekt.",
+  "292a824a8a835b6b": "Ändert den Ordner für Chats ohne Worktree. Chatverlauf, bestehende Worktrees und Dateien bleiben erhalten. Laufende Aufgaben verwenden ihren bisherigen Ordner bis zum nächsten Durchlauf.",
+  "0275e0f0d098aa99": "Ordner speichern"
 }

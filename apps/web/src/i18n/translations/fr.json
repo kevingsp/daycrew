@@ -12292,5 +12292,12 @@
   "2b50c38c8242551b": "Ouvrir les espaces de travail",
   "ecb840de2fc249ba": "Demande de fusion",
   "2a30fc2634766ea1": "Conversation",
-  "5a708c8019a8ea99": "Chargement des modifications…"
+  "5a708c8019a8ea99": "Chargement des modifications…",
+  "006515c2ac7b8065": "Impossible de modifier le dossier du projet",
+  "10ea77d0072ce29d": "Modifier le dossier de {path}",
+  "373e02f7d2ce7a58": "Modifier le dossier",
+  "605eca74c2ded999": "Dossier du projet",
+  "45dea778d18d6331": "Ce dossier appartient déjà à un autre projet.",
+  "292a824a8a835b6b": "Modifie le dossier des chats sans worktree. L’historique, les worktrees existants et les fichiers sont conservés. Les tâches en cours gardent leur dossier jusqu’au prochain tour.",
+  "0275e0f0d098aa99": "Enregistrer le dossier"
 }

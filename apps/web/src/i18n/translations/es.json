@@ -12287,5 +12287,12 @@
   "2b50c38c8242551b": "Abrir espacios de trabajo",
   "ecb840de2fc249ba": "Solicitud de fusión",
   "2a30fc2634766ea1": "Conversación",
-  "5a708c8019a8ea99": "Cargando cambios…"
+  "5a708c8019a8ea99": "Cargando cambios…",
+  "006515c2ac7b8065": "No se pudo cambiar la carpeta del proyecto",
+  "10ea77d0072ce29d": "Cambiar carpeta de {path}",
+  "373e02f7d2ce7a58": "Cambiar carpeta",
+  "605eca74c2ded999": "Carpeta del proyecto",
+  "45dea778d18d6331": "Esta carpeta ya pertenece a otro proyecto.",
+  "292a824a8a835b6b": "Cambia la carpeta de los chats sin worktree. Se conservan el historial, los worktrees existentes y los archivos. Las tareas en curso mantienen su carpeta hasta el siguiente turno.",
+  "0275e0f0d098aa99": "Guardar carpeta"
 }

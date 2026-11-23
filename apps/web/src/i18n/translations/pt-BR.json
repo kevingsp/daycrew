@@ -12291,5 +12291,12 @@
   "2b50c38c8242551b": "Abrir espaços de trabalho",
   "ecb840de2fc249ba": "Pull request",
   "2a30fc2634766ea1": "Conversa",
-  "5a708c8019a8ea99": "Carregando alterações…"
+  "5a708c8019a8ea99": "Carregando alterações…",
+  "006515c2ac7b8065": "Não foi possível alterar a pasta do projeto",
+  "10ea77d0072ce29d": "Alterar pasta de {path}",
+  "373e02f7d2ce7a58": "Alterar pasta",
+  "605eca74c2ded999": "Pasta do projeto",
+  "45dea778d18d6331": "Esta pasta já pertence a outro projeto.",
+  "292a824a8a835b6b": "Altera a pasta dos chats sem worktree. O histórico, os worktrees existentes e os arquivos são mantidos. As tarefas em andamento usam a pasta atual até o próximo turno.",
+  "0275e0f0d098aa99": "Salvar pasta"
 }
