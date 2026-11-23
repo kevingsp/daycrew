@@ -282,7 +282,7 @@ function bootstrapTitlePlugin(): Plugin {
     transformIndexHtml(html) {
       const stageLabel = resolveWebAppStageLabel({
         hostedAppChannel: configuredHostedAppChannel,
-        development,
+        development: development || configuredReleaseChannel === "dev",
       });
       const title = formatAppDisplayName({ baseName: "Daycrew", stageLabel });
       return html.replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`);

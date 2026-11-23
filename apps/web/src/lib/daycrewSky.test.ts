@@ -169,7 +169,7 @@ describe("resolveDaycrewSky", () => {
     }
   });
 
-  it("shifts dusk-to-dawn adaptive accent hues across dawn, day, golden-hour, and night", () => {
+  it("shifts between the relay palette's ruby, gold, orange, and violet accents", () => {
     const hueOf = (minute: number) => {
       const accent = resolveDaycrewSky(minute, "light").tokens["--sky-accent"];
       const parsed = parse(accent);
@@ -177,10 +177,18 @@ describe("resolveDaycrewSky", () => {
       return toOklch(parsed!)?.h ?? 0;
     };
 
-    expect(hueDistance(hueOf(5 * 60), 34)).toBeLessThan(20);
-    expect(hueDistance(hueOf(12 * 60), 238)).toBeLessThan(20);
-    expect(hueDistance(hueOf(17 * 60 + 30), 44)).toBeLessThan(20);
-    expect(hueDistance(hueOf(0), 268)).toBeLessThan(20);
+    expect(hueDistance(hueOf(5 * 60), 12)).toBeLessThan(14);
+    expect(hueDistance(hueOf(12 * 60), 80)).toBeLessThan(14);
+    expect(hueDistance(hueOf(17 * 60 + 30), 47)).toBeLessThan(14);
+    expect(hueDistance(hueOf(0), 296)).toBeLessThan(14);
+
+    for (const minute of [0, 300, 720, 1050]) {
+      const light = resolveDaycrewSky(minute, "light");
+      const dark = resolveDaycrewSky(minute, "dark");
+      expect(toOklch(parse(dark.rawSamples.top)!)!.l).toBeLessThan(
+        toOklch(parse(light.rawSamples.top)!)!.l,
+      );
+    }
   });
 
   it("assigns all seven semantic phases across the 24-hour cycle", () => {

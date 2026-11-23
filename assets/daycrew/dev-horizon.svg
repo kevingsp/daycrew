@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="dev-land" x2="0%" y2="100%">
+      <stop stop-color="#684019" />
+      <stop offset=".42" stop-color="#2b1935" />
+      <stop offset="1" stop-color="#0c0b21" />
+    </linearGradient>
+    <linearGradient id="dev-rim">
+      <stop stop-color="#c88420" stop-opacity=".25" />
+      <stop offset=".46" stop-color="#ffd13b" />
+      <stop offset=".76" stop-color="#f5a918" />
+      <stop offset="1" stop-color="#c88420" stop-opacity=".35" />
+    </linearGradient>
+  </defs>
+  <path d="M-80 920 Q512 489 1104 920 V1024 H-80Z" fill="url(#dev-land)" />
+  <path d="M-80 920 Q512 489 1104 920" fill="none" stroke="url(#dev-rim)" stroke-width="9" />
+</svg>

@@ -109,33 +109,33 @@ declare global {
 
 // At dusk and dawn both bodies pass below the horizon before the new one rises.
 const DAYCREW_SKY_STOPS: readonly DaycrewSkyStop[] = [
-  { hour: 0, top: "#161b3b", base: "#363656", light: "#9798c7", x: 89, y: 39, reach: 44 },
-  { hour: 4, top: "#2b3255", base: "#555674", light: "#a9a9cf", x: 14, y: 106, reach: 48 },
-  { hour: 5, top: "#8885ab", base: "#ba9fb1", light: "#edbdad", x: 12, y: 166, reach: 62 },
-  { hour: 7, top: "#acaadc", base: "#edc3c3", light: "#ffdaa6", x: 14, y: 91, reach: 67 },
-  { hour: 12, top: "#91bde2", base: "#cde5e4", light: "#fff2c8", x: 48, y: -6, reach: 79 },
-  { hour: 16, top: "#a7bed9", base: "#dfc9be", light: "#ffe1ae", x: 71, y: 53, reach: 68 },
-  { hour: 18, top: "#b0a5c6", base: "#d8a6a5", light: "#ffc79b", x: 77, y: 99, reach: 63 },
-  { hour: 19, top: "#262541", base: "#443b57", light: "#eca78e", x: 72, y: 109, reach: 66 },
-  { hour: 20, top: "#252545", base: "#4c405e", light: "#c1a5c3", x: 90, y: 165, reach: 55 },
-  { hour: 22, top: "#1a2043", base: "#383757", light: "#a29dc9", x: 97, y: 97, reach: 47 },
+  { hour: 0, top: "#0c0b21", base: "#28204e", light: "#8070a9", x: 89, y: 39, reach: 44 },
+  { hour: 4, top: "#19132e", base: "#4a294f", light: "#a37199", x: 14, y: 106, reach: 48 },
+  { hour: 5, top: "#85617c", base: "#c58e8b", light: "#f5b27a", x: 12, y: 166, reach: 62 },
+  { hour: 7, top: "#e9bcad", base: "#f8d6ab", light: "#fff1b3", x: 14, y: 91, reach: 67 },
+  { hour: 12, top: "#f1d9b8", base: "#fff0d0", light: "#fff8a5", x: 48, y: -6, reach: 79 },
+  { hour: 16, top: "#e3b4a4", base: "#f6ce99", light: "#ffdf89", x: 71, y: 53, reach: 68 },
+  { hour: 18, top: "#bb7d91", base: "#d68d78", light: "#ffd58a", x: 77, y: 99, reach: 63 },
+  { hour: 19, top: "#3a1d43", base: "#60334e", light: "#e39370", x: 72, y: 109, reach: 66 },
+  { hour: 20, top: "#19132e", base: "#44294f", light: "#b678a5", x: 90, y: 165, reach: 55 },
+  { hour: 22, top: "#100d24", base: "#30234b", light: "#9784b8", x: 97, y: 97, reach: 47 },
 ];
 
 const MIDNIGHT_SKY_STOP: DaycrewSkyStop = { ...DAYCREW_SKY_STOPS[0]!, hour: 24 };
 
 // Dusk-to-dawn adaptive accent anchors interpolated in OKLab across 24 hours.
 const ACCENT_STOPS: readonly AccentStop[] = [
-  { hour: 0, L: 0.64, C: 0.13, h: 268 },
-  { hour: 4, L: 0.63, C: 0.125, h: 272 },
-  { hour: 5, L: 0.65, C: 0.135, h: 34 },
-  { hour: 6, L: 0.64, C: 0.13, h: 36 },
-  { hour: 7, L: 0.58, C: 0.13, h: 238 },
-  { hour: 12, L: 0.56, C: 0.135, h: 238 },
-  { hour: 15, L: 0.57, C: 0.135, h: 238 },
-  { hour: 16.5, L: 0.63, C: 0.135, h: 44 },
-  { hour: 18.25, L: 0.62, C: 0.14, h: 44 },
-  { hour: 19.5, L: 0.63, C: 0.13, h: 268 },
-  { hour: 22, L: 0.64, C: 0.13, h: 268 },
+  { hour: 0, L: 0.64, C: 0.13, h: 296 },
+  { hour: 4, L: 0.63, C: 0.125, h: 319 },
+  { hour: 5, L: 0.65, C: 0.135, h: 12 },
+  { hour: 6, L: 0.64, C: 0.13, h: 37 },
+  { hour: 7, L: 0.62, C: 0.13, h: 69 },
+  { hour: 12, L: 0.62, C: 0.135, h: 80 },
+  { hour: 15, L: 0.62, C: 0.135, h: 80 },
+  { hour: 16.5, L: 0.63, C: 0.135, h: 56 },
+  { hour: 18.25, L: 0.62, C: 0.14, h: 40 },
+  { hour: 19.5, L: 0.63, C: 0.13, h: 343 },
+  { hour: 22, L: 0.64, C: 0.13, h: 296 },
 ];
 
 const MIDNIGHT_ACCENT_STOP: AccentStop = { ...ACCENT_STOPS[0]!, hour: 24 };
@@ -143,10 +143,10 @@ const MIDNIGHT_ACCENT_STOP: AccentStop = { ...ACCENT_STOPS[0]!, hour: 24 };
 const MINUTES_PER_DAY = 1440;
 const GLOW_PEAK_ALPHA = 0.66;
 const SELECTED_TINT_ALPHA = 0.18;
-const DARK_SCRIM_HEX = "#0b0e20";
-const LIGHT_SCRIM_HEX = "#f7f6fb";
-const DARK_SCRIM_RGB: RgbColor = { r: 11, g: 14, b: 32 };
-const LIGHT_SCRIM_RGB: RgbColor = { r: 247, g: 246, b: 251 };
+const DARK_SCRIM_HEX = "#050619";
+const LIGHT_SCRIM_HEX = "#fff8ef";
+const DARK_SCRIM_RGB: RgbColor = { r: 5, g: 6, b: 25 };
+const LIGHT_SCRIM_RGB: RgbColor = { r: 255, g: 248, b: 239 };
 const DARK_SKY_INK_SEED: RgbColor = { r: 250, g: 249, b: 255 };
 const LIGHT_SKY_INK_SEED: RgbColor = { r: 18, g: 20, b: 38 };
 const INVERSE_WHITE_RGB: RgbColor = { r: 255, g: 255, b: 255 };
@@ -458,9 +458,16 @@ export function resolveDaycrewSky(
   const to = DAYCREW_SKY_STOPS[index + 1] ?? MIDNIGHT_SKY_STOP;
   const fraction = clamp((hour - from.hour) / (to.hour - from.hour), 0, 1);
 
-  const rawTopRgb = mixRgb(parseHexRgb(from.top), parseHexRgb(to.top), fraction);
-  const rawBaseRgb = mixRgb(parseHexRgb(from.base), parseHexRgb(to.base), fraction);
-  const rawLightRgb = mixRgb(parseHexRgb(from.light), parseHexRgb(to.light), fraction);
+  const darkTint = appearance === "dark" ? 0.14 : 0;
+  const skyColor = (role: "top" | "base" | "light") =>
+    mixRgb(
+      mixRgb(parseHexRgb(from[role]), parseHexRgb(to[role]), fraction),
+      DARK_SCRIM_RGB,
+      darkTint,
+    );
+  const rawTopRgb = skyColor("top");
+  const rawBaseRgb = skyColor("base");
+  const rawLightRgb = skyColor("light");
   const rawMidRgb = mixRgb(rawTopRgb, rawBaseRgb, 0.5);
   const rawGlowPeakRgb = mixRgb(rawBaseRgb, rawLightRgb, GLOW_PEAK_ALPHA);
   const rawGlowTopRgb = mixRgb(rawTopRgb, rawLightRgb, GLOW_PEAK_ALPHA);

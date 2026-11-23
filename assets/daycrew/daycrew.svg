@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<title>Daycrew · Fused Relay</title>
+<defs>
+<radialGradient id="ruby" cx="86%" cy="87%" r="112%">
+<stop offset="0" stop-color="#ff536a" stop-opacity="1"/>
+<stop offset="0.19" stop-color="#ff173f" stop-opacity="1"/>
+<stop offset="0.53" stop-color="#a0003c" stop-opacity="1"/>
+<stop offset="0.86" stop-color="#4a073f" stop-opacity="1"/>
+<stop offset="1" stop-color="#852461" stop-opacity="1"/>
+</radialGradient>
+<radialGradient id="orange" cx="86%" cy="87%" r="112%">
+<stop offset="0" stop-color="#ffbf2e" stop-opacity="1"/>
+<stop offset="0.19" stop-color="#ff9810" stop-opacity="1"/>
+<stop offset="0.53" stop-color="#fa6203" stop-opacity="1"/>
+<stop offset="0.86" stop-color="#b72f13" stop-opacity="1"/>
+<stop offset="1" stop-color="#d44919" stop-opacity="1"/>
+</radialGradient>
+<radialGradient id="gold" cx="86%" cy="87%" r="112%">
+<stop offset="0" stop-color="#fff485" stop-opacity="1"/>
+<stop offset="0.19" stop-color="#ffd13b" stop-opacity="1"/>
+<stop offset="0.53" stop-color="#f5a918" stop-opacity="1"/>
+<stop offset="0.86" stop-color="#c88420" stop-opacity="1"/>
+<stop offset="1" stop-color="#f4b748" stop-opacity="1"/>
+</radialGradient>
+<radialGradient id="sky" cx="50%" cy="86%" r="88%">
+<stop offset="0" stop-color="#28204e" stop-opacity="1"/>
+<stop offset="0.32" stop-color="#19132e" stop-opacity="1"/>
+<stop offset="0.7" stop-color="#0c0b21" stop-opacity="1"/>
+<stop offset="1" stop-color="#050619" stop-opacity="1"/>
+</radialGradient>
+<radialGradient id="haze" >
+<stop offset="0" stop-color="#aa7acc" stop-opacity="0.48"/>
+<stop offset="0.42" stop-color="#614aaf" stop-opacity="0.18"/>
+<stop offset="1" stop-color="#6854c0" stop-opacity="0"/>
+</radialGradient>
+<radialGradient id="light" cx="73%" cy="83%" r="92%">
+<stop offset="0" stop-color="#fff8a5" stop-opacity="0.92"/>
+<stop offset="0.37" stop-color="#ffd535" stop-opacity="0.8"/>
+<stop offset="1" stop-color="#ff9f13" stop-opacity="0.25"/>
+</radialGradient>
+<radialGradient id="halo" >
+<stop offset="0" stop-color="#ffac1e" stop-opacity="0.9"/>
+<stop offset="0.2" stop-color="#ff9009" stop-opacity="0.35"/>
+<stop offset="1" stop-color="#ff8303" stop-opacity="0"/>
+</radialGradient>
+<linearGradient id="land" x2="0" y2="1">
+<stop stop-color="#1d163c"/>
+<stop offset="1" stop-color="#06071b"/>
+</linearGradient>
+<linearGradient id="rim">
+<stop stop-color="#7564bd" stop-opacity="0"/>
+<stop offset=".49" stop-color="#b587c1" stop-opacity=".7"/>
+<stop offset="1" stop-color="#7564bd" stop-opacity="0"/>
+</linearGradient>
+<filter id="frost" color-interpolation-filters="sRGB">
+<feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" stitchTiles="stitch"/>
+<feColorMatrix type="saturate" values="0"/>
+</filter>
+<clipPath id="clip0">
+<circle cx="425" cy="585" r="248" />
+</clipPath>
+<clipPath id="clip1">
+<circle cx="593" cy="431" r="156" />
+</clipPath>
+<clipPath id="clip2">
+<circle cx="737" cy="299" r="96" />
+</clipPath>
+</defs>
+<g id="sky">
+<rect width="1024" height="1024" fill="url(#sky)"/>
+<circle cx="149" cy="129" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="788" cy="35" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="285" cy="150" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="820" cy="510" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="97" cy="256" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="912" cy="372" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="548" cy="133" r=".65" fill="#bac5ee" opacity=".47"/>
+<circle cx="483" cy="249" r=".65" fill="#bac5ee" opacity=".47"/>
+<ellipse cx="505" cy="925" rx="490" ry="62" fill="url(#haze)"/>
+</g>
+<g id="horizon">
+<path d="M-100 978 Q512 866 1124 978 V1024 H-100Z" fill="url(#land)"/>
+<path d="M-100 978 Q512 866 1124 978" stroke="url(#rim)" stroke-width="1" fill="none"/>
+</g>
+<g id="relay">
+<circle cx="425" cy="585" r="248" fill="url(#ruby)"/>
+<g clip-path="url(#clip0)">
+<rect x="0" y="0" width="1024" height="1024" filter="url(#frost)" opacity=".065"/>
+</g>
+<circle cx="593" cy="431" r="156" fill="url(#orange)"/>
+<g clip-path="url(#clip0)">
+<circle cx="593" cy="431" r="156" fill="url(#light)"/>
+</g>
+<g clip-path="url(#clip1)">
+<rect x="0" y="0" width="1024" height="1024" filter="url(#frost)" opacity=".065"/>
+</g>
+<circle cx="737" cy="299" r="96" fill="url(#gold)"/>
+<g clip-path="url(#clip1)">
+<circle cx="737" cy="299" r="96" fill="url(#light)"/>
+</g>
+<g clip-path="url(#clip2)">
+<rect x="0" y="0" width="1024" height="1024" filter="url(#frost)" opacity=".065"/>
+</g>
+<circle cx="857" cy="189" r="25" fill="url(#halo)"/>
+<circle cx="857" cy="189" r="4" fill="#fff6b0"/>
+</g>
+</svg>

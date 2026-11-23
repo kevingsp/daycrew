@@ -1,3 +1,4 @@
+import { BRAND_ASSET_PATHS } from "../../../../scripts/lib/brand-assets.ts";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -61,33 +62,19 @@ const resolveResourcePath = Effect.fn("desktop.assets.resolveResourcePath")(func
   return Option.none<string>();
 });
 
-const sourceTreeIconFileNames = {
-  dev: {
-    ico: "blueprint-windows.ico",
-    macPng: "blueprint-macos-1024.png",
-    universalPng: "blueprint-universal-1024.png",
-  },
-  prod: {
-    ico: "t3-black-windows.ico",
-    macPng: "black-macos-1024.png",
-    universalPng: "black-universal-1024.png",
-  },
-} as const;
-
 function resolveSourceTreeIconPath(
   environment: DesktopEnvironment.DesktopEnvironment["Service"],
   ext: keyof DesktopIconPaths,
 ): string | undefined {
   if (environment.isPackaged || ext === "icns") return undefined;
-  const brand = environment.isDevelopment ? "dev" : "prod";
-  const fileNames = sourceTreeIconFileNames[brand];
-  const fileName =
+  const assets = BRAND_ASSET_PATHS[environment.isDevelopment ? "development" : "production"];
+  const relative =
     ext === "ico"
-      ? fileNames.ico
+      ? assets.windows
       : environment.platform === "darwin"
-        ? fileNames.macPng
-        : fileNames.universalPng;
-  return environment.path.join(environment.rootDir, "assets", brand, fileName);
+        ? assets.mac
+        : assets.universal;
+  return environment.path.join(environment.rootDir, relative);
 }
 
 const resolveIconPath = Effect.fn("desktop.assets.resolveIconPath")(function* (
@@ -99,17 +86,6 @@ const resolveIconPath = Effect.fn("desktop.assets.resolveIconPath")(function* (
 > {
   const fileSystem = yield* FileSystem.FileSystem;
   const environment = yield* DesktopEnvironment.DesktopEnvironment;
-  if (!environment.isPackaged && ext !== "icns") {
-    const daycrewIcon = environment.path.join(
-      environment.rootDir,
-      "assets",
-      "daycrew",
-      ext === "ico" ? "daycrew.ico" : "daycrew.png",
-    );
-    if (yield* fileSystem.exists(daycrewIcon).pipe(Effect.orElseSucceed(() => false))) {
-      return Option.some(daycrewIcon);
-    }
-  }
   const sourceTreeIconPath = resolveSourceTreeIconPath(environment, ext);
   if (sourceTreeIconPath !== undefined) {
     const sourceTreeIconExists = yield* fileSystem.exists(sourceTreeIconPath).pipe(

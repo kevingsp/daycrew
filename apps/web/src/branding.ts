@@ -24,7 +24,7 @@ export const APP_STAGE_LABEL =
   injectedDesktopAppBranding?.stageLabel ??
   resolveWebAppStageLabel({
     hostedAppChannel: HOSTED_APP_CHANNEL,
-    development: import.meta.env.DEV,
+    development: import.meta.env.DEV || import.meta.env.VITE_RELEASE_CHANNEL === "dev",
   });
 export const APP_DISPLAY_NAME =
   injectedDesktopAppBranding?.displayName ??

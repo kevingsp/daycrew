@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import { T3Wordmark } from "../T3Wordmark";
+import { DaycrewAppIcon } from "../DaycrewAppIcon";
 
 export function InstallDaycrew() {
   const gt = useGT();
@@ -31,7 +31,7 @@ export function InstallDaycrew() {
       <DialogPopup>
         <DialogHeader>
           <span className="mb-2 flex size-12 items-center justify-center rounded-2xl border border-border bg-muted">
-            <T3Wordmark aria-hidden="true" className="size-6" />
+            <DaycrewAppIcon className="size-6" />
           </span>
           <DialogTitle>
             <T>Daycrew on your Home Screen</T>
